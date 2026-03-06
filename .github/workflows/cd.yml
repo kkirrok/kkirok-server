@@ -11,7 +11,8 @@ on:
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
   ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
-  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+  ECR_REPOSITORY_SPRINGBOOT_DEV: ${{ secrets.ECR_REPOSITORY_SPRINGBOOT_DEV }}
+  ECR_REPOSITORY_SPRINGBOOT_PROD: ${{ secrets.ECR_REPOSITORY_SPRINGBOOT_PROD }}
   COMPOSE_FILE_PATH: /home/ubuntu/docker-compose.yml
   SPRING_SERVICE_NAME: spring
 
@@ -57,8 +58,8 @@ jobs:
         env:
           IMAGE_TAG: ${{ steps.meta.outputs.image_tag }}
         run: |
-          docker build --target dev -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" .
-          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker build --target dev -t "$ECR_REGISTRY/$ECR_REPOSITORY_SPRINGBOOT_DEV:$IMAGE_TAG" .
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY_SPRINGBOOT_DEV:$IMAGE_TAG"
 
   deploy-dev:
     needs: build-and-push-dev
@@ -92,6 +93,7 @@ jobs:
 
             export IMAGE_TAG="$IMAGE_TAG"
             export SPRING_SERVICE_NAME="$SPRING_SERVICE_NAME"
+            export ECR_REPOSITORY="$ECR_REPOSITORY_SPRINGBOOT_DEV"
 
             docker compose -f "$COMPOSE_FILE_PATH" stop "$SPRING_SERVICE_NAME" || true
             docker compose -f "$COMPOSE_FILE_PATH" rm -f "$SPRING_SERVICE_NAME" || true
@@ -146,8 +148,8 @@ jobs:
         env:
           IMAGE_TAG: ${{ steps.meta.outputs.image_tag }}
         run: |
-          docker build --target prod -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" .
-          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker build --target prod -t "$ECR_REGISTRY/$ECR_REPOSITORY_SPRINGBOOT_PROD:$IMAGE_TAG" .
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY_SPRINGBOOT_PROD:$IMAGE_TAG"
 
   deploy-prod:
     needs: build-and-push-prod
@@ -168,7 +170,9 @@ jobs:
       - name: Start ssh-agent
         uses: webfactory/ssh-agent@v0.9.0
         with:
-          ssh-private-key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
+          ssh-private-key: |
+            ${{ secrets.PROD_BASTION_SSH_PRIVATE_KEY }}
+            ${{ secrets.PROD_PRIVATE_EC2_SSH_PRIVATE_KEY }}
 
       - name: Deploy to prod private EC2 through bastion
         env:
@@ -184,6 +188,7 @@ jobs:
 
             export IMAGE_TAG="$IMAGE_TAG"
             export SPRING_SERVICE_NAME="$SPRING_SERVICE_NAME"
+            export ECR_REPOSITORY="$ECR_REPOSITORY_SPRINGBOOT_PROD"
 
             docker compose -f "$COMPOSE_FILE_PATH" stop "$SPRING_SERVICE_NAME" || true
             docker compose -f "$COMPOSE_FILE_PATH" rm -f "$SPRING_SERVICE_NAME" || true
