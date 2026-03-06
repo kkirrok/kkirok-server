@@ -1,0 +1,97 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.3.5'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.kkirok'
+version = '0.0.1-SNAPSHOT'
+description = 'Server Project for Kkirok'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+
+	// Enable Log4j2 except for the Spring Boot Default Logging Framework (Logback)
+	configureEach {
+		exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+		exclude group: 'commons-logging', module: 'commons-logging'
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+
+	// spring boot
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+//	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+	// lombok
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	// DB
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+//	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test' // jpa test
+	implementation 'org.postgresql:postgresql:42.7.3' // postgresql
+
+	// Redis
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+	// validation
+//	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testRuntimeOnly 'com.h2database:h2'
+
+	// External API
+	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign:4.1.3'
+
+	// JWT
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+	// log4j2
+	implementation 'org.springframework.boot:spring-boot-starter-log4j2'
+
+	// Security
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+//	testImplementation 'org.springframework.security:spring-security-test' // security test
+
+	// Oauth2
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
+	// Swagger
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+
+	// AOP
+	implementation 'org.springframework.boot:spring-boot-starter-aop'
+
+}
+
+//jar {
+//	enabled = false
+//}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
