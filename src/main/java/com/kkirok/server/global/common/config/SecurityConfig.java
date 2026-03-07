@@ -32,7 +32,7 @@ public class SecurityConfig {
                 "/api/users/local/login",
                 "/api/users/refresh-token",
                 "/api/main",
-                "/v3/api-docs/**",
+                "/api-docs/**",
                 "/swagger-ui/**",
                 "/swagger-resources/**",
                 "/api/files/**",
