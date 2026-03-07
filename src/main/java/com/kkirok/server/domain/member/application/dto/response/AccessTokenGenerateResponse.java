@@ -1,0 +1,11 @@
+package com.kkirok.server.domain.member.application.dto.response;
+
+public record AccessTokenGenerateResponse(
+	String accessToken
+) {
+	public static AccessTokenGenerateResponse from(
+		final String accessToken
+	) {
+		return new AccessTokenGenerateResponse(accessToken);
+	}
+}

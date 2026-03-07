@@ -1,0 +1,202 @@
+name: CD
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - develop
+      - main
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+  ECR_REPOSITORY_SPRINGBOOT_DEV: ${{ secrets.ECR_REPOSITORY_SPRINGBOOT_DEV }}
+  ECR_REPOSITORY_SPRINGBOOT_PROD: ${{ secrets.ECR_REPOSITORY_SPRINGBOOT_PROD }}
+  COMPOSE_FILE_PATH: /home/ubuntu/docker-compose.yml
+  SPRING_SERVICE_NAME: spring
+
+jobs:
+  build-and-push-dev:
+    if: >-
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.base.ref == 'develop'
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.meta.outputs.image_tag }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Compute image tag
+        id: meta
+        run: |
+          BUILD_TIME="$(date -u +'%Y%m%d-%H%M%S')"
+          SHORT_SHA="${GITHUB_SHA::7}"
+          echo "image_tag=dev-${BUILD_TIME}-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push dev image
+        env:
+          IMAGE_TAG: ${{ steps.meta.outputs.image_tag }}
+        run: |
+          docker build --target dev -t "$ECR_REGISTRY/$ECR_REPOSITORY_SPRINGBOOT_DEV:$IMAGE_TAG" .
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY_SPRINGBOOT_DEV:$IMAGE_TAG"
+
+  deploy-dev:
+    needs: build-and-push-dev
+    if: >-
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.base.ref == 'develop'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Start ssh-agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEV_EC2_SSH_PRIVATE_KEY }}
+
+      - name: Deploy to dev EC2
+        env:
+          DEV_HOST: ${{ secrets.DEV_EC2_HOST }}
+          DEV_USER: ${{ secrets.DEV_EC2_USER }}
+          IMAGE_TAG: ${{ needs.build-and-push-dev.outputs.image_tag }}
+        run: |
+          ssh -o StrictHostKeyChecking=no "$DEV_USER@$DEV_HOST" << EOF_REMOTE
+            set -e
+            aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+
+            export IMAGE_TAG="$IMAGE_TAG"
+            export SPRING_SERVICE_NAME="$SPRING_SERVICE_NAME"
+            export ECR_REPOSITORY="$ECR_REPOSITORY_SPRINGBOOT_DEV"
+
+            docker compose -f "$COMPOSE_FILE_PATH" stop "$SPRING_SERVICE_NAME" || true
+            docker compose -f "$COMPOSE_FILE_PATH" rm -f "$SPRING_SERVICE_NAME" || true
+
+            docker images "$ECR_REGISTRY/$ECR_REPOSITORY" --format '{{.ID}}' | sort -u | xargs -r docker rmi -f || true
+
+            docker compose -f "$COMPOSE_FILE_PATH" pull "$SPRING_SERVICE_NAME"
+            docker compose -f "$COMPOSE_FILE_PATH" up -d "$SPRING_SERVICE_NAME"
+
+            docker image prune -f
+          EOF_REMOTE
+
+  build-and-push-prod:
+    if: >-
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.head.ref == 'develop'
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.meta.outputs.image_tag }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Compute image tag
+        id: meta
+        run: |
+          BUILD_TIME="$(date -u +'%Y%m%d-%H%M%S')"
+          SHORT_SHA="${GITHUB_SHA::7}"
+          echo "image_tag=prod-${BUILD_TIME}-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push prod image
+        env:
+          IMAGE_TAG: ${{ steps.meta.outputs.image_tag }}
+        run: |
+          docker build --target prod -t "$ECR_REGISTRY/$ECR_REPOSITORY_SPRINGBOOT_PROD:$IMAGE_TAG" .
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY_SPRINGBOOT_PROD:$IMAGE_TAG"
+
+  deploy-prod:
+    needs: build-and-push-prod
+    if: >-
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.head.ref == 'develop'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Start ssh-agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: |
+            ${{ secrets.PROD_BASTION_SSH_PRIVATE_KEY }}
+            ${{ secrets.PROD_PRIVATE_EC2_SSH_PRIVATE_KEY }}
+
+      - name: Deploy to prod private EC2 through bastion
+        env:
+          BASTION_HOST: ${{ secrets.PROD_BASTION_HOST }}
+          BASTION_USER: ${{ secrets.PROD_BASTION_USER }}
+          PROD_HOST: ${{ secrets.PROD_PRIVATE_EC2_HOST }}
+          PROD_USER: ${{ secrets.PROD_PRIVATE_EC2_USER }}
+          IMAGE_TAG: ${{ needs.build-and-push-prod.outputs.image_tag }}
+        run: |
+          ssh -J "$BASTION_USER@$BASTION_HOST" -o StrictHostKeyChecking=no "$PROD_USER@$PROD_HOST" << EOF_REMOTE
+            set -e
+            aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+
+            export IMAGE_TAG="$IMAGE_TAG"
+            export SPRING_SERVICE_NAME="$SPRING_SERVICE_NAME"
+            export ECR_REPOSITORY="$ECR_REPOSITORY_SPRINGBOOT_PROD"
+
+            docker compose -f "$COMPOSE_FILE_PATH" stop "$SPRING_SERVICE_NAME" || true
+            docker compose -f "$COMPOSE_FILE_PATH" rm -f "$SPRING_SERVICE_NAME" || true
+
+            docker images "$ECR_REGISTRY/$ECR_REPOSITORY" --format '{{.ID}}' | sort -u | xargs -r docker rmi -f || true
+
+            docker compose -f "$COMPOSE_FILE_PATH" pull "$SPRING_SERVICE_NAME"
+            docker compose -f "$COMPOSE_FILE_PATH" up -d "$SPRING_SERVICE_NAME"
+
+            docker image prune -f
+          EOF_REMOTE
