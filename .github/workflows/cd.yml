@@ -14,7 +14,7 @@ env:
   ECR_REPOSITORY_SPRINGBOOT_DEV: ${{ secrets.ECR_REPOSITORY_SPRINGBOOT_DEV }}
   ECR_REPOSITORY_SPRINGBOOT_PROD: ${{ secrets.ECR_REPOSITORY_SPRINGBOOT_PROD }}
   COMPOSE_FILE_PATH: /home/ubuntu/docker-compose.yml
-  SPRING_SERVICE_NAME: spring
+  SPRING_SERVICE_NAME: app
 
 jobs:
   build-and-push-dev:
@@ -76,35 +76,72 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Start ssh-agent
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.DEV_EC2_SSH_PRIVATE_KEY }}
+      # Legacy SSH deploy is disabled. Use SSM-based deploy below.
+      # - name: Start ssh-agent
+      #   uses: webfactory/ssh-agent@v0.9.0
+      #   with:
+      #     ssh-private-key: ${{ secrets.DEV_EC2_SSH_PRIVATE_KEY }}
+      #
+      # - name: Deploy to dev EC2
+      #   env:
+      #     DEV_HOST: ${{ secrets.DEV_EC2_HOST }}
+      #     DEV_USER: ${{ secrets.DEV_EC2_USER }}
+      #     IMAGE_TAG: ${{ needs.build-and-push-dev.outputs.image_tag }}
+      #   run: |
+      #     ssh -o StrictHostKeyChecking=no "$DEV_USER@$DEV_HOST" << EOF_REMOTE
+      #       ...
+      #     EOF_REMOTE
 
-      - name: Deploy to dev EC2
+      - name: Deploy to dev EC2 with SSM
         env:
-          DEV_HOST: ${{ secrets.DEV_EC2_HOST }}
-          DEV_USER: ${{ secrets.DEV_EC2_USER }}
+          DEV_INSTANCE_ID: ${{ secrets.DEV_EC2_INSTANCE_ID }}
           IMAGE_TAG: ${{ needs.build-and-push-dev.outputs.image_tag }}
         run: |
-          ssh -o StrictHostKeyChecking=no "$DEV_USER@$DEV_HOST" << EOF_REMOTE
-            set -e
-            aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "$DEV_INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Deploy dev spring container" \
+            --parameters "commands=[
+              \"set -e\",
+              \"aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY\",
+              \"export IMAGE_TAG=$IMAGE_TAG\",
+              \"export SPRING_SERVICE_NAME=$SPRING_SERVICE_NAME\",
+              \"export ECR_REPOSITORY=$ECR_REPOSITORY_SPRINGBOOT_DEV\",
+              \"docker compose -f $COMPOSE_FILE_PATH stop $SPRING_SERVICE_NAME || true\",
+              \"docker compose -f $COMPOSE_FILE_PATH rm -f $SPRING_SERVICE_NAME || true\",
+              \"docker images $ECR_REGISTRY/$ECR_REPOSITORY --format '{{.ID}}' | sort -u | xargs -r docker rmi -f || true\",
+              \"docker compose -f $COMPOSE_FILE_PATH pull $SPRING_SERVICE_NAME\",
+              \"docker compose -f $COMPOSE_FILE_PATH up -d $SPRING_SERVICE_NAME\",
+              \"docker image prune -f\"
+            ]" \
+            --query "Command.CommandId" \
+            --output text)
 
-            export IMAGE_TAG="$IMAGE_TAG"
-            export SPRING_SERVICE_NAME="$SPRING_SERVICE_NAME"
-            export ECR_REPOSITORY="$ECR_REPOSITORY_SPRINGBOOT_DEV"
+          echo "SSM Command ID: $COMMAND_ID"
 
-            docker compose -f "$COMPOSE_FILE_PATH" stop "$SPRING_SERVICE_NAME" || true
-            docker compose -f "$COMPOSE_FILE_PATH" rm -f "$SPRING_SERVICE_NAME" || true
+          while true; do
+            STATUS=$(aws ssm get-command-invocation \
+              --command-id "$COMMAND_ID" \
+              --instance-id "$DEV_INSTANCE_ID" \
+              --query "Status" \
+              --output text)
+            if [ "$STATUS" = "Pending" ] || [ "$STATUS" = "InProgress" ] || [ "$STATUS" = "Delayed" ]; then
+              sleep 3
+            else
+              break
+            fi
+          done
 
-            docker images "$ECR_REGISTRY/$ECR_REPOSITORY" --format '{{.ID}}' | sort -u | xargs -r docker rmi -f || true
+          aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$DEV_INSTANCE_ID" \
+            --query "{Status:Status,StdOut:StandardOutputContent,StdErr:StandardErrorContent}" \
+            --output json
 
-            docker compose -f "$COMPOSE_FILE_PATH" pull "$SPRING_SERVICE_NAME"
-            docker compose -f "$COMPOSE_FILE_PATH" up -d "$SPRING_SERVICE_NAME"
-
-            docker image prune -f
-          EOF_REMOTE
+          if [ "$STATUS" != "Success" ]; then
+            echo "SSM deployment failed with status: $STATUS"
+            exit 1
+          fi
 
   build-and-push-prod:
     if: >-
@@ -167,36 +204,70 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Start ssh-agent
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: |
-            ${{ secrets.PROD_BASTION_SSH_PRIVATE_KEY }}
-            ${{ secrets.PROD_PRIVATE_EC2_SSH_PRIVATE_KEY }}
+      # Legacy SSH deploy is disabled. Use SSM-based deploy below.
+      # - name: Start ssh-agent
+      #   uses: webfactory/ssh-agent@v0.9.0
+      #   with:
+      #     ssh-private-key: |
+      #       ${{ secrets.PROD_BASTION_SSH_PRIVATE_KEY }}
+      #       ${{ secrets.PROD_PRIVATE_EC2_SSH_PRIVATE_KEY }}
+      #
+      # - name: Deploy to prod private EC2 through bastion
+      #   env:
+      #     BASTION_HOST: ${{ secrets.PROD_BASTION_HOST }}
+      #     BASTION_USER: ${{ secrets.PROD_BASTION_USER }}
+      #     PROD_HOST: ${{ secrets.PROD_PRIVATE_EC2_HOST }}
+      #     PROD_USER: ${{ secrets.PROD_PRIVATE_EC2_USER }}
+      #   run: |
+      #     ssh -J "$BASTION_USER@$BASTION_HOST" ...
 
-      - name: Deploy to prod private EC2 through bastion
+      - name: Deploy to prod private EC2 with SSM
         env:
-          BASTION_HOST: ${{ secrets.PROD_BASTION_HOST }}
-          BASTION_USER: ${{ secrets.PROD_BASTION_USER }}
-          PROD_HOST: ${{ secrets.PROD_PRIVATE_EC2_HOST }}
-          PROD_USER: ${{ secrets.PROD_PRIVATE_EC2_USER }}
+          PROD_INSTANCE_ID: ${{ secrets.PROD_PRIVATE_EC2_INSTANCE_ID }}
           IMAGE_TAG: ${{ needs.build-and-push-prod.outputs.image_tag }}
         run: |
-          ssh -J "$BASTION_USER@$BASTION_HOST" -o StrictHostKeyChecking=no "$PROD_USER@$PROD_HOST" << EOF_REMOTE
-            set -e
-            aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "$PROD_INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Deploy prod spring container" \
+            --parameters "commands=[
+              \"set -e\",
+              \"aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY\",
+              \"export IMAGE_TAG=$IMAGE_TAG\",
+              \"export SPRING_SERVICE_NAME=$SPRING_SERVICE_NAME\",
+              \"export ECR_REPOSITORY=$ECR_REPOSITORY_SPRINGBOOT_PROD\",
+              \"docker compose -f $COMPOSE_FILE_PATH stop $SPRING_SERVICE_NAME || true\",
+              \"docker compose -f $COMPOSE_FILE_PATH rm -f $SPRING_SERVICE_NAME || true\",
+              \"docker images $ECR_REGISTRY/$ECR_REPOSITORY --format '{{.ID}}' | sort -u | xargs -r docker rmi -f || true\",
+              \"docker compose -f $COMPOSE_FILE_PATH pull $SPRING_SERVICE_NAME\",
+              \"docker compose -f $COMPOSE_FILE_PATH up -d $SPRING_SERVICE_NAME\",
+              \"docker image prune -f\"
+            ]" \
+            --query "Command.CommandId" \
+            --output text)
 
-            export IMAGE_TAG="$IMAGE_TAG"
-            export SPRING_SERVICE_NAME="$SPRING_SERVICE_NAME"
-            export ECR_REPOSITORY="$ECR_REPOSITORY_SPRINGBOOT_PROD"
+          echo "SSM Command ID: $COMMAND_ID"
 
-            docker compose -f "$COMPOSE_FILE_PATH" stop "$SPRING_SERVICE_NAME" || true
-            docker compose -f "$COMPOSE_FILE_PATH" rm -f "$SPRING_SERVICE_NAME" || true
+          while true; do
+            STATUS=$(aws ssm get-command-invocation \
+              --command-id "$COMMAND_ID" \
+              --instance-id "$PROD_INSTANCE_ID" \
+              --query "Status" \
+              --output text)
+            if [ "$STATUS" = "Pending" ] || [ "$STATUS" = "InProgress" ] || [ "$STATUS" = "Delayed" ]; then
+              sleep 3
+            else
+              break
+            fi
+          done
 
-            docker images "$ECR_REGISTRY/$ECR_REPOSITORY" --format '{{.ID}}' | sort -u | xargs -r docker rmi -f || true
+          aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$PROD_INSTANCE_ID" \
+            --query "{Status:Status,StdOut:StandardOutputContent,StdErr:StandardErrorContent}" \
+            --output json
 
-            docker compose -f "$COMPOSE_FILE_PATH" pull "$SPRING_SERVICE_NAME"
-            docker compose -f "$COMPOSE_FILE_PATH" up -d "$SPRING_SERVICE_NAME"
-
-            docker image prune -f
-          EOF_REMOTE
+          if [ "$STATUS" != "Success" ]; then
+            echo "SSM deployment failed with status: $STATUS"
+            exit 1
+          fi
