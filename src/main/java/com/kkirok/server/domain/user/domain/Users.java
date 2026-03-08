@@ -16,7 +16,7 @@ public class Users {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "varchar(10) default 'USER'")
+    @Column(nullable = false, length = 10)
     private Role role;
 
     @Builder

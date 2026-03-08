@@ -4,9 +4,10 @@ import com.kkirok.server.domain.user.domain.Role;
 import com.kkirok.server.global.auth.jwt.filter.JwtAuthenticationFilter;
 import com.kkirok.server.global.auth.security.CustomAccessDeniedHandler;
 import com.kkirok.server.global.auth.security.CustomJwtAuthenticationEntryPoint;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -32,8 +33,11 @@ public class SecurityConfig {
                 "/api/users/local/login",
                 "/api/users/refresh-token",
                 "/api/main",
+                "/api-docs",
                 "/api-docs/**",
+                "/v3/api-docs/**",
                 "/swagger-ui/**",
+                "/swagger-ui.html",
                 "/swagger-resources/**",
                 "/api/files/**",
                 "/error",
@@ -49,7 +53,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
+        http.cors(Customizer.withDefaults())
+                .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .sessionManagement(session ->
@@ -59,7 +64,8 @@ public class SecurityConfig {
                                 .accessDeniedHandler(customAccessDeniedHandler));
 
         http.authorizeHttpRequests(auth ->
-                        auth.requestMatchers(getAuthWhitelist()).permitAll()
+                        auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                .requestMatchers(getAuthWhitelist()).permitAll()
                                 .requestMatchers(AUTH_ADMIN_ONLY).hasAuthority(Role.ADMIN.getRoleName())
                                 .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
