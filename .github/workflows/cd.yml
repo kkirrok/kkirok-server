@@ -109,9 +109,9 @@ jobs:
               \"export ECR_REPOSITORY=$ECR_REPOSITORY_SPRINGBOOT_DEV\",
               \"docker compose -f $COMPOSE_FILE_PATH stop $SPRING_SERVICE_NAME || true\",
               \"docker compose -f $COMPOSE_FILE_PATH rm -f $SPRING_SERVICE_NAME || true\",
-              \"docker images $ECR_REGISTRY/$ECR_REPOSITORY --format '{{.ID}}' | sort -u | xargs -r docker rmi -f || true\",
               \"docker compose -f $COMPOSE_FILE_PATH pull $SPRING_SERVICE_NAME\",
               \"docker compose -f $COMPOSE_FILE_PATH up -d $SPRING_SERVICE_NAME\",
+              \"docker images $ECR_REGISTRY/$ECR_REPOSITORY --format '{{.Repository}}:{{.Tag}}' | grep -v \":$IMAGE_TAG$\" | xargs -r docker rmi -f || true\",
               \"docker image prune -f\"
             ]" \
             --query "Command.CommandId" \
@@ -238,9 +238,9 @@ jobs:
               \"export ECR_REPOSITORY=$ECR_REPOSITORY_SPRINGBOOT_PROD\",
               \"docker compose -f $COMPOSE_FILE_PATH stop $SPRING_SERVICE_NAME || true\",
               \"docker compose -f $COMPOSE_FILE_PATH rm -f $SPRING_SERVICE_NAME || true\",
-              \"docker images $ECR_REGISTRY/$ECR_REPOSITORY --format '{{.ID}}' | sort -u | xargs -r docker rmi -f || true\",
               \"docker compose -f $COMPOSE_FILE_PATH pull $SPRING_SERVICE_NAME\",
               \"docker compose -f $COMPOSE_FILE_PATH up -d $SPRING_SERVICE_NAME\",
+              \"docker images $ECR_REGISTRY/$ECR_REPOSITORY --format '{{.Repository}}:{{.Tag}}' | grep -v \":$IMAGE_TAG$\" | xargs -r docker rmi -f || true\",
               \"docker image prune -f\"
             ]" \
             --query "Command.CommandId" \
