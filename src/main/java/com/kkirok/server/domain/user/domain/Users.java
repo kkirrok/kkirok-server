@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import org.hibernate.annotations.ColumnDefault;
+
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -16,8 +18,8 @@ public class Users {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "varchar(10) default 'USER'")
-    private Role role;
+    @Column(nullable = false, length = 10)
+    private Role role = Role.USER;
 
     @Builder
     private Users(Role role) {

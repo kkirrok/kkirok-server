@@ -86,6 +86,10 @@ dependencies {
 	// AOP
 	implementation 'org.springframework.boot:spring-boot-starter-aop'
 
+	// R2
+	implementation 'software.amazon.awssdk:s3:2.25.4'
+	implementation 'software.amazon.awssdk:auth:2.25.4'
+
 }
 
 //jar {
