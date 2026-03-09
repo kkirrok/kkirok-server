@@ -38,7 +38,7 @@ public interface MemberApi {
                     - 요청 바디: `socialType`, `state(NAVER 필수)`
                     - 응답: accessToken + 사용자 정보
                     - refreshToken은 HttpOnly 쿠키로 내려갑니다.
-            """
+                    """
     )
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "SOCIAL_TYPE_BAD_REQUEST"),

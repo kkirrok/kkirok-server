@@ -24,10 +24,11 @@ spring:
             client-id: test-kakao-client-id
             client-secret: test-kakao-client-secret
             redirect-uri: http://localhost:8080/login/oauth2/code/kakao
-            client-authentication-method: post
+            client-authentication-method: POST
             authorization-grant-type: authorization_code
             scope: profile_nickname, account_email
             client-name: Kakao
+            provider: kakao
           naver:
             client-id: test-naver-client-id
             client-secret: test-naver-client-secret
@@ -36,6 +37,7 @@ spring:
             authorization-grant-type: authorization_code
             scope: name, email, nickname
             client-name: Naver
+            provider: naver
         provider:
           kakao:
             authorization-uri: https://kauth.kakao.com/oauth/authorize
