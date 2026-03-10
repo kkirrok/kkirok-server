@@ -66,3 +66,10 @@ cors:
 app:
   server:
     url: http://localhost:8080
+
+cloudflare:
+  r2:
+    access-key: test-access-key
+    secret-key: test-secret-key
+    endpoint: http://localhost:9000
+    bucket-name: test-bucket

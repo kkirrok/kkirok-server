@@ -75,7 +75,7 @@ dependencies {
 
 	// Security
 	implementation 'org.springframework.boot:spring-boot-starter-security'
-//	testImplementation 'org.springframework.security:spring-security-test' // security test
+	testImplementation 'org.springframework.security:spring-security-test'
 
 	// Oauth2
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
@@ -85,6 +85,10 @@ dependencies {
 
 	// AOP
 	implementation 'org.springframework.boot:spring-boot-starter-aop'
+
+	// R2
+	implementation 'software.amazon.awssdk:s3:2.25.4'
+	implementation 'software.amazon.awssdk:auth:2.25.4'
 
 }
 

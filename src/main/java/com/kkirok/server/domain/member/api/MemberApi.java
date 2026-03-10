@@ -33,7 +33,7 @@ public interface MemberApi {
             description = """
                     소셜 authorizationCode로 로그인합니다.
                     회원이 없으면 자동으로 회원가입 후 로그인 처리됩니다.
-
+        
                     - 요청 파라미터: `authorizationCode`
                     - 요청 바디: `socialType`, `state(NAVER 필수)`
                     - 응답: accessToken + 사용자 정보
