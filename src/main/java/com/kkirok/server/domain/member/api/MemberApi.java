@@ -1,9 +1,13 @@
 package com.kkirok.server.domain.member.api;
 
 import com.kkirok.server.domain.member.application.dto.request.LocalLoginRequest;
+import com.kkirok.server.domain.member.application.dto.request.EmailVerificationConfirmRequest;
+import com.kkirok.server.domain.member.application.dto.request.EmailVerificationSendRequest;
 import com.kkirok.server.domain.member.application.dto.request.LocalSignUpRequest;
 import com.kkirok.server.domain.member.application.dto.response.AccessTokenGenerateResponse;
+import com.kkirok.server.domain.member.application.dto.response.EmailVerificationStatusResponse;
 import com.kkirok.server.domain.member.application.dto.response.MemberLoginResponse;
+import com.kkirok.server.domain.member.exception.EmailErrorCode;
 import com.kkirok.server.domain.member.exception.MemberErrorCode;
 import com.kkirok.server.domain.member.exception.MemberSuccessCode;
 import com.kkirok.server.global.swagger.annotation.ApiErrorCodeExample;
@@ -13,6 +17,7 @@ import com.kkirok.server.global.auth.annotation.CurrentMember;
 import com.kkirok.server.global.auth.client.dto.MemberLoginRequest;
 import com.kkirok.server.global.auth.jwt.exception.TokenErrorCode;
 import com.kkirok.server.global.common.dto.SuccessResponse;
+import com.kkirok.server.global.common.redis.exception.RedisErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -53,6 +58,45 @@ public interface MemberApi {
     );
 
     @Operation(
+            summary = "이메일 인증번호 발송",
+            description = """
+                    입력한 이메일로 숫자 6자리 인증번호를 발송합니다.
+
+                    - 요청 바디: `email`
+                    """
+    )
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(codeType = EmailErrorCode.class, code = "EMAIL_SEND_FAILED"),
+            @ApiErrorCodeExample(codeType = RedisErrorCode.class, code = "REDIS_SAVE_FAILED"),
+            @ApiErrorCodeExample(codeType = RedisErrorCode.class, code = "REDIS_DELETE_FAILED")
+    })
+    @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "EMAIL_VERIFICATION_CODE_SENT")
+    ResponseEntity<SuccessResponse<Void>> sendEmailVerificationCode(
+            @Valid @RequestBody final EmailVerificationSendRequest request
+    );
+
+    @Operation(
+            summary = "이메일 인증번호 확인",
+            description = """
+                    이메일과 숫자 6자리 인증번호를 검증합니다.
+
+                    - 요청 바디: `email`, `code`
+                    - 응답: 이메일 인증 완료 여부
+                    """
+    )
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(codeType = EmailErrorCode.class, code = "EMAIL_VERIFICATION_CODE_NOT_FOUND"),
+            @ApiErrorCodeExample(codeType = EmailErrorCode.class, code = "EMAIL_VERIFICATION_CODE_MISMATCH"),
+            @ApiErrorCodeExample(codeType = RedisErrorCode.class, code = "REDIS_READ_FAILED"),
+            @ApiErrorCodeExample(codeType = RedisErrorCode.class, code = "REDIS_SAVE_FAILED"),
+            @ApiErrorCodeExample(codeType = RedisErrorCode.class, code = "REDIS_DELETE_FAILED")
+    })
+    @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "EMAIL_VERIFIED_SUCCESS")
+    ResponseEntity<SuccessResponse<EmailVerificationStatusResponse>> verifyEmail(
+            @Valid @RequestBody final EmailVerificationConfirmRequest request
+    );
+
+    @Operation(
             summary = "로컬 회원가입",
             description = """
                     이메일/비밀번호 기반 로컬 회원가입을 수행합니다.
@@ -64,7 +108,10 @@ public interface MemberApi {
                     """
     )
     @ApiErrorCodeExamples({
-            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "LOCAL_EMAIL_ALREADY_EXISTS")
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "LOCAL_EMAIL_ALREADY_EXISTS"),
+            @ApiErrorCodeExample(codeType = EmailErrorCode.class, code = "EMAIL_NOT_VERIFIED"),
+            @ApiErrorCodeExample(codeType = RedisErrorCode.class, code = "REDIS_READ_FAILED"),
+            @ApiErrorCodeExample(codeType = RedisErrorCode.class, code = "REDIS_DELETE_FAILED")
     })
     @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "LOCAL_SIGN_UP_SUCCESS")
     public ResponseEntity<SuccessResponse<MemberLoginResponse>> localSignUp(

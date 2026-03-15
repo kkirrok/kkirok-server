@@ -40,6 +40,8 @@ public class SecurityConfig {
                 "/swagger-ui.html",
                 "/swagger-resources/**",
                 "/api/files/**",
+                "/api/users/email-verification/send",
+                "/api/users/email-verification/verify",
                 "/error",
 //                actuatorEndPoint + "/health",
 //                actuatorEndPoint + "/prometheus", // TODO: 추후 모니터링 추가하면 활성화

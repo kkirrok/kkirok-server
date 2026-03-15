@@ -133,3 +133,10 @@ cloudflare:
     bucket-name: ${DEV_R2_BUCKET_NAME}
     access-key: ${DEV_R2_ACCESS_KEY}
     secret-key: ${DEV_R2_SECRET_KEY}
+
+aws:
+  ses:
+    access-key: ${DEV_AWS_SES_ACCESS_KEY}
+    secret-key: ${DEV_AWS_SES_SECRET_KEY}
+    region: ${DEV_AWS_SES_REGION}
+    source-email: ${DEV_AWS_SES_SOURCE_EMAIL}

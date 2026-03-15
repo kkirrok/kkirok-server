@@ -7,9 +7,10 @@ import com.kkirok.server.domain.member.dao.AuthIdentityRepository;
 import com.kkirok.server.domain.member.domain.AuthIdentity;
 import com.kkirok.server.domain.member.domain.AuthProvider;
 import com.kkirok.server.domain.member.domain.Member;
+import com.kkirok.server.domain.member.exception.EmailErrorCode;
+import com.kkirok.server.domain.member.exception.EmailException;
 import com.kkirok.server.domain.member.exception.MemberErrorCode;
 import com.kkirok.server.global.common.exception.ConflictException;
-import com.kkirok.server.global.common.exception.KkirokException;
 import com.kkirok.server.global.common.exception.UnauthorizedException;
 import com.kkirok.server.support.fixture.AuthIdentityFixture;
 import com.kkirok.server.support.fixture.LocalLoginRequestFixture;
@@ -18,6 +19,7 @@ import com.kkirok.server.support.fixture.MemberFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -42,6 +44,9 @@ class LocalLoginServiceTest {
 
     @Mock
     private AuthenticationService authenticationService;
+
+    @Mock
+    private EmailVerificationStateService emailVerificationStateService;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -72,6 +77,7 @@ class LocalLoginServiceTest {
 
         // Then
         assertThat(response).isEqualTo(expected);
+        then(emailVerificationStateService).should().consumeVerifiedEmail(request.email());
         then(passwordEncoder).should().encode(request.password());
         then(memberRegistrationService).should()
                 .registerLocalMember(request.nickname(), request.email(), "encoded-password");
@@ -94,6 +100,24 @@ class LocalLoginServiceTest {
                 .isInstanceOf(ConflictException.class)
                 .extracting("baseErrorCode")
                 .isEqualTo(MemberErrorCode.LOCAL_EMAIL_ALREADY_EXISTS);
+    }
+
+    @Test
+    @DisplayName("이메일 인증이 완료되지 않으면 로컬 회원가입할 수 없다")
+    void shouldThrowBadRequestException_whenEmailIsNotVerified() {
+        // Given
+        LocalSignUpRequest request = LocalSignUpRequestFixture.create();
+        given(authIdentityRepository.existsByProviderAndProviderUserId(AuthProvider.LOCAL, request.email()))
+                .willReturn(false);
+        BDDMockito.willThrow(new EmailException(EmailErrorCode.EMAIL_NOT_VERIFIED))
+                .given(emailVerificationStateService)
+                .consumeVerifiedEmail(request.email());
+
+        // When, Then
+        assertThatThrownBy(() -> localLoginService.signUp(request))
+                .isInstanceOf(EmailException.class)
+                .extracting("baseErrorCode")
+                .isEqualTo(EmailErrorCode.EMAIL_NOT_VERIFIED);
     }
 
     @Test

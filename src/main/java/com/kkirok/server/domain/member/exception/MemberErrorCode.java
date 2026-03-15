@@ -12,7 +12,6 @@ public enum MemberErrorCode implements BaseErrorCode {
 	*/
 	SOCIAL_TYPE_BAD_REQUEST(400, "로그인 요청이 유효하지 않습니다."),
 	LOCAL_LOGIN_BAD_REQUEST(400, "로컬 로그인 요청이 유효하지 않습니다."),
-
 	/*
 	401 Unauthorized
 	*/

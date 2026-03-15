@@ -22,6 +22,7 @@ public class LocalLoginService {
     private final AuthIdentityRepository authIdentityRepository;
     private final MemberRegistrationService memberRegistrationService;
     private final AuthenticationService authenticationService;
+    private final EmailVerificationStateService emailVerificationStateService;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
@@ -29,6 +30,7 @@ public class LocalLoginService {
         if (authIdentityRepository.existsByProviderAndProviderUserId(AuthProvider.LOCAL, request.email())) {
             throw new ConflictException(MemberErrorCode.LOCAL_EMAIL_ALREADY_EXISTS);
         }
+        emailVerificationStateService.consumeVerifiedEmail(request.email());
 
         String encodedPassword = passwordEncoder.encode(request.password());
         Member member = memberRegistrationService.registerLocalMember(

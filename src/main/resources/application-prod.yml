@@ -130,4 +130,11 @@ cloudflare:
     endpoint: ${PROD_R2_END_POINT}
     bucket-name: ${PROD_R2_BUCKET_NAME}
     access-key: ${PROD_R2_ACCESS_KEY}
-    secret-key: ${PROD_R2_SECRET_KEY
+    secret-key: ${PROD_R2_SECRET_KEY}
+
+aws:
+  ses:
+    access-key: ${PROD_AWS_SES_ACCESS_KEY}
+    secret-key: ${PROD_AWS_SES_SECRET_KEY}
+    region: ${PROD_AWS_SES_REGION}
+    source-email: ${PROD_AWS_SES_SOURCE_EMAIL}
