@@ -72,8 +72,8 @@ public class MemberRegistrationService {
     }
 
     private Users createUserWithMemberRole() {
-        Users users = Users.createWithRole(Role.MEMBER);
-        log.info("Granting MEMBER role to new user with role: {}", users.getRole());
+        Users users = Users.createWithRole(Role.USER);
+        log.info("Granting USER role to new user with role: {}", users.getRole());
         users = userRepository.save(users);
         userRepository.flush();
         return users;

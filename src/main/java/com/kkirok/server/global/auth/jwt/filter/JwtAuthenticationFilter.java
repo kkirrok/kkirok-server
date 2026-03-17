@@ -92,7 +92,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		if (role == Role.ADMIN) {
 			log.info("Creating AdminAuthentication for memberId: {}", memberId);
 			return new AdminAuthentication(memberId.toString(), null, authorities);
-		} else if (role == Role.MEMBER) {
+		} else if (role == Role.USER) {
 			log.info("Creating MemberAuthentication for memberId: {}", memberId);
 			return new MemberAuthentication(memberId.toString(), null, authorities);
 		}

@@ -44,7 +44,7 @@ class AuthenticationServiceTest {
     @DisplayName("일반 회원이 로그인하면 회원 권한으로 토큰을 발급한다")
     void shouldReturnLoginSuccessResponseWithMemberAuthentication_whenMemberLogsIn() {
         // Given
-        Users user = UserFixture.create(Role.MEMBER);
+        Users user = UserFixture.create(Role.USER);
         ArgumentCaptor<UsernamePasswordAuthenticationToken> authCaptor =
                 ArgumentCaptor.forClass(UsernamePasswordAuthenticationToken.class);
 
@@ -60,7 +60,7 @@ class AuthenticationServiceTest {
         assertThat(response.accessToken()).isEqualTo("access-token");
         assertThat(response.refreshToken()).isEqualTo("refresh-token");
         assertThat(response.nickname()).isEqualTo("kkirok");
-        assertThat(response.role()).isEqualTo(Role.MEMBER.getRoleName());
+        assertThat(response.role()).isEqualTo(Role.USER.getRoleName());
 
         then(jwtTokenProvider).should().issueRefreshToken(authCaptor.capture());
         assertThat(authCaptor.getValue()).isInstanceOf(MemberAuthentication.class);
@@ -102,7 +102,7 @@ class AuthenticationServiceTest {
         given(jwtTokenProvider.validateToken("refresh-token")).willReturn(JwtValidationType.VALID_JWT);
         given(jwtTokenProvider.getMemberIdFromJwt("refresh-token")).willReturn(1L);
         given(tokenService.findIdByRefreshToken("refresh-token")).willReturn(1L);
-        given(jwtTokenProvider.getRoleFromJwt("refresh-token")).willReturn(Role.MEMBER);
+        given(jwtTokenProvider.getRoleFromJwt("refresh-token")).willReturn(Role.USER);
         given(jwtTokenProvider.issueAccessToken(any(UsernamePasswordAuthenticationToken.class)))
                 .willReturn("new-access-token");
 

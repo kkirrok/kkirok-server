@@ -9,7 +9,7 @@ public final class UserFixture {
     }
 
     public static Users create() {
-        return Users.createWithRole(Role.MEMBER);
+        return Users.createWithRole(Role.USER);
     }
 
     public static Users create(Role role) {
