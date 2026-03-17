@@ -3,7 +3,9 @@ package com.kkirok.server.domain.member.domain;
 public enum AuthProvider {
     LOCAL,
     KAKAO,
-    NAVER;
+    NAVER,
+    GOOGLE,
+    APPLE;
 
     public static AuthProvider fromSocialType(SocialType socialType) {
         return switch (socialType) {

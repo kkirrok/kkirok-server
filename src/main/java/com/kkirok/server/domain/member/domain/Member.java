@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Table(name = "member")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member extends BaseTimeEntity {
 
@@ -24,8 +25,14 @@ public class Member extends BaseTimeEntity {
     @Column(nullable = false)
     private String nickname;
 
-    @Column(nullable = true)
+    @Column(nullable = false, length = 50)
     private String email;
+
+    @Column(name = "profile_image", length = 255)
+    private String profileImage;
+
+    @Column(name = "onboarding_completed", nullable = false)
+    private boolean onboardingCompleted;
 
     @Column(nullable = true)
     private LocalDateTime deletedAt;
@@ -39,18 +46,29 @@ public class Member extends BaseTimeEntity {
     private Long socialId;  // 소셜 회원번호 저장
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = true)
+    @Column(nullable = true, length = 20)
     private SocialType socialType;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 10)
+    private Gender gender;
+
+    private Integer age;
+
     @Builder
-    private Member(String nickname, String email, LocalDateTime deletedAt, Users user, Long socialId,
-                   SocialType socialType) {
+    private Member(String nickname, String email, String profileImage, boolean onboardingCompleted,
+                   LocalDateTime deletedAt, Users user, Long socialId, SocialType socialType,
+                   Gender gender, Integer age) {
         this.nickname = nickname;
         this.email = email;
+        this.profileImage = profileImage;
+        this.onboardingCompleted = onboardingCompleted;
         this.deletedAt = deletedAt;
         this.user = user;
         this.socialId = socialId;
         this.socialType = socialType;
+        this.gender = gender;
+        this.age = age;
     }
 
     public static Member create(
@@ -63,6 +81,8 @@ public class Member extends BaseTimeEntity {
         return Member.builder()
                 .nickname(nickname)
                 .email(email)
+                .profileImage(null)
+                .onboardingCompleted(false)
                 .user(user)
                 .socialId(socialId)
                 .socialType(socialType)
@@ -77,6 +97,8 @@ public class Member extends BaseTimeEntity {
         return Member.builder()
                 .nickname(nickname)
                 .email(email)
+                .profileImage(null)
+                .onboardingCompleted(false)
                 .user(user)
                 .socialId(null)
                 .socialType(null)

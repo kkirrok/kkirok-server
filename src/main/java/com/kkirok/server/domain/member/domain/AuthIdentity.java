@@ -47,12 +47,21 @@ public class AuthIdentity extends BaseTimeEntity {
     @Column(name = "password_hash", length = 255)
     private String passwordHash;
 
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified;
+
+    @Column(name = "last_login_at")
+    private java.time.LocalDateTime lastLoginAt;
+
     @Builder
-    private AuthIdentity(Member member, AuthProvider provider, String providerUserId, String passwordHash) {
+    private AuthIdentity(Member member, AuthProvider provider, String providerUserId, String passwordHash,
+                         boolean emailVerified, java.time.LocalDateTime lastLoginAt) {
         this.member = member;
         this.provider = provider;
         this.providerUserId = providerUserId;
         this.passwordHash = passwordHash;
+        this.emailVerified = emailVerified;
+        this.lastLoginAt = lastLoginAt;
     }
 
     public static AuthIdentity createSocial(Member member, AuthProvider provider, String providerUserId) {
@@ -61,6 +70,8 @@ public class AuthIdentity extends BaseTimeEntity {
                 .provider(provider)
                 .providerUserId(providerUserId)
                 .passwordHash(null)
+                .emailVerified(true)
+                .lastLoginAt(null)
                 .build();
     }
 
@@ -70,6 +81,8 @@ public class AuthIdentity extends BaseTimeEntity {
                 .provider(AuthProvider.LOCAL)
                 .providerUserId(email)
                 .passwordHash(passwordHash)
+                .emailVerified(false)
+                .lastLoginAt(null)
                 .build();
     }
 }
