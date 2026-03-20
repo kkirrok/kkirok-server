@@ -28,11 +28,11 @@ public class SecurityConfig {
 
     public String[] getAuthWhitelist() {
         return new String[] {
-                "/api/users/sign-up",
-                "/api/users/local/sign-up",
-                "/api/users/local/login",
-                "/api/users/refresh-token",
-                "/api/main",
+                "/v1/users/sign-up",
+                "/v1/users/local/sign-up",
+                "/v1/users/local/login",
+                "/v1/users/refresh-token",
+                "/v1/main",
                 "/api-docs",
                 "/api-docs/**",
                 "/v3/api-docs/**",
@@ -40,8 +40,8 @@ public class SecurityConfig {
                 "/swagger-ui.html",
                 "/swagger-resources/**",
                 "/api/files/**",
-                "/api/users/email-verification/send",
-                "/api/users/email-verification/verify",
+                "/v1/users/email-verification/send",
+                "/v1/users/email-verification/verify",
                 "/error",
 //                actuatorEndPoint + "/health",
 //                actuatorEndPoint + "/prometheus", // TODO: 추후 모니터링 추가하면 활성화

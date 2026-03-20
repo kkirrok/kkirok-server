@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.net.URL;
 
 @RestController
-@RequestMapping("/api/r2")
+@RequestMapping("/v1/r2")
 @RequiredArgsConstructor
 public class R2Controller implements R2Api {
 
