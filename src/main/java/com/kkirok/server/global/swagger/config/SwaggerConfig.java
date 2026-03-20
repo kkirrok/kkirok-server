@@ -46,7 +46,8 @@ public class SwaggerConfig {
 	public GroupedOpenApi generalApi(
 		@Qualifier("customize") OperationCustomizer securityCustomizer,
 		@Qualifier("errorCodeExampleCustomizer") OperationCustomizer errorCodeExampleCustomizer,
-		@Qualifier("snakeCaseSchemaCustomizer") OpenApiCustomizer snakeCaseSchemaCustomizer
+		@Qualifier("snakeCaseSchemaCustomizer") OpenApiCustomizer snakeCaseSchemaCustomizer,
+		@Qualifier("successResponseExampleCustomizer") OpenApiCustomizer successResponseExampleCustomizer
 	) {
 		return GroupedOpenApi.builder()
 			.group("general")
@@ -55,6 +56,7 @@ public class SwaggerConfig {
 			.addOperationCustomizer(securityCustomizer)
 			.addOperationCustomizer(errorCodeExampleCustomizer)
 			.addOpenApiCustomizer(snakeCaseSchemaCustomizer)
+			.addOpenApiCustomizer(successResponseExampleCustomizer)
 			.build();
 	}
 
@@ -62,7 +64,8 @@ public class SwaggerConfig {
 	public GroupedOpenApi adminApi(
 		@Qualifier("customize") OperationCustomizer securityCustomizer,
 		@Qualifier("errorCodeExampleCustomizer") OperationCustomizer errorCodeExampleCustomizer,
-		@Qualifier("snakeCaseSchemaCustomizer") OpenApiCustomizer snakeCaseSchemaCustomizer
+		@Qualifier("snakeCaseSchemaCustomizer") OpenApiCustomizer snakeCaseSchemaCustomizer,
+		@Qualifier("successResponseExampleCustomizer") OpenApiCustomizer successResponseExampleCustomizer
 	) {
 		return GroupedOpenApi.builder()
 			.group("admin")
@@ -70,6 +73,7 @@ public class SwaggerConfig {
 			.addOperationCustomizer(securityCustomizer)
 			.addOperationCustomizer(errorCodeExampleCustomizer)
 			.addOpenApiCustomizer(snakeCaseSchemaCustomizer)
+			.addOpenApiCustomizer(successResponseExampleCustomizer)
 			.build();
 	}
 

@@ -8,12 +8,14 @@ import com.kkirok.server.global.swagger.annotation.ApiErrorCodeExamples;
 import com.kkirok.server.global.swagger.annotation.ApiSuccessCodeExample;
 import com.kkirok.server.global.swagger.annotation.ApiSuccessCodeExamples;
 import io.swagger.v3.oas.models.Operation;
+import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.examples.Example;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
+import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springdoc.core.customizers.OperationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,6 +31,8 @@ import java.util.*;
 @Configuration
 public class SwaggerErrorExampleConfig {
 
+    private static final String SUCCESS_EXAMPLES_EXTENSION = "x-success-examples";
+
     @Bean
     public OperationCustomizer errorCodeExampleCustomizer() {
         return (Operation operation, HandlerMethod handlerMethod) -> {
@@ -41,6 +45,7 @@ public class SwaggerErrorExampleConfig {
                 ResolvedSuccessCode resolvedSuccessCode = resolveSuccessCode(success);
                 if (resolvedSuccessCode != null) {
                     applySuccessExample(operation, resolvedSuccessCode.code(), resolvedSuccessCode.status(), resolvedSuccessCode.description());
+                    addSuccessExampleExtension(operation, resolvedSuccessCode);
                 }
             }
 
@@ -79,6 +84,18 @@ public class SwaggerErrorExampleConfig {
         };
     }
 
+    @Bean
+    public OpenApiCustomizer successResponseExampleCustomizer() {
+        return openApi -> {
+            if (openApi.getPaths() == null) {
+                return;
+            }
+
+            openApi.getPaths().values().forEach(pathItem ->
+                    pathItem.readOperations().forEach(operation -> applySuccessExamplesFromExtension(openApi, operation)));
+        };
+    }
+
     private void applySuccessExample(Operation operation, String code, int status, String description) {
         String statusCode = String.valueOf(status);
         ApiResponse apiResponse = operation.getResponses().get(statusCode);
@@ -88,9 +105,23 @@ public class SwaggerErrorExampleConfig {
         } else if (apiResponse.getDescription() == null || apiResponse.getDescription().isBlank()) {
             apiResponse.setDescription(description);
         }
+    }
 
-        // Keep data schema intact and set only wrapper field examples per API.
-        applyResponseWrapperExamples(apiResponse, code, status, description);
+    @SuppressWarnings("unchecked")
+    private void addSuccessExampleExtension(Operation operation, ResolvedSuccessCode successCode) {
+        if (operation.getExtensions() == null) {
+            operation.setExtensions(new LinkedHashMap<>());
+        }
+
+        Map<String, Object> successExamples = (Map<String, Object>) operation.getExtensions()
+                .computeIfAbsent(SUCCESS_EXAMPLES_EXTENSION, key -> new LinkedHashMap<String, Object>());
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("code", successCode.code());
+        payload.put("status", successCode.status());
+        payload.put("message", successCode.description());
+
+        successExamples.put(String.valueOf(successCode.status()), payload);
     }
 
     private List<ApiErrorCodeExample> collectErrorCodeExamples(HandlerMethod handlerMethod) {
@@ -287,7 +318,45 @@ public class SwaggerErrorExampleConfig {
     }
 
     @SuppressWarnings("unchecked")
-    private void applyResponseWrapperExamples(ApiResponse apiResponse, String code, int status, String message) {
+    private void applySuccessExamplesFromExtension(OpenAPI openApi, Operation operation) {
+        if (operation.getExtensions() == null) {
+            return;
+        }
+
+        Object rawExamples = operation.getExtensions().get(SUCCESS_EXAMPLES_EXTENSION);
+        if (!(rawExamples instanceof Map<?, ?> successExamples)) {
+            return;
+        }
+
+        if (operation.getResponses() == null) {
+            return;
+        }
+
+        for (Map.Entry<?, ?> entry : successExamples.entrySet()) {
+            String statusCode = String.valueOf(entry.getKey());
+            Object value = entry.getValue();
+            if (!(value instanceof Map<?, ?> exampleMap)) {
+                continue;
+            }
+
+            ApiResponse apiResponse = operation.getResponses().get(statusCode);
+            if (apiResponse == null) {
+                continue;
+            }
+
+            Object code = exampleMap.get("code");
+            Object status = exampleMap.get("status");
+            Object message = exampleMap.get("message");
+            if (!(code instanceof String codeValue) || !(status instanceof Number statusValue)
+                    || !(message instanceof String messageValue)) {
+                continue;
+            }
+
+            applyResponseWrapperExamples(openApi, apiResponse, codeValue, statusValue.intValue(), messageValue);
+        }
+    }
+
+    private void applyResponseWrapperExamples(OpenAPI openApi, ApiResponse apiResponse, String code, int status, String message) {
         if (apiResponse.getContent() == null) {
             return;
         }
@@ -297,7 +366,7 @@ public class SwaggerErrorExampleConfig {
             return;
         }
 
-        Schema<?> schema = mediaType.getSchema();
+        Schema<?> schema = resolveSchema(openApi, mediaType.getSchema());
         applySchemaExamples(schema, code, status, message);
     }
 
@@ -339,6 +408,25 @@ public class SwaggerErrorExampleConfig {
                 applySchemaExamples(item, code, status, message);
             }
         }
+    }
+
+    private Schema<?> resolveSchema(OpenAPI openApi, Schema<?> schema) {
+        if (schema == null) {
+            return null;
+        }
+
+        if (schema.get$ref() != null && openApi.getComponents() != null && openApi.getComponents().getSchemas() != null) {
+            String ref = schema.get$ref();
+            String prefix = "#/components/schemas/";
+            if (ref.startsWith(prefix)) {
+                Schema<?> resolved = openApi.getComponents().getSchemas().get(ref.substring(prefix.length()));
+                if (resolved != null) {
+                    return resolved;
+                }
+            }
+        }
+
+        return schema;
     }
 
     private record ResolvedErrorCode(String code, int status, String message, String exampleName) {
