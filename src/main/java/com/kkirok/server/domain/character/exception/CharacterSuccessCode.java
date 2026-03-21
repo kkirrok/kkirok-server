@@ -18,5 +18,4 @@ public enum CharacterSuccessCode implements BaseSuccessCode {
 
     private final int status;
     private final String message;
-
 }

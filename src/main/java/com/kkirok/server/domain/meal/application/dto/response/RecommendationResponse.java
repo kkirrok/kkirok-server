@@ -14,12 +14,12 @@ public record RecommendationResponse (
             {
                 "exerciseName": "자전거",
                 "description": "1시간을 타면 200kcal가 소모되어요!",
-                "category": 유산소
+                "category": "유산소"
             },
             {
                 "exerciseName": "테니스",
                 "description": "1시간을 타면 200kcal가 소모되어요!",
-                "category": 유산소
+                "category": "유산소"
             }
         ]
         """)

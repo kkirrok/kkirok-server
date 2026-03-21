@@ -28,17 +28,17 @@ public record ReportResponse(
         @Schema(description = "섭취 패턴 분석 내용", example = "전체의 40%의 칼로리를 저녁에 섭취하였고, 탄수화물은 30g을 저녁마다 먹었어요")
         String mainKcalComment,
 
-        @Schema(description = "다음에는 이렇게 해보아요 :)",
+        @Schema(description = "다음에는 이렇게 해보아요",
                 example = """
                 [
                   {
-                    "title': "영양소는 고르게 섭취해요",
+                    "title": "영양소는 고르게 섭취해요",
                     "content": "당은 과다, 다른 영양소는 부족해요
                                 에너지뿐 아니라 필수 영양소도 챙기며 균형
                                 잡힌 식사로 쉽게 시작해보세요"
                   },
                   {
-                    "title': "저녁과 야식은 라이트하게!",
+                    "title": "저녁과 야식은 라이트하게!",
                     "content": "속도 편하고 마음도 가볍게, 라이트한 한 끼로
                                 건강한 하루의 끝을 만들어보세요"
                   }

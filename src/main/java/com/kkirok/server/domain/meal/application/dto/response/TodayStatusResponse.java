@@ -10,6 +10,6 @@ public record TodayStatusResponse (
         Integer health,
 
         @Schema(description = "상태 멘트", example = "오늘도 잘 먹고 있어요!")
-        Integer status
+        String status
 ){
 }

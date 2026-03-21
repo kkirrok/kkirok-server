@@ -108,7 +108,7 @@ public interface MealApi {
     )
     @ApiErrorCodeExamples({
     })
-    @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "MEAL_RECOMMEND_SUCCESS")
+    @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "RECOMMENDATION_GET_SUCCESS")
     ResponseEntity<SuccessResponse<RecommendationResponse>> recommendMeal(
             @CurrentMember Long memberId
     );
@@ -116,10 +116,10 @@ public interface MealApi {
     @Operation(
             summary = "식단 수정",
             description = """
-                    특정 식단 기록을 수정합니다.
+                    특정 식단을 수정합니다.
                     
                     - 경로 변수: `mealId`
-                    - 응답: 식단 기록
+                    - 응답: 수정된 식단 정보
                     """
     )
     @ApiErrorCodeExamples({

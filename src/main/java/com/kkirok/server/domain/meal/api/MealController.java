@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 public class MealController implements MealApi {
 
     @Override
+    @GetMapping
     public ResponseEntity<SuccessResponse<MealResponse>> getMeals(
             @CurrentMember Long memberId
     ) {
