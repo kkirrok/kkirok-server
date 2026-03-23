@@ -1,5 +1,6 @@
 package com.kkirok.server.domain.meal.api;
 
+import com.kkirok.server.domain.meal.application.dto.request.MealUpdateRequest;
 import com.kkirok.server.domain.meal.application.dto.response.MealResponse;
 import com.kkirok.server.domain.meal.application.dto.response.RecommendationResponse;
 import com.kkirok.server.domain.meal.application.dto.response.TodayStatusResponse;
@@ -66,8 +67,9 @@ public class MealController implements MealApi {
     @PutMapping("/{mealId}")
     public ResponseEntity<SuccessResponse<MealResponse>> updateMeal(
             @CurrentMember Long memberId,
-            @PathVariable Long mealId
-    ) {
+            @PathVariable Long mealId,
+            @RequestBody MealUpdateRequest request
+            ) {
         return null;
     }
 

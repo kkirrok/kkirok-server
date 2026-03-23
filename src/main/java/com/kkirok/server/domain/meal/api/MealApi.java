@@ -1,5 +1,6 @@
 package com.kkirok.server.domain.meal.api;
 
+import com.kkirok.server.domain.meal.application.dto.request.MealUpdateRequest;
 import com.kkirok.server.domain.meal.application.dto.response.MealResponse;
 import com.kkirok.server.domain.meal.application.dto.response.RecommendationResponse;
 import com.kkirok.server.domain.meal.application.dto.response.TodayStatusResponse;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @Tag(name = "Meal API", description = "식단 관련 API")
 public interface MealApi {
@@ -127,8 +129,9 @@ public interface MealApi {
     @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "MEAL_UPDATE_SUCCESS")
     ResponseEntity<SuccessResponse<MealResponse>> updateMeal(
             @CurrentMember Long memberId,
-            @PathVariable Long mealId
-    );
+            @PathVariable Long mealId,
+            @RequestBody MealUpdateRequest request
+            );
 
     @Operation(
             summary = "식단 삭제",
