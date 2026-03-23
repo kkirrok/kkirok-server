@@ -12,8 +12,8 @@ public record CalendarMonthInfo(
         @Schema(description = "월 종료 날짜", example = "31")
         Integer endDayOfMonth,
         @Schema(description = "월 시작 요일", example = "0")
-        Integer startDayWeek,
+        Integer startDayOfWeek,
         @Schema(description = "월 종료 요일", example = "6")
-        Integer endDayWeek
+        Integer endDayOfWeek
 ) {
 }
