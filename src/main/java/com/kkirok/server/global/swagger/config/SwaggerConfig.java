@@ -55,6 +55,7 @@ public class SwaggerConfig {
 			.pathsToExclude("/api/admin/**")
 			.addOperationCustomizer(securityCustomizer)
 			.addOperationCustomizer(errorCodeExampleCustomizer)
+			.addOpenApiCustomizer(openApi -> openApi.info(apiInfo("Kkirok OpenAPI Docs")))
 			.addOpenApiCustomizer(snakeCaseSchemaCustomizer)
 			.addOpenApiCustomizer(successResponseExampleCustomizer)
 			.build();
@@ -72,6 +73,7 @@ public class SwaggerConfig {
 			.pathsToMatch("/api/admin/**")
 			.addOperationCustomizer(securityCustomizer)
 			.addOperationCustomizer(errorCodeExampleCustomizer)
+			.addOpenApiCustomizer(openApi -> openApi.info(apiInfo("Kkirok Admin API Docs")))
 			.addOpenApiCustomizer(snakeCaseSchemaCustomizer)
 			.addOpenApiCustomizer(successResponseExampleCustomizer)
 			.build();
@@ -89,8 +91,12 @@ public class SwaggerConfig {
 	}
 
 	private Info apiInfo() {
+		return apiInfo("Kkirok Project API");
+	}
+
+	private Info apiInfo(String title) {
 		return new Info()
-			.title("Kkirok Project API")
+			.title(title)
 			.description("살빼자")
 			.version("0.0.1");
 	}
