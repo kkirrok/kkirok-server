@@ -33,7 +33,6 @@ public class SecurityConfig {
                 "/v1/users/local/login",
                 "/v1/users/refresh-token",
                 "/v1/main",
-                "/api-docs",
                 "/api-docs/**",
                 "/v3/api-docs/**",
                 "/swagger-ui/**",
@@ -67,6 +66,8 @@ public class SecurityConfig {
 
         http.authorizeHttpRequests(auth ->
                         auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                .requestMatchers("/swagger-ui/index.html", "/swagger-ui.html").denyAll()
+                                .requestMatchers("/api-specs/**").denyAll()
                                 .requestMatchers(getAuthWhitelist()).permitAll()
                                 .requestMatchers(AUTH_ADMIN_ONLY).hasAuthority(Role.ADMIN.getRoleName())
                                 .anyRequest().authenticated())

@@ -366,8 +366,93 @@ public class SwaggerErrorExampleConfig {
             return;
         }
 
-        Schema<?> schema = resolveSchema(openApi, mediaType.getSchema());
-        applySchemaExamples(schema, code, status, message);
+        mediaType.setExample(createSuccessResponseExample(openApi, mediaType.getSchema(), code, status, message));
+
+        if (mediaType.getSchema().get$ref() == null) {
+            Schema<?> schema = resolveSchema(openApi, mediaType.getSchema());
+            applySchemaExamples(schema, code, status, message);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> createSuccessResponseExample(OpenAPI openApi, Schema<?> schema, String code, int status, String message) {
+        Object generated = generateExampleFromSchema(openApi, schema, new IdentityHashMap<>());
+
+        Map<String, Object> payload = generated instanceof Map<?, ?> map
+                ? new LinkedHashMap<>((Map<String, Object>) map)
+                : new LinkedHashMap<>();
+
+        payload.put("code", code);
+        payload.put("status", status);
+        payload.put("message", message);
+
+        if (!payload.containsKey("data")) {
+            payload.put("data", null);
+        }
+
+        return payload;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Object generateExampleFromSchema(OpenAPI openApi, Schema<?> schema, IdentityHashMap<Schema<?>, Boolean> visited) {
+        Schema<?> resolvedSchema = resolveSchema(openApi, schema);
+        if (resolvedSchema == null || visited.containsKey(resolvedSchema)) {
+            return null;
+        }
+
+        visited.put(resolvedSchema, Boolean.TRUE);
+        try {
+            if (resolvedSchema.getExample() != null) {
+                return resolvedSchema.getExample();
+            }
+
+            if (resolvedSchema.getAllOf() != null && !resolvedSchema.getAllOf().isEmpty()) {
+                Map<String, Object> merged = new LinkedHashMap<>();
+                for (Schema<?> item : resolvedSchema.getAllOf()) {
+                    Object child = generateExampleFromSchema(openApi, item, visited);
+                    if (child instanceof Map<?, ?> childMap) {
+                        merged.putAll((Map<String, Object>) childMap);
+                    }
+                }
+                if (!merged.isEmpty()) {
+                    return merged;
+                }
+            }
+
+            if (resolvedSchema.getProperties() != null && !resolvedSchema.getProperties().isEmpty()) {
+                Map<String, Object> objectExample = new LinkedHashMap<>();
+                for (Map.Entry<String, Schema> entry : resolvedSchema.getProperties().entrySet()) {
+                    Schema<?> propertySchema = entry.getValue();
+                    objectExample.put(entry.getKey(), generateExampleFromSchema(openApi, propertySchema, visited));
+                }
+                return objectExample;
+            }
+
+            if ("array".equals(resolvedSchema.getType()) && resolvedSchema.getItems() != null) {
+                Object itemExample = generateExampleFromSchema(openApi, resolvedSchema.getItems(), visited);
+                return itemExample == null ? List.of() : List.of(itemExample);
+            }
+
+            return defaultExampleForType(resolvedSchema);
+        } finally {
+            visited.remove(resolvedSchema);
+        }
+    }
+
+    private Object defaultExampleForType(Schema<?> schema) {
+        if ("string".equals(schema.getType())) {
+            return null;
+        }
+        if ("integer".equals(schema.getType())) {
+            return 0;
+        }
+        if ("number".equals(schema.getType())) {
+            return 0;
+        }
+        if ("boolean".equals(schema.getType())) {
+            return false;
+        }
+        return null;
     }
 
     @SuppressWarnings("unchecked")

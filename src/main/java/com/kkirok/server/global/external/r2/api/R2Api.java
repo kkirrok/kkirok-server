@@ -25,7 +25,7 @@ public interface R2Api {
                 key를 해당 api에 넣어 요청하면 presigned url를 받을 수 있습니다.
                 각 Url은 5분의 유효 기간이 존재합니다.
                 
-                - 요청 파라미터: `key`
+                - 요청 파라미터: `key` -> UUID + Keyword 조합으로 이루어져 있습니다.
                 - 응답: key + downloadUrl
             """
     )
