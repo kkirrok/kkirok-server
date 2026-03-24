@@ -11,6 +11,7 @@ import com.kkirok.server.global.swagger.annotation.ApiErrorCodeExamples;
 import com.kkirok.server.global.swagger.annotation.ApiSuccessCodeExample;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -130,7 +131,7 @@ public interface MealApi {
     ResponseEntity<SuccessResponse<MealResponse>> updateMeal(
             @CurrentMember Long memberId,
             @PathVariable Long mealId,
-            @RequestBody MealUpdateRequest request
+            @Valid @RequestBody MealUpdateRequest request
             );
 
     @Operation(
