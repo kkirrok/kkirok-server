@@ -1,6 +1,14 @@
 package com.kkirok.server.domain.character.application.dto.res;
 
+import com.kkirok.server.domain.character.domain.Character;
+import com.kkirok.server.domain.character.util.CharacterUtilLevel;
+import com.kkirok.server.domain.meal.domain.MealAiAnalysis;
+import com.kkirok.server.domain.meal.domain.MealRecord;
+import com.kkirok.server.domain.meal.util.NutrientAvgUtil;
+import com.kkirok.server.domain.meal.util.NutrientMaxUtil;
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.util.List;
 
 // 캐릭터 기본 정보
 public record CharacterDefaultInfoResponse(
@@ -31,4 +39,23 @@ public record CharacterDefaultInfoResponse(
         @Schema(example = "30")
         Integer sodiumG
 ) {
+
+    public static CharacterDefaultInfoResponse create(Character character, List<MealRecord> mealRecord) {
+        return new CharacterDefaultInfoResponse(
+                character.getId(),
+                character.getLevel(),
+                character.getName(),
+                character.getExp(),
+                CharacterUtilLevel.getMaximumLevel(character.getExp()),
+                character.getCharacterType().getBaseImage(),
+                NutrientAvgUtil.getAvg(mealRecord, analysis -> analysis.getKcal().longValue()),
+                NutrientMaxUtil.getMax(mealRecord, analysis -> analysis.getKcal().longValue()),
+                NutrientAvgUtil.getAvg(mealRecord, MealAiAnalysis::getCarbohydrateG),
+                NutrientAvgUtil.getAvg(mealRecord, MealAiAnalysis::getProteinG),
+                NutrientAvgUtil.getAvg(mealRecord, MealAiAnalysis::getFatG),
+                NutrientAvgUtil.getAvg(mealRecord, MealAiAnalysis::getSugarG),
+                NutrientAvgUtil.getAvg(mealRecord, MealAiAnalysis::getSodiumMg)
+        );
+    }
+
 }

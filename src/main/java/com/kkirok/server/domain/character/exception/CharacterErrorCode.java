@@ -12,6 +12,11 @@ public enum CharacterErrorCode implements BaseErrorCode {
         400 BadRequest
     */
 
+    /*
+        404 NotFound
+     */
+    CHARACTER_NOT_FOUND(404, "유저에게 해당되는 캐릭터가 존재하지 않습니다")
+
     ;
 
     private final int status;
