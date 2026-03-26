@@ -12,8 +12,12 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 import lombok.*;
 
@@ -53,6 +57,9 @@ public class Character extends BaseTimeEntity {
 
     @Column(name = "last_status_updated_at", nullable = false)
     private LocalDateTime lastStatusUpdatedAt;
+
+    @OneToMany(mappedBy = "character") // 양방향 매핑
+    private List<ItemPossession> itemPossessions = new ArrayList<>();
 
     @Builder
     private Character(Member member, CharacterType characterType, String name, CharacterStatusType currentStatus) {
