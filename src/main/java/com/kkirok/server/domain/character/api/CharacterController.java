@@ -41,7 +41,7 @@ public class CharacterController implements CharacterApi {
     }
 
     @Override
-    @PatchMapping("/items/{itemId}/wear")
+    @PatchMapping("/items/{itemId}/unwear")
     public ResponseEntity<SuccessResponse<Void>> unWearItem(@CurrentMember Long memberId, @PathVariable Long itemId) {
         characterWearingService.takeOffItem(memberId, itemId);
         return ResponseEntity.ok(SuccessResponse.of(CharacterSuccessCode.ITEM_UNWEAR_SUCCESS, null));
