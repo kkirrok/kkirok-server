@@ -43,12 +43,37 @@ public class CharacterWearingService {
         // 이미 장착하고 있는 유형의 아이템이면 예외 발생
         boolean itemWearing = isItemWearing(character.getItemPossessions(), requestedItem);
         if (itemWearing) {
-            throw new CharacterException(CharacterErrorCode.ALREADY_WEARING);
+            throw new CharacterException(CharacterErrorCode.ALREADY_WEARING_TYPE);
         }
 
         // 문제 없다면 아이템 장착
         foundItemPossession.wear();
 
+    }
+
+    /*
+        아이템 장착 해제 메서드입니다
+
+        이미 장착되어있지 않은 경우 예외가 발생합니다.
+     */
+    @Transactional
+    public void takeOffItem(Long memberId, Long itemId) {
+
+        if (itemId == null) { // itemId null 체크
+            throw new BadRequestException(CharacterErrorCode.ITEM_INFO_REQUIRED);
+        }
+
+        // 요청한 itemId에 대해 ItemPossession ( 아이템 소유 정보 ) 조회,
+        ItemPossession itemPossession = characterRepository.findItemPossessionFetchItems(memberId, itemId)
+                .orElseThrow(() -> new CharacterException(CharacterErrorCode.NOT_POSSESSING));
+
+        // 이미 장착 해제된 아이템이라면 예외 발생
+        if(!itemPossession.isWearing()) {
+            throw new CharacterException(CharacterErrorCode.ALREADY_UNWEARING_ITEM);
+        }
+
+        // 문제 없다면 장착 해제
+        itemPossession.cancelWear();
     }
 
     // 현재 장착 아이템(attachedItems) 중 현재 착용하려는 아이템과 같은 타입의 아이템이 있는지

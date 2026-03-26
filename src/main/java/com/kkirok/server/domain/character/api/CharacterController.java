@@ -34,15 +34,16 @@ public class CharacterController implements CharacterApi {
     }
 
     @Override
-    @PostMapping("/items/{itemId}/wear")
+    @PatchMapping("/items/{itemId}/wear")
     public ResponseEntity<SuccessResponse<Void>> wearItem(@CurrentMember Long memberId, @PathVariable Long itemId) {
         characterWearingService.putOnItem(memberId, itemId);
         return ResponseEntity.ok(SuccessResponse.of(CharacterSuccessCode.ITEM_WEAR_SUCCESS, null));
     }
 
     @Override
-    @DeleteMapping("/items/{itemId}/wear")
-    public ResponseEntity<SuccessResponse<Void>> unWearItem(@PathVariable Long itemId) {
-        return null;
+    @PatchMapping("/items/{itemId}/wear")
+    public ResponseEntity<SuccessResponse<Void>> unWearItem(@CurrentMember Long memberId, @PathVariable Long itemId) {
+        characterWearingService.takeOffItem(memberId, itemId);
+        return ResponseEntity.ok(SuccessResponse.of(CharacterSuccessCode.ITEM_UNWEAR_SUCCESS, null));
     }
 }

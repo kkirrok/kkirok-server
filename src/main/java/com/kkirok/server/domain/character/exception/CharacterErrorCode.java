@@ -22,8 +22,11 @@ public enum CharacterErrorCode implements BaseErrorCode {
     /*
         422 Unprocessable Entity
      */
-    ALREADY_WEARING(422, "이미 착용하고 있는 유형의 아이템입니다."),
-    NOT_POSSESSING(422, "보유하고 있는 아이템이 아님.")
+    ALREADY_WEARING_TYPE(422, "이미 착용하고 있는 유형의 아이템입니다."),
+    NOT_POSSESSING(422, "보유하고 있는 아이템이 아님."),
+
+    ALREADY_UNWEARING_ITEM(422, "이미 해제되어 있습니다."),
+
 
     ;
 

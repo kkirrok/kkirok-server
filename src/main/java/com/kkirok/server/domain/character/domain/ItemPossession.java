@@ -51,4 +51,8 @@ public class ItemPossession extends BaseTimeEntity {
         this.isWearing = true;
     }
 
+    public void cancelWear() {
+        this.isWearing = false;
+    }
+
 }
