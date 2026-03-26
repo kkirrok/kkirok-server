@@ -102,14 +102,66 @@ class CharacterWearingServiceTest {
         assertThatThrownBy(() -> characterWearingService.putOnItem(memberId, itemId))
                 .isInstanceOf(CharacterException.class)
                 .extracting("baseErrorCode")
-                .isEqualTo(CharacterErrorCode.ALREADY_WEARING);
+                .isEqualTo(CharacterErrorCode.ALREADY_WEARING_TYPE);
+    }
+
+    @Test
+    @DisplayName("해제할 아이템 ID가 없으면 예외가 발생한다")
+    void shouldThrowBadRequestException_whenTakeOffItemIdIsNull() {
+        assertThatThrownBy(() -> characterWearingService.takeOffItem(1L, null))
+                .isInstanceOf(BadRequestException.class)
+                .extracting("baseErrorCode")
+                .isEqualTo(CharacterErrorCode.ITEM_INFO_REQUIRED);
+    }
+
+    @Test
+    @DisplayName("보유하지 않은 아이템은 장착 해제할 수 없다")
+    void shouldThrowCharacterException_whenTakingOffNotPossessingItem() {
+        Long memberId = 1L;
+        Long itemId = 10L;
+        given(characterRepository.findItemPossessionFetchItems(memberId, itemId)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> characterWearingService.takeOffItem(memberId, itemId))
+                .isInstanceOf(CharacterException.class)
+                .extracting("baseErrorCode")
+                .isEqualTo(CharacterErrorCode.NOT_POSSESSING);
+    }
+
+    @Test
+    @DisplayName("이미 장착 해제된 아이템이면 예외가 발생한다")
+    void shouldThrowCharacterException_whenItemIsAlreadyUnworn() {
+        Long memberId = 1L;
+        Long itemId = 10L;
+        ItemPossession itemPossession = createItemPossession(createCharacter(), itemId, ItemType.HAT, false);
+        given(characterRepository.findItemPossessionFetchItems(memberId, itemId))
+                .willReturn(Optional.of(itemPossession));
+
+        assertThatThrownBy(() -> characterWearingService.takeOffItem(memberId, itemId))
+                .isInstanceOf(CharacterException.class)
+                .extracting("baseErrorCode")
+                .isEqualTo(CharacterErrorCode.ALREADY_UNWEARING_ITEM);
+    }
+
+    @Test
+    @DisplayName("장착 중인 아이템은 장착 해제된다")
+    void shouldTakeOffItem_whenItemIsWearing() {
+        Long memberId = 1L;
+        Long itemId = 10L;
+        ItemPossession itemPossession = createItemPossession(createCharacter(), itemId, ItemType.HAT, true);
+        given(characterRepository.findItemPossessionFetchItems(memberId, itemId))
+                .willReturn(Optional.of(itemPossession));
+
+        characterWearingService.takeOffItem(memberId, itemId);
+
+        assertThat(itemPossession.getIsWearing()).isFalse();
+        then(characterRepository).should().findItemPossessionFetchItems(memberId, itemId);
     }
 
     private Character createCharacterWithItemPossession(Long itemId, ItemType itemType, boolean isWearing) {
         return createCharacterWithItemPossessions(createItemFixture(itemId, itemType, isWearing));
     }
 
-    private Character createCharacterWithItemPossessions(ItemFixture... itemFixtures) {
+    private Character createCharacter() {
         CharacterType characterType = CharacterType.create("BASIC", "기본 캐릭터", "character-base.png");
         Character character = Character.builder()
                 .member(MemberFixture.createLocalMember())
@@ -118,6 +170,11 @@ class CharacterWearingServiceTest {
                 .currentStatus(CharacterStatusType.NORMAL)
                 .build();
         ReflectionTestUtils.setField(character, "id", 1L);
+        return character;
+    }
+
+    private Character createCharacterWithItemPossessions(ItemFixture... itemFixtures) {
+        Character character = createCharacter();
 
         List<ItemPossession> itemPossessions = List.of(itemFixtures).stream()
                 .map(itemFixture -> createItemPossession(character, itemFixture.itemId(), itemFixture.itemType(), itemFixture.isWearing()))
