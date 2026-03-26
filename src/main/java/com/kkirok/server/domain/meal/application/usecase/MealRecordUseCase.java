@@ -7,6 +7,6 @@ import java.util.List;
 
 public interface MealRecordUseCase {
 
-    public List<MealRecord> getTodayRecords(Long memberId, LocalDate date);
+    public List<MealRecord> getTodayRecords(Long memberId);
 
 }
