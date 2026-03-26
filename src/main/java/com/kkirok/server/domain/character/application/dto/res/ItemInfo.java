@@ -1,5 +1,6 @@
 package com.kkirok.server.domain.character.application.dto.res;
 
+import com.kkirok.server.domain.character.dao.ItemWithPossessionProjection;
 import com.kkirok.server.domain.character.domain.ItemType;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -15,4 +16,15 @@ public record ItemInfo(
     @Schema(example = "HAT")
     ItemType itemType
 ) {
+
+    public static ItemInfo fromProjection(ItemWithPossessionProjection projection) {
+        return new ItemInfo(
+                projection.getItemId(),
+                projection.getName(),
+                projection.getImage(),
+                Boolean.TRUE.equals(projection.getIsWearing()),
+                projection.getItemType()
+        );
+    }
+
 }

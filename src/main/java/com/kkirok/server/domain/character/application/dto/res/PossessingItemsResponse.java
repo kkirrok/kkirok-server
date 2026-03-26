@@ -44,4 +44,9 @@ public record PossessingItemsResponse(
                 """)
         List<ItemInfo> notPossession
 ) {
+
+        public static PossessingItemsResponse create(List<ItemInfo> possession, List<ItemInfo> notPossession) {
+                return new PossessingItemsResponse(possession, notPossession);
+        }
+
 }

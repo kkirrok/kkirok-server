@@ -27,7 +27,8 @@ public class CharacterController implements CharacterApi {
     @Override
     @GetMapping("/items")
     public ResponseEntity<SuccessResponse<PossessingItemsResponse>> possessingItems(@CurrentMember Long memberId) {
-        return null;
+        PossessingItemsResponse itemInfo = characterInfoService.getItemInfo(memberId);
+        return ResponseEntity.ok(SuccessResponse.of(CharacterSuccessCode.POSSESSING_ITEMS_GET_SUCCESS, itemInfo));
     }
 
     @Override
