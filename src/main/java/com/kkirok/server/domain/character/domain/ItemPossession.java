@@ -35,4 +35,20 @@ public class ItemPossession extends BaseTimeEntity {
         this.isWearing = false;
     }
 
+    public boolean hasItemId(Long itemId) {
+        return item.getId().equals(itemId);
+    }
+
+    public boolean isWearing() {
+        return Boolean.TRUE.equals(isWearing);
+    }
+
+    public boolean hasSameItemType(ItemType itemType) {
+        return item.getItemType() == itemType;
+    }
+
+    public void wear() {
+        this.isWearing = true;
+    }
+
 }

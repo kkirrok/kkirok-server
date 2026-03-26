@@ -3,6 +3,7 @@ package com.kkirok.server.domain.character.api;
 import com.kkirok.server.domain.character.application.dto.res.CharacterDefaultInfoResponse;
 import com.kkirok.server.domain.character.application.dto.res.PossessingItemsResponse;
 import com.kkirok.server.domain.character.application.service.CharacterInfoService;
+import com.kkirok.server.domain.character.application.service.CharacterWearingService;
 import com.kkirok.server.domain.character.exception.CharacterSuccessCode;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
 import com.kkirok.server.global.common.dto.SuccessResponse;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 public class CharacterController implements CharacterApi {
 
     private final CharacterInfoService characterInfoService;
+    private final CharacterWearingService characterWearingService;
 
     @Override
     @GetMapping
@@ -33,8 +35,9 @@ public class CharacterController implements CharacterApi {
 
     @Override
     @PostMapping("/items/{itemId}/wear")
-    public ResponseEntity<SuccessResponse<Void>> wearItem(@PathVariable Long itemId) {
-        return null;
+    public ResponseEntity<SuccessResponse<Void>> wearItem(@CurrentMember Long memberId, @PathVariable Long itemId) {
+        characterWearingService.putOnItem(memberId, itemId);
+        return ResponseEntity.ok(SuccessResponse.of(CharacterSuccessCode.ITEM_WEAR_SUCCESS, null));
     }
 
     @Override

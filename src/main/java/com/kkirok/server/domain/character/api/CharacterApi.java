@@ -61,6 +61,7 @@ public interface CharacterApi {
     })
     @ApiSuccessCodeExample(codeType = CharacterSuccessCode.class, code = "ITEM_WEAR_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> wearItem(
+            @CurrentMember Long memberId,
             @Parameter(description = "장착할 아이템 ID", required = true)
             @PathVariable Long itemId
     );
