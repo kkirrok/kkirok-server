@@ -23,9 +23,13 @@ public class MemberService implements MemberUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public Member findMemberByMemberId(Long memberId) {
-        return memberRepository.findById(memberId)
+    public Member findMemberByMemberId(Long memberId) { // 탈퇴한 회원 조회하면 예외 발생
+
+        Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new NotFoundException(MemberErrorCode.MEMBER_NOT_FOUND));
+
+        checkMemberQuit(member);
+        return member;
     }
 
     @Override
@@ -63,8 +67,10 @@ public class MemberService implements MemberUseCase {
 
     @Override
     public Member findWithOnboarding(Long memberId) {
-        return memberRepository.findWithOnboarding(memberId)
+        Member member =  memberRepository.findWithOnboarding(memberId)
                 .orElseThrow(() -> new NotFoundException(MemberErrorCode.MEMBER_NOT_FOUND));
+        checkMemberQuit(member);
+        return member;
     }
 
     @Override
@@ -74,4 +80,11 @@ public class MemberService implements MemberUseCase {
         member.quit();
         memberRepository.save(member);
     }
+
+    private void checkMemberQuit(Member member) {
+        if ( member.getDeletedAt() != null ) {
+            throw new NotFoundException(MemberErrorCode.DELETED_MEMBER);
+        }
+    }
+
 }

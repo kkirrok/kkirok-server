@@ -28,6 +28,7 @@ public enum MemberErrorCode implements BaseErrorCode {
 	409 Conflict
 	*/
 	LOCAL_EMAIL_ALREADY_EXISTS(409, "이미 사용 중인 이메일입니다."),
+	DELETED_MEMBER(409, "탈퇴한 회원입니다."),
 
 	/*
 	404 NotFound
