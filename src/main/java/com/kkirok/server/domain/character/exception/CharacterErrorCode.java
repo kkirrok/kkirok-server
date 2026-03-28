@@ -16,6 +16,7 @@ public enum CharacterErrorCode implements BaseErrorCode {
     /*
         404 NotFound
      */
+    CHARACTER_TYPE_NOT_FOUND(404, "기본 캐릭터 타입이 존재하지 않습니다"),
     CHARACTER_NOT_FOUND(404, "유저에게 해당되는 캐릭터가 존재하지 않습니다"),
     ITEM_NOT_FOUND(404, "존재하지 않는 item입니다"),
 

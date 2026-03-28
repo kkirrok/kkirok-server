@@ -47,7 +47,8 @@ public record CharacterDefaultInfoResponse(
                 character.getName(),
                 character.getExp(),
                 CharacterUtilLevel.getMaximumLevel(character.getExp()),
-                character.getCharacterType().getBaseImage(),
+//                character.getCharacterType().getBaseImage(),
+                null, // TODO: 이미지 넣기
                 NutrientAvgUtil.getAvg(mealRecord, analysis -> analysis.getKcal().longValue()),
                 NutrientMaxUtil.getMax(mealRecord, analysis -> analysis.getKcal().longValue()),
                 NutrientAvgUtil.getAvg(mealRecord, MealAiAnalysis::getCarbohydrateG),

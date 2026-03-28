@@ -1,5 +1,6 @@
 package com.kkirok.server.domain.member.application.service;
 
+import com.kkirok.server.domain.character.application.service.CharacterInitializationService;
 import com.kkirok.server.domain.member.application.dto.event.MemberRegisteredEvent;
 import com.kkirok.server.domain.member.dao.AuthIdentityRepository;
 import com.kkirok.server.domain.member.dao.MemberRepository;
@@ -26,10 +27,12 @@ public class MemberRegistrationService {
     private final UserRepository userRepository;
     private final MemberRepository memberRepository;
     private final AuthIdentityRepository authIdentityRepository;
+    private final CharacterInitializationService characterInitializationService;
 
     @Transactional
     public Long registerMemberWithUserInfo(final MemberInfoResponse memberInfoResponse) {
         Member member = createMember(memberInfoResponse);
+        characterInitializationService.createInitialCharacter(member);
         authIdentityRepository.save(AuthIdentity.createSocial(
                 member,
                 AuthProvider.fromSocialType(memberInfoResponse.socialType()),
@@ -44,6 +47,7 @@ public class MemberRegistrationService {
     @Transactional
     public Member registerLocalMember(final String email, final String passwordHash) {
         Member member = createLocalMember(email);
+        characterInitializationService.createInitialCharacter(member);
         authIdentityRepository.save(AuthIdentity.createLocal(member, email, passwordHash));
         eventPublisher.publishEvent(new MemberRegisteredEvent(member.getNickname()));
         return member;
