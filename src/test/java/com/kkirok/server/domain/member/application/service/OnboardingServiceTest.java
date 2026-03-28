@@ -54,6 +54,7 @@ class OnboardingServiceTest {
 
         // Then
         assertThat(member.isOnboardingCompleted()).isTrue();
+        assertThat(member.getName()).isEqualTo(request.name());
         assertThat(member.getNickname()).isEqualTo(request.nickname());
         assertThat(member.getPhone()).isEqualTo(request.phone());
         assertThat(member.getGender()).isEqualTo(request.gender());

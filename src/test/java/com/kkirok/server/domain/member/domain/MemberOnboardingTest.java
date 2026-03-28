@@ -25,6 +25,7 @@ class MemberOnboardingTest {
         member.updateOnboarding(request, "profile-key");
 
         assertThat(member.isOnboardingCompleted()).isTrue();
+        assertThat(member.getName()).isEqualTo("김준용");
         assertThat(member.getNickname()).isEqualTo("첫닉네임");
         assertThat(member.getOnboarding()).isNotNull();
         assertThat(member.getOnboarding().getMember()).isSameAs(member);
