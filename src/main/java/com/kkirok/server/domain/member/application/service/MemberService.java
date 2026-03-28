@@ -55,4 +55,9 @@ public class MemberService implements MemberUseCase {
     public long countMembers() {
         return memberRepository.count();
     }
+
+    @Override
+    public void updateMember(Member member) {
+        memberRepository.save(member);
+    }
 }

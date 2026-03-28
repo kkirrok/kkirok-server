@@ -13,4 +13,7 @@ public interface MemberUseCase {
     void deleteUser(Long id);
 
     long countMembers();
+
+    void updateMember(Member member);
+
 }

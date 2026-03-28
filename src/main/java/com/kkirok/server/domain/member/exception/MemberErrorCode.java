@@ -12,6 +12,8 @@ public enum MemberErrorCode implements BaseErrorCode {
 	*/
 	SOCIAL_TYPE_BAD_REQUEST(400, "로그인 요청이 유효하지 않습니다."),
 	LOCAL_LOGIN_BAD_REQUEST(400, "로컬 로그인 요청이 유효하지 않습니다."),
+	ONBOARDING_HABIT_MAX_COUNT(400, "식습관 유형은 최대 5개까지입니다."),
+
 	/*
 	401 Unauthorized
 	*/
@@ -25,7 +27,9 @@ public enum MemberErrorCode implements BaseErrorCode {
 	/*
 	404 NotFound
 	*/
-	MEMBER_NOT_FOUND(404, "회원이 없습니다");
+	MEMBER_NOT_FOUND(404, "회원이 없습니다"),
+
+	;
 
 	private final int status;
 	private final String message;

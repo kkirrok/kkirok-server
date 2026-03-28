@@ -10,11 +10,6 @@ public record LocalSignUpRequest(
         @Email(message = "이메일 형식이 아닙니다.")
         @Schema(example = "email@naver.com")
         String email,
-//
-//        @NotBlank(message = "닉네임은 필수입니다.")
-//        @Size(max = 20, message = "닉네임은 20자 이하여야 합니다.")
-//        @Schema(example = "멋진닉네임입력부탁")
-//        String nickname,
 
         @NotBlank(message = "비밀번호는 필수입니다.")
         @Size(min = 8, max = 100, message = "비밀번호는 8자 이상이어야 합니다.")

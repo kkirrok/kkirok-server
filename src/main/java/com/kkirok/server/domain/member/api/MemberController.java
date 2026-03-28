@@ -1,29 +1,24 @@
 package com.kkirok.server.domain.member.api;
 
-import com.kkirok.server.domain.member.application.dto.request.LocalLoginRequest;
-import com.kkirok.server.domain.member.application.dto.request.EmailVerificationConfirmRequest;
-import com.kkirok.server.domain.member.application.dto.request.EmailVerificationSendRequest;
-import com.kkirok.server.domain.member.application.dto.request.LocalSignUpRequest;
+import com.kkirok.server.domain.member.application.dto.request.*;
 import com.kkirok.server.domain.member.application.dto.response.AccessTokenGenerateResponse;
 import com.kkirok.server.domain.member.application.dto.response.EmailVerificationStatusResponse;
 import com.kkirok.server.domain.member.application.dto.response.LoginSuccessResponse;
 import com.kkirok.server.domain.member.application.dto.response.MemberLoginResponse;
-import com.kkirok.server.domain.member.application.service.AuthenticationService;
-import com.kkirok.server.domain.member.application.service.EmailVerificationService;
-import com.kkirok.server.domain.member.application.service.EmailVerificationStateService;
-import com.kkirok.server.domain.member.application.service.LocalLoginService;
-import com.kkirok.server.domain.member.application.service.SocialLoginService;
+import com.kkirok.server.domain.member.application.service.*;
 import com.kkirok.server.domain.member.exception.MemberSuccessCode;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
 import com.kkirok.server.global.auth.client.dto.MemberLoginRequest;
 import com.kkirok.server.global.auth.jwt.application.TokenService;
 import com.kkirok.server.global.common.dto.SuccessResponse;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/v1/users")
@@ -36,6 +31,7 @@ public class MemberController implements MemberApi {
     private final LocalLoginService localLoginService;
     private final EmailVerificationService emailVerificationService;
     private final EmailVerificationStateService emailVerificationStateService;
+    private final OnboardingService onboardingService;
 
     private static final int COOKIE_MAX_AGE = 7 * 24 * 60 * 60;
 
@@ -141,7 +137,15 @@ public class MemberController implements MemberApi {
     }
 
     @Override
-    public ResponseEntity<SuccessResponse<Void>> onboarding() {
-        return null;
+    @PostMapping("/profile")
+    public ResponseEntity<SuccessResponse<Void>> updateProfile(
+            @Parameter(hidden = true) @CurrentMember Long memberId,
+            @ModelAttribute @Valid ProfileSettingRequest request,
+            @RequestPart(required = false) MultipartFile profileImage
+    ) {
+        onboardingService.updateProfile(memberId, request, profileImage);
+        return ResponseEntity.ok()
+                .body(SuccessResponse.from(MemberSuccessCode.PROFILE_SETTING_SUCCESS));
     }
+
 }

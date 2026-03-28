@@ -1,9 +1,6 @@
 package com.kkirok.server.domain.member.api;
 
-import com.kkirok.server.domain.member.application.dto.request.LocalLoginRequest;
-import com.kkirok.server.domain.member.application.dto.request.EmailVerificationConfirmRequest;
-import com.kkirok.server.domain.member.application.dto.request.EmailVerificationSendRequest;
-import com.kkirok.server.domain.member.application.dto.request.LocalSignUpRequest;
+import com.kkirok.server.domain.member.application.dto.request.*;
 import com.kkirok.server.domain.member.application.dto.response.AccessTokenGenerateResponse;
 import com.kkirok.server.domain.member.application.dto.response.EmailVerificationStatusResponse;
 import com.kkirok.server.domain.member.application.dto.response.MemberLoginResponse;
@@ -18,6 +15,7 @@ import com.kkirok.server.global.auth.client.dto.MemberLoginRequest;
 import com.kkirok.server.global.auth.jwt.exception.TokenErrorCode;
 import com.kkirok.server.global.common.dto.SuccessResponse;
 import com.kkirok.server.global.common.redis.exception.RedisErrorCode;
+import com.kkirok.server.global.external.r2.exception.R2ErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,8 +23,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "Member API", description = "서비스 내 Member 관련 API")
 public interface MemberApi {
@@ -179,10 +180,33 @@ public interface MemberApi {
             @CurrentMember final Long memberId
     );
 
-    @Operation(summary = "회원가입 이후 사용자 정보 입력", description = """
-            회원가입 이후 이름, 생년월일, 전화번호, 닉네임, 성별을 입력합니다.
-            """)
-    public ResponseEntity<SuccessResponse<Void>> onboarding();
+    @Operation(
+            summary = "프로필 설정(온보딩)",
+            description = """
+                    회원가입 이후 프로필 정보와 온보딩 정보를 함께 설정합니다.
+
+                    요청 전체는 `multipart/form-data`로 전송하며, 텍스트 필드와 `profileImage` 파일 파트를 함께 보냅니다.
+                    - 프로필 설정: `name`, `birth`, `phone`, `nickname`, `gender`
+                    - 온보딩 정보: `purpose`, `habits`
+                    - 선택값: `profileImage`, `purpose`, `habits`
+                    - `profileImage`는 URL 문자열이 아니라 파일 파트로 업로드합니다.
+                    - 업로드된 프로필 이미지는 R2에 저장되고, DB에는 이미지 URL이 아닌 저장 key가 보관됩니다.
+                    - 식습관을 선택하지 않으면 빈 리스트로 저장됩니다.
+                    """
+    )
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "ONBOARDING_HABIT_MAX_COUNT"),
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "MEMBER_NOT_FOUND"),
+            @ApiErrorCodeExample(codeType = R2ErrorCode.class, code = "FILE_STREAM_READ_FAILED"),
+            @ApiErrorCodeExample(codeType = R2ErrorCode.class, code = "FILE_UPLOAD_FAILED")
+    })
+    @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "PROFILE_SETTING_SUCCESS")
+    public ResponseEntity<SuccessResponse<Void>> updateProfile(
+            @Parameter(hidden = true) @CurrentMember Long memberId,
+            @Valid @ModelAttribute ProfileSettingRequest request,
+            @RequestPart(required = false) MultipartFile profileImage
+    );
 
 
 }
