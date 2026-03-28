@@ -2,6 +2,7 @@ package com.kkirok.server.domain.member.domain;
 
 import com.kkirok.server.domain.BaseTimeEntity;
 import com.kkirok.server.domain.user.domain.Users;
+import com.kkirok.server.global.auth.client.dto.MemberInfoResponse;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -72,30 +73,26 @@ public class Member extends BaseTimeEntity {
     }
 
     public static Member create(
-            final String nickname,
-            final String email,
-            final Users user,
-            final Long socialId,
-            final SocialType socialType
+            final MemberInfoResponse memberInfoResponse,
+            final Users user
     ) {
         return Member.builder()
-                .nickname(nickname)
-                .email(email)
+                .nickname(null)
+                .email(memberInfoResponse.email())
                 .profileImage(null)
                 .onboardingCompleted(false)
                 .user(user)
-                .socialId(socialId)
-                .socialType(socialType)
+                .socialId(memberInfoResponse.socialId())
+                .socialType(memberInfoResponse.socialType())
                 .build();
     }
 
     public static Member createLocal(
-            final String nickname,
             final String email,
             final Users user
     ) {
         return Member.builder()
-                .nickname(nickname)
+                .nickname(null)
                 .email(email)
                 .profileImage(null)
                 .onboardingCompleted(false)

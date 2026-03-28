@@ -59,7 +59,7 @@ class LocalLoginServiceTest {
     void shouldReturnLoginSuccessResponse_whenLocalSignUpSucceeds() {
         // Given
         LocalSignUpRequest request = LocalSignUpRequestFixture.create();
-        Member member = MemberFixture.createLocalMember(request.nickname(), request.email());
+        Member member = MemberFixture.createLocalMember("unused", request.email());
         ReflectionTestUtils.setField(member, "id", 1L);
         LoginSuccessResponse expected = LoginSuccessResponse.of("access-token", "refresh-token", "kkirok",
                 "ROLE_MEMBER");
@@ -67,7 +67,7 @@ class LocalLoginServiceTest {
         given(authIdentityRepository.existsByProviderAndProviderUserId(AuthProvider.LOCAL, request.email()))
                 .willReturn(false);
         given(passwordEncoder.encode(request.password())).willReturn("encoded-password");
-        given(memberRegistrationService.registerLocalMember(request.nickname(), request.email(), "encoded-password"))
+        given(memberRegistrationService.registerLocalMember(request.email(), "encoded-password"))
                 .willReturn(member);
         given(authenticationService.generateLoginSuccessResponse(member.getId(), member.getUser(), member.getNickname()))
                 .willReturn(expected);
@@ -80,7 +80,7 @@ class LocalLoginServiceTest {
         then(emailVerificationStateService).should().consumeVerifiedEmail(request.email());
         then(passwordEncoder).should().encode(request.password());
         then(memberRegistrationService).should()
-                .registerLocalMember(request.nickname(), request.email(), "encoded-password");
+                .registerLocalMember(request.email(), "encoded-password");
         then(authenticationService).should()
                 .generateLoginSuccessResponse(member.getId(), member.getUser(), member.getNickname());
     }
@@ -89,7 +89,7 @@ class LocalLoginServiceTest {
     @DisplayName("이미 가입된 이메일로는 로컬 회원가입할 수 없다")
     void shouldThrowConflictException_whenLocalEmailAlreadyExists() {
         // Given
-        LocalSignUpRequest request = LocalSignUpRequestFixture.create("already-exists@test.com", "kkirok",
+        LocalSignUpRequest request = LocalSignUpRequestFixture.create("already-exists@test.com",
                 "password123!");
 
         given(authIdentityRepository.existsByProviderAndProviderUserId(AuthProvider.LOCAL, request.email()))

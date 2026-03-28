@@ -29,12 +29,7 @@ public class MemberRegistrationService {
 
     @Transactional
     public Long registerMemberWithUserInfo(final MemberInfoResponse memberInfoResponse) {
-        Member member = createMember(
-                memberInfoResponse.nickname(),
-                memberInfoResponse.email(),
-                memberInfoResponse.socialId(),
-                memberInfoResponse.socialType()
-        );
+        Member member = createMember(memberInfoResponse);
         authIdentityRepository.save(AuthIdentity.createSocial(
                 member,
                 AuthProvider.fromSocialType(memberInfoResponse.socialType()),
@@ -47,25 +42,24 @@ public class MemberRegistrationService {
     }
 
     @Transactional
-    public Member registerLocalMember(final String nickname, final String email, final String passwordHash) {
-        Member member = createLocalMember(nickname, email);
+    public Member registerLocalMember(final String email, final String passwordHash) {
+        Member member = createLocalMember(email);
         authIdentityRepository.save(AuthIdentity.createLocal(member, email, passwordHash));
         eventPublisher.publishEvent(new MemberRegisteredEvent(member.getNickname()));
         return member;
     }
 
-    private Member createMember(final String nickname, final String email, final Long socialId,
-                                final SocialType socialType) {
+    private Member createMember(final MemberInfoResponse memberInfoResponse) {
         Users users = createUserWithMemberRole();
-        Member member = Member.create(nickname, email, users, socialId, socialType);
+        Member member = Member.create(memberInfoResponse, users);
         memberRepository.save(member);
         log.info("Member registered with memberId: {}, role: {}", member.getId(), users.getRole());
         return member;
     }
 
-    private Member createLocalMember(final String nickname, final String email) {
+    private Member createLocalMember(final String email) {
         Users users = createUserWithMemberRole();
-        Member member = Member.createLocal(nickname, email, users);
+        Member member = Member.createLocal( email, users);
         memberRepository.save(member);
         log.info("Local member registered with memberId: {}, role: {}", member.getId(), users.getRole());
         return member;

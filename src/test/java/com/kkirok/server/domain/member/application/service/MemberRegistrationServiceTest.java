@@ -62,14 +62,13 @@ class MemberRegistrationServiceTest {
 
         // When
         Member registeredMember = memberRegistrationService.registerLocalMember(
-                "kkirok",
                 "kkirok@test.com",
                 "encoded-password"
         );
 
         // Then
         assertThat(registeredMember.getId()).isEqualTo(1L);
-        assertThat(registeredMember.getNickname()).isEqualTo("kkirok");
+        assertThat(registeredMember.getNickname()).isNull();
         assertThat(registeredMember.getEmail()).isEqualTo("kkirok@test.com");
         assertThat(registeredMember.getUser().getRole()).isEqualTo(Role.USER);
 
@@ -86,7 +85,7 @@ class MemberRegistrationServiceTest {
         assertThat(authIdentity.getPasswordHash()).isEqualTo("encoded-password");
         assertThat(authIdentity.getMember()).isSameAs(registeredMember);
 
-        assertThat(eventCaptor.getValue().nickname()).isEqualTo("kkirok");
+        assertThat(eventCaptor.getValue().nickname()).isNull();
     }
 
     @Test
@@ -131,6 +130,6 @@ class MemberRegistrationServiceTest {
         assertThat(authIdentity.getMember().getSocialId()).isEqualTo(1001L);
         assertThat(authIdentity.getMember().getSocialType()).isEqualTo(SocialType.KAKAO);
 
-        assertThat(eventCaptor.getValue().nickname()).isEqualTo("kkirok");
+        assertThat(eventCaptor.getValue().nickname()).isNull();
     }
 }

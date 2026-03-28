@@ -179,5 +179,10 @@ public interface MemberApi {
             @CurrentMember final Long memberId
     );
 
+    @Operation(summary = "회원가입 이후 사용자 정보 입력", description = """
+            회원가입 이후 이름, 생년월일, 전화번호, 닉네임, 성별을 입력합니다.
+            """)
+    public ResponseEntity<SuccessResponse<Void>> onboarding();
+
 
 }

@@ -139,4 +139,9 @@ public class MemberController implements MemberApi {
         return ResponseEntity.ok()
                 .body(SuccessResponse.from(MemberSuccessCode.SIGN_OUT_SUCCESS));
     }
+
+    @Override
+    public ResponseEntity<SuccessResponse<Void>> onboarding() {
+        return null;
+    }
 }
