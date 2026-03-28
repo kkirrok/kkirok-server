@@ -1,9 +1,11 @@
 package com.kkirok.server.domain.member.application.service;
 
 import com.kkirok.server.domain.member.application.dto.request.ProfileSettingRequest;
+import com.kkirok.server.domain.member.application.dto.response.OnboardingProfileResponse;
 import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
 import com.kkirok.server.domain.member.domain.Member;
 import com.kkirok.server.domain.member.domain.OnboardingHabit;
+import com.kkirok.server.domain.member.domain.OnboardingPurpose;
 import com.kkirok.server.domain.member.exception.MemberErrorCode;
 import com.kkirok.server.global.common.exception.BadRequestException;
 import com.kkirok.server.global.external.r2.application.service.R2UploadService;
@@ -132,6 +134,59 @@ class OnboardingServiceTest {
         assertThat(member.getProfileImage()).isNull();
         then(memberUseCase).should().findMemberByMemberId(memberId);
         then(memberUseCase).should().updateMember(member);
+    }
+
+    @Test
+    @DisplayName("온보딩 정보를 조회하면 전체 선택지와 현재 선택 상태를 함께 반환한다")
+    void shouldReturnOnboardingProfileResponse_whenOnboardingExists() {
+        // Given
+        Long memberId = 1L;
+        Member member = MemberFixture.createLocalMember();
+        ProfileSettingRequest request = ProfileSettingRequestFixture.create(
+                OnboardingPurpose.HABIT,
+                List.of(OnboardingHabit.MEAT, OnboardingHabit.SNACK)
+        );
+        member.updateOnboarding(request, "profile-key");
+
+        given(memberUseCase.findWithOnboarding(memberId)).willReturn(member);
+
+        // When
+        OnboardingProfileResponse response = onboardingService.getOnboardingInfo(memberId);
+
+        // Then
+        assertThat(response.nickname()).isEqualTo(member.getNickname());
+        assertThat(response.gender()).isEqualTo(member.getGender());
+        assertThat(response.profileImage()).isEqualTo(member.getProfileImage());
+        assertThat(response.purposes())
+                .filteredOn(OnboardingProfileResponse.OnboardingLabelInfo::isSelected)
+                .extracting(OnboardingProfileResponse.OnboardingLabelInfo::label)
+                .containsExactly(OnboardingPurpose.HABIT.getLabel());
+        assertThat(response.habits())
+                .filteredOn(OnboardingProfileResponse.OnboardingLabelInfo::isSelected)
+                .extracting(OnboardingProfileResponse.OnboardingLabelInfo::label)
+                .containsExactlyInAnyOrder(
+                        OnboardingHabit.MEAT.getLabel(),
+                        OnboardingHabit.SNACK.getLabel()
+                );
+    }
+
+    @Test
+    @DisplayName("온보딩 정보가 없으면 전체 선택지를 미선택 상태로 반환한다")
+    void shouldReturnUnselectedOnboardingChoices_whenOnboardingDoesNotExist() {
+        // Given
+        Long memberId = 1L;
+        Member member = MemberFixture.createLocalMember();
+
+        given(memberUseCase.findWithOnboarding(memberId)).willReturn(member);
+
+        // When
+        OnboardingProfileResponse response = onboardingService.getOnboardingInfo(memberId);
+
+        // Then
+        assertThat(response.purposes()).hasSize(OnboardingPurpose.values().length);
+        assertThat(response.habits()).hasSize(OnboardingHabit.values().length);
+        assertThat(response.purposes()).allMatch(info -> !info.isSelected());
+        assertThat(response.habits()).allMatch(info -> !info.isSelected());
     }
 
     private MultipartFile createProfileImage() {

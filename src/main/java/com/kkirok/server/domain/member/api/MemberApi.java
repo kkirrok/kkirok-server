@@ -1,10 +1,7 @@
 package com.kkirok.server.domain.member.api;
 
 import com.kkirok.server.domain.member.application.dto.request.*;
-import com.kkirok.server.domain.member.application.dto.response.AccessTokenGenerateResponse;
-import com.kkirok.server.domain.member.application.dto.response.EmailVerificationStatusResponse;
-import com.kkirok.server.domain.member.application.dto.response.FoundEmailResponse;
-import com.kkirok.server.domain.member.application.dto.response.MemberLoginResponse;
+import com.kkirok.server.domain.member.application.dto.response.*;
 import com.kkirok.server.domain.member.exception.EmailErrorCode;
 import com.kkirok.server.domain.member.exception.MemberErrorCode;
 import com.kkirok.server.domain.member.exception.MemberSuccessCode;
@@ -220,6 +217,18 @@ public interface MemberApi {
     public ResponseEntity<SuccessResponse<Void>> signOut(
             @Parameter(description = "현재 로그인한 회원 ID", required = true)
             @CurrentMember final Long memberId
+    );
+
+    @Operation(summary = "프로필 조회(온보딩)", description = """
+            프로필 설정 전, 기본 정보를 조회합니다.
+            멤버 기본 정보( 닉네임, 성별, 프로필사진 )와 목표•식습관 유형 정보(라벨, 선택여부)를 반환합니다.
+            """)
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "MEMBER_NOT_FOUND")
+    })
+    public ResponseEntity<OnboardingProfileResponse> getOnboardingProfile(
+            @Parameter(hidden = true) @CurrentMember final Long memberId
     );
 
     @Operation(

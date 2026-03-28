@@ -60,4 +60,10 @@ public class MemberService implements MemberUseCase {
     public void updateMember(Member member) {
         memberRepository.save(member);
     }
+
+    @Override
+    public Member findWithOnboarding(Long memberId) {
+        return memberRepository.findWithOnboarding(memberId)
+                .orElseThrow(() -> new NotFoundException(MemberErrorCode.MEMBER_NOT_FOUND));
+    }
 }

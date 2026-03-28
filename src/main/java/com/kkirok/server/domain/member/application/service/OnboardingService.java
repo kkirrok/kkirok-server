@@ -1,6 +1,7 @@
 package com.kkirok.server.domain.member.application.service;
 
 import com.kkirok.server.domain.member.application.dto.request.ProfileSettingRequest;
+import com.kkirok.server.domain.member.application.dto.response.OnboardingProfileResponse;
 import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
 import com.kkirok.server.domain.member.domain.Member;
 import com.kkirok.server.domain.member.exception.MemberErrorCode;
@@ -40,6 +41,15 @@ public class OnboardingService {
         member.updateOnboarding(request, imageKey);
         memberUseCase.updateMember(member);
 
+    }
+
+    /*
+        프로필 설정, 온보딩 화면 조회를 위한 메서드
+     */
+    @Transactional(readOnly = true)
+    public OnboardingProfileResponse getOnboardingInfo(Long memberId) {
+        Member member = memberUseCase.findWithOnboarding(memberId);
+        return OnboardingProfileResponse.of(member);
     }
 
     private String extractProfileImageKey(final MultipartFile profileImage) {

@@ -16,4 +16,6 @@ public interface MemberUseCase {
 
     void updateMember(Member member);
 
+    Member findWithOnboarding(Long memberId);
+
 }

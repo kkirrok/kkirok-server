@@ -1,11 +1,7 @@
 package com.kkirok.server.domain.member.api;
 
 import com.kkirok.server.domain.member.application.dto.request.*;
-import com.kkirok.server.domain.member.application.dto.response.AccessTokenGenerateResponse;
-import com.kkirok.server.domain.member.application.dto.response.EmailVerificationStatusResponse;
-import com.kkirok.server.domain.member.application.dto.response.FoundEmailResponse;
-import com.kkirok.server.domain.member.application.dto.response.LoginSuccessResponse;
-import com.kkirok.server.domain.member.application.dto.response.MemberLoginResponse;
+import com.kkirok.server.domain.member.application.dto.response.*;
 import com.kkirok.server.domain.member.application.service.*;
 import com.kkirok.server.domain.member.exception.MemberSuccessCode;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
@@ -157,6 +153,14 @@ public class MemberController implements MemberApi {
         tokenService.deleteRefreshToken(memberId);
         return ResponseEntity.ok()
                 .body(SuccessResponse.from(MemberSuccessCode.SIGN_OUT_SUCCESS));
+    }
+
+    @Override
+    @GetMapping("/profile")
+    public ResponseEntity<OnboardingProfileResponse> getOnboardingProfile(
+            @Parameter(hidden = true) @CurrentMember final Long memberId
+    ) {
+        return ResponseEntity.ok(onboardingService.getOnboardingInfo(memberId));
     }
 
     @Override
