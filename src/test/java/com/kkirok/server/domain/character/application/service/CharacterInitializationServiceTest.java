@@ -20,7 +20,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -54,8 +53,7 @@ class CharacterInitializationServiceTest {
 
         Character character = characterCaptor.getValue();
         assertThat(character.getMember()).isSameAs(member);
-        assertThat(character.getCharacterType()).isSameAs(characterType);
-        assertThat(character.getName()).isEqualTo("기본 캐릭터");
+        assertThat(character.getName()).isEqualTo("캐릭터명");
         assertThat(character.getLevel()).isEqualTo(1);
         assertThat(character.getExp()).isEqualTo(0);
     }

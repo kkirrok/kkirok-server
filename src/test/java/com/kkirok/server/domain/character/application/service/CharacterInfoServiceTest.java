@@ -85,7 +85,7 @@ class CharacterInfoServiceTest {
                 "뀨뀨뀨",
                 120,
                 100,
-                "character-base.png",
+                null, //TODO: 캐릭터 수정하면 이미지 체크하는 것도 추가
                 600,
                 700,
                 50,

@@ -22,6 +22,7 @@ public enum MemberSuccessCode implements BaseSuccessCode {
 	USER_DELETE_SUCCESS(200, "회원 탈퇴 성공"),
 	PROFILE_SETTING_SUCCESS(200, "프로필 설정 성공")
 
+
 	;
 
 	private final int status;

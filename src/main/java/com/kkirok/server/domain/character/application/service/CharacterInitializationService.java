@@ -22,10 +22,9 @@ public class CharacterInitializationService {
 
     @Transactional
     public void createInitialCharacter(final Member member) {
+        CharacterType characterType = characterTypeRepository.findByTypeCode(DEFAULT_CHARACTER_TYPE_CODE)
+                .orElseThrow(() -> new CharacterException(CharacterErrorCode.CHARACTER_TYPE_NOT_FOUND));
 
-//        CharacterType characterType = characterTypeRepository.findByTypeCode(DEFAULT_CHARACTER_TYPE_CODE)
-//                .orElseThrow(() -> new CharacterException(CharacterErrorCode.CHARACTER_TYPE_NOT_FOUND));
-
-        characterRepository.save(Character.create(member, null)); // TODO: 캐릭터 타입 넣기
+        characterRepository.save(Character.create(member, characterType));
     }
 }

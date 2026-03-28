@@ -1,5 +1,6 @@
 package com.kkirok.server.domain.member.application.service;
 
+import com.kkirok.server.domain.character.application.service.CharacterInitializationService;
 import com.kkirok.server.domain.member.application.dto.event.MemberRegisteredEvent;
 import com.kkirok.server.domain.member.dao.AuthIdentityRepository;
 import com.kkirok.server.domain.member.dao.MemberRepository;
@@ -42,6 +43,9 @@ class MemberRegistrationServiceTest {
     @Mock
     private AuthIdentityRepository authIdentityRepository;
 
+    @Mock
+    private CharacterInitializationService characterInitializationService;
+
     @InjectMocks
     private MemberRegistrationService memberRegistrationService;
 
@@ -76,6 +80,7 @@ class MemberRegistrationServiceTest {
         ArgumentCaptor<MemberRegisteredEvent> eventCaptor = ArgumentCaptor.forClass(MemberRegisteredEvent.class);
 
         then(userRepository).should().flush();
+        then(characterInitializationService).should().createInitialCharacter(registeredMember);
         then(authIdentityRepository).should().save(authIdentityCaptor.capture());
         then(eventPublisher).should().publishEvent(eventCaptor.capture());
 
@@ -124,6 +129,7 @@ class MemberRegistrationServiceTest {
         then(eventPublisher).should().publishEvent(eventCaptor.capture());
 
         AuthIdentity authIdentity = authIdentityCaptor.getValue();
+        then(characterInitializationService).should().createInitialCharacter(authIdentity.getMember());
         assertThat(authIdentity.getProvider()).isEqualTo(AuthProvider.KAKAO);
         assertThat(authIdentity.getProviderUserId()).isEqualTo("kakao-1001");
         assertThat(authIdentity.getPasswordHash()).isNull();

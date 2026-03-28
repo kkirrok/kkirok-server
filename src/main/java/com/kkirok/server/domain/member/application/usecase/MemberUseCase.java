@@ -18,4 +18,6 @@ public interface MemberUseCase {
 
     Member findWithOnboarding(Long memberId);
 
+    void quit(Long memberId);
+
 }

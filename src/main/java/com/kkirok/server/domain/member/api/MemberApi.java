@@ -108,4 +108,12 @@ public interface MemberApi {
             @Valid @ModelAttribute ProfileSettingRequest request,
             @RequestPart(required = false) MultipartFile profileImage
     );
+
+    @Operation(summary = "회원 탈퇴", description = """
+            회원탈퇴입니다. 복구 정책을 대비하여 완전 삭제하지 않습니다.
+            """)
+    ResponseEntity<SuccessResponse<Void>> quitMember(
+            @Parameter(hidden = true) @CurrentMember Long memberId
+    );
+
 }

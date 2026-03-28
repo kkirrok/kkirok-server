@@ -6,6 +6,7 @@ import com.kkirok.server.domain.member.application.dto.request.ResetPasswordRequ
 import com.kkirok.server.domain.member.application.dto.response.FoundEmailResponse;
 import com.kkirok.server.domain.member.application.dto.response.OnboardingProfileResponse;
 import com.kkirok.server.domain.member.application.service.AccountRecoveryService;
+import com.kkirok.server.domain.member.application.service.MemberService;
 import com.kkirok.server.domain.member.application.service.OnboardingService;
 import com.kkirok.server.domain.member.exception.MemberSuccessCode;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
@@ -14,13 +15,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
@@ -30,6 +25,7 @@ public class MemberController implements MemberApi {
 
     private final AccountRecoveryService accountRecoveryService;
     private final OnboardingService onboardingService;
+    private final MemberService memberService;
 
     @Override
     @PostMapping("/recovery/email")
@@ -68,4 +64,14 @@ public class MemberController implements MemberApi {
         onboardingService.updateProfile(memberId, request, profileImage);
         return ResponseEntity.ok().body(SuccessResponse.from(MemberSuccessCode.PROFILE_SETTING_SUCCESS));
     }
+
+    @Override
+    @DeleteMapping
+    public ResponseEntity<SuccessResponse<Void>> quitMember( @Parameter(hidden = true) @CurrentMember Long memberId){
+        memberService.quit(memberId);
+        return ResponseEntity.ok()
+                .body(SuccessResponse.from(MemberSuccessCode.USER_DELETE_SUCCESS));
+    }
+
+
 }

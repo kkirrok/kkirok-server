@@ -66,4 +66,12 @@ public class MemberService implements MemberUseCase {
         return memberRepository.findWithOnboarding(memberId)
                 .orElseThrow(() -> new NotFoundException(MemberErrorCode.MEMBER_NOT_FOUND));
     }
+
+    @Override
+    @Transactional
+    public void quit(Long memberId) {
+        Member member = findMemberByMemberId(memberId);
+        member.quit();
+        memberRepository.save(member);
+    }
 }

@@ -129,4 +129,8 @@ public class Member extends BaseTimeEntity {
         this.onboarding = onboarding;
     }
 
+    public void quit(){
+        this.deletedAt = LocalDateTime.now();
+    }
+
 }
