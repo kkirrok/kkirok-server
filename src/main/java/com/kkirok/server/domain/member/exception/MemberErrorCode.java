@@ -20,6 +20,11 @@ public enum MemberErrorCode implements BaseErrorCode {
 	LOCAL_LOGIN_FAILED(401, "이메일 또는 비밀번호가 올바르지 않습니다."),
 
 	/*
+	403 Forbidden
+	*/
+	ACCOUNT_RECOVERY_FORBIDDEN(403, "본인 계정만 비밀번호를 재설정할 수 있습니다."),
+
+	/*
 	409 Conflict
 	*/
 	LOCAL_EMAIL_ALREADY_EXISTS(409, "이미 사용 중인 이메일입니다."),
@@ -27,6 +32,7 @@ public enum MemberErrorCode implements BaseErrorCode {
 	/*
 	404 NotFound
 	*/
+	ACCOUNT_RECOVERY_INFO_MISMATCH(404, "일치하는 회원 정보가 없습니다."),
 	MEMBER_NOT_FOUND(404, "회원이 없습니다"),
 
 	;

@@ -3,6 +3,7 @@ package com.kkirok.server.domain.member.api;
 import com.kkirok.server.domain.member.application.dto.request.*;
 import com.kkirok.server.domain.member.application.dto.response.AccessTokenGenerateResponse;
 import com.kkirok.server.domain.member.application.dto.response.EmailVerificationStatusResponse;
+import com.kkirok.server.domain.member.application.dto.response.FoundEmailResponse;
 import com.kkirok.server.domain.member.application.dto.response.MemberLoginResponse;
 import com.kkirok.server.domain.member.exception.EmailErrorCode;
 import com.kkirok.server.domain.member.exception.MemberErrorCode;
@@ -95,6 +96,47 @@ public interface MemberApi {
     @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "EMAIL_VERIFIED_SUCCESS")
     ResponseEntity<SuccessResponse<EmailVerificationStatusResponse>> verifyEmail(
             @Valid @RequestBody final EmailVerificationConfirmRequest request
+    );
+
+    @Operation(
+            summary = "이메일 찾기",
+            description = """
+                    이름, 생년월일, 전화번호가 일치하는 회원의 이메일을 조회합니다.
+
+                    - 요청 바디: `name`, `birth`, `phone`
+                    - 응답: 가입된 이메일
+                    """
+    )
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "ACCOUNT_RECOVERY_INFO_MISMATCH")
+    })
+    @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "FIND_EMAIL_SUCCESS")
+    ResponseEntity<SuccessResponse<FoundEmailResponse>> findEmail(
+            @Valid @RequestBody final FindEmailRequest request
+    );
+
+    @Operation(
+            summary = "비밀번호 재설정",
+            description = """
+                    이메일 인증이 완료된 이메일과 이름이 일치하면 로컬 계정 비밀번호를 재설정합니다.
+
+                    - 요청 바디: `email`, `name`, `newPassword`
+                    - 사전 조건: 이메일 인증 완료
+                    """
+    )
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
+            @ApiErrorCodeExample(codeType = EmailErrorCode.class, code = "EMAIL_NOT_VERIFIED"),
+            @ApiErrorCodeExample(codeType = RedisErrorCode.class, code = "REDIS_READ_FAILED"),
+            @ApiErrorCodeExample(codeType = RedisErrorCode.class, code = "REDIS_DELETE_FAILED"),
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "ACCOUNT_RECOVERY_FORBIDDEN"),
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "ACCOUNT_RECOVERY_INFO_MISMATCH")
+    })
+    @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "RESET_PASSWORD_SUCCESS")
+    ResponseEntity<SuccessResponse<Void>> resetPassword(
+            @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
+            @CurrentMember final Long memberId,
+            @Valid @RequestBody final ResetPasswordRequest request
     );
 
     @Operation(
@@ -207,6 +249,8 @@ public interface MemberApi {
             @Valid @ModelAttribute ProfileSettingRequest request,
             @RequestPart(required = false) MultipartFile profileImage
     );
+
+
 
 
 }

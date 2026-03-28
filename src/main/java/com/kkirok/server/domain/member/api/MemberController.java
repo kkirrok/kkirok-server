@@ -3,6 +3,7 @@ package com.kkirok.server.domain.member.api;
 import com.kkirok.server.domain.member.application.dto.request.*;
 import com.kkirok.server.domain.member.application.dto.response.AccessTokenGenerateResponse;
 import com.kkirok.server.domain.member.application.dto.response.EmailVerificationStatusResponse;
+import com.kkirok.server.domain.member.application.dto.response.FoundEmailResponse;
 import com.kkirok.server.domain.member.application.dto.response.LoginSuccessResponse;
 import com.kkirok.server.domain.member.application.dto.response.MemberLoginResponse;
 import com.kkirok.server.domain.member.application.service.*;
@@ -29,6 +30,7 @@ public class MemberController implements MemberApi {
     private final AuthenticationService authenticationService;
     private final SocialLoginService socialLoginService;
     private final LocalLoginService localLoginService;
+    private final AccountRecoveryService accountRecoveryService;
     private final EmailVerificationService emailVerificationService;
     private final EmailVerificationStateService emailVerificationStateService;
     private final OnboardingService onboardingService;
@@ -71,6 +73,27 @@ public class MemberController implements MemberApi {
                         MemberSuccessCode.EMAIL_VERIFIED_SUCCESS,
                         EmailVerificationStatusResponse.of(request.email(), true)
                 ));
+    }
+
+    @Override
+    @PostMapping("/recovery/email")
+    public ResponseEntity<SuccessResponse<FoundEmailResponse>> findEmail(
+            @Valid @RequestBody final FindEmailRequest request
+    ) {
+        FoundEmailResponse response = FoundEmailResponse.of(accountRecoveryService.findEmail(request));
+        return ResponseEntity.ok()
+                .body(SuccessResponse.of(MemberSuccessCode.FIND_EMAIL_SUCCESS, response));
+    }
+
+    @Override
+    @PostMapping("/recovery/password")
+    public ResponseEntity<SuccessResponse<Void>> resetPassword(
+            @Parameter(hidden = true) @CurrentMember final Long memberId,
+            @Valid @RequestBody final ResetPasswordRequest request
+    ) {
+        accountRecoveryService.resetPassword(memberId, request);
+        return ResponseEntity.ok()
+                .body(SuccessResponse.from(MemberSuccessCode.RESET_PASSWORD_SUCCESS));
     }
 
     @Override

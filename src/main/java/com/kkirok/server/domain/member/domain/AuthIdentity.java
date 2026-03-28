@@ -85,4 +85,8 @@ public class AuthIdentity extends BaseTimeEntity {
                 .lastLoginAt(null)
                 .build();
     }
+
+    public void changePassword(final String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
 }

@@ -29,6 +29,9 @@ public class Member extends BaseTimeEntity {
     @Column(nullable = false)
     private String nickname;
 
+    @Column(name = "name", length = 20)
+    private String name;
+
     @Column(nullable = false, length = 50)
     private String email;
 
@@ -107,6 +110,7 @@ public class Member extends BaseTimeEntity {
         if (profileImageKey != null) {
             this.profileImage = profileImageKey;
         }
+        this.name = dto.name();
         this.nickname = dto.nickname();
         this.phone = dto.phone();
         this.gender = dto.gender();
