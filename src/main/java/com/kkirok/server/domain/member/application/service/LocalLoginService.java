@@ -34,7 +34,6 @@ public class LocalLoginService {
 
         String encodedPassword = passwordEncoder.encode(request.password());
         Member member = memberRegistrationService.registerLocalMember(
-                request.nickname(),
                 request.email(),
                 encodedPassword
         );

@@ -11,21 +11,24 @@ public final class MemberFixture {
 
     public static Member createLocalMember() {
         Users user = UserFixture.create();
-        return Member.createLocal("kkirok", "kkirok@test.com", user);
+        return Member.createLocal("kkirok@test.com", user);
     }
 
     public static Member createLocalMember(String nickname, String email) {
         Users user = UserFixture.create();
-        return Member.createLocal(nickname, email, user);
+        return Member.createLocal(email, user);
     }
 
     public static Member createLocalMember(String nickname, String email, Users user) {
-        return Member.createLocal(nickname, email, user);
+        return Member.createLocal(email, user);
     }
 
     public static Member createSocialMember(Long socialId, SocialType socialType) {
         Users user = UserFixture.create();
-        return Member.create("kkirok", "kkirok@test.com", user, socialId, socialType);
+        return Member.create(
+                MemberInfoResponseFixture.create(socialId, "provider-user-id", "kkirok", "kkirok@test.com", socialType),
+                user
+        );
     }
 
     public static Member createSocialMember(
@@ -35,6 +38,9 @@ public final class MemberFixture {
             Long socialId,
             SocialType socialType
     ) {
-        return Member.create(nickname, email, user, socialId, socialType);
+        return Member.create(
+                MemberInfoResponseFixture.create(socialId, "provider-user-id", nickname, email, socialType),
+                user
+        );
     }
 }

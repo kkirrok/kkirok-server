@@ -33,7 +33,7 @@ public interface CharacterApi {
     })
     @ApiSuccessCodeExample(codeType = CharacterSuccessCode.class, code = "CHARACTER_DEFAULT_INFO_GET_SUCCESS")
     ResponseEntity<SuccessResponse<CharacterDefaultInfoResponse>> characterDefaultInfo(
-            @Parameter(description = "현재 로그인한 회원 ID", required = true)
+            @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
             @CurrentMember Long memberId
     );
 
@@ -50,7 +50,7 @@ public interface CharacterApi {
     })
     @ApiSuccessCodeExample(codeType = CharacterSuccessCode.class, code = "POSSESSING_ITEMS_GET_SUCCESS")
     ResponseEntity<SuccessResponse<PossessingItemsResponse>> possessingItems(
-            @Parameter(description = "현재 로그인한 회원 ID", required = true)
+            @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
             @CurrentMember Long memberId
     );
 
@@ -73,7 +73,7 @@ public interface CharacterApi {
     })
     @ApiSuccessCodeExample(codeType = CharacterSuccessCode.class, code = "ITEM_WEAR_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> wearItem(
-            @Parameter(description = "현재 로그인한 회원 ID", required = true)
+            @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
             @CurrentMember Long memberId,
             @Parameter(description = "장착할 아이템 ID", required = true)
             @PathVariable Long itemId
@@ -97,7 +97,7 @@ public interface CharacterApi {
     })
     @ApiSuccessCodeExample(codeType = CharacterSuccessCode.class, code = "ITEM_UNWEAR_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> unWearItem(
-            @Parameter(description = "현재 로그인한 회원 ID", required = true)
+            @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
             @CurrentMember Long memberId,
             @Parameter(description = "장착 해제할 아이템 ID", required = true)
             @PathVariable Long itemId

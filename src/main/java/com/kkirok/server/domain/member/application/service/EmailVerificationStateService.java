@@ -1,6 +1,8 @@
 package com.kkirok.server.domain.member.application.service;
 
+import com.kkirok.server.domain.member.dao.EmailVerificationHistoryRepository;
 import com.kkirok.server.domain.member.dao.redis.EmailVerificationRepository;
+import com.kkirok.server.domain.member.domain.EmailVerificationHistory;
 import com.kkirok.server.domain.member.exception.EmailErrorCode;
 import com.kkirok.server.domain.member.exception.EmailException;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class EmailVerificationStateService {
 
+    private final EmailVerificationHistoryRepository emailVerificationHistoryRepository;
     private final EmailVerificationRepository emailVerificationRepository;
 
     @Transactional
@@ -21,6 +24,9 @@ public class EmailVerificationStateService {
         if (!verificationCode.equals(code)) {
             throw new EmailException(EmailErrorCode.EMAIL_VERIFICATION_CODE_MISMATCH);
         }
+
+        emailVerificationHistoryRepository.findLatestPendingHistory(email, code)
+                .ifPresent(EmailVerificationHistory::markSuccess);
 
         emailVerificationRepository.deleteVerificationCode(email);
         emailVerificationRepository.markVerified(email);

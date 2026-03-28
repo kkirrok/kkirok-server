@@ -1,5 +1,6 @@
 package com.kkirok.server.domain.member.application.service;
 
+import com.kkirok.server.domain.member.dao.EmailVerificationHistoryRepository;
 import com.kkirok.server.domain.member.dao.redis.EmailVerificationRepository;
 import com.kkirok.server.domain.member.util.EmailCodeGenerator;
 import org.junit.jupiter.api.DisplayName;
@@ -24,6 +25,9 @@ class EmailVerificationServiceTest {
     @Mock
     private EmailVerificationRepository emailVerificationRepository;
 
+    @Mock
+    private EmailVerificationHistoryRepository emailVerificationHistoryRepository;
+
     @InjectMocks
     private EmailVerificationService emailVerificationService;
 
@@ -40,6 +44,7 @@ class EmailVerificationServiceTest {
             emailVerificationService.sendVerificationCode(email);
 
             // Then
+            then(emailVerificationHistoryRepository).should().save(org.mockito.ArgumentMatchers.any());
             then(emailVerificationRepository).should().saveVerificationCode(email, "123456");
             then(emailVerificationRepository).should().deleteVerified(email);
             then(emailSender).should().sendVerificationCode(email, "123456");

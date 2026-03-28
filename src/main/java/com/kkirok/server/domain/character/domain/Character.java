@@ -35,9 +35,9 @@ public class Character extends BaseTimeEntity {
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "character_type_id", nullable = false)
-    private CharacterType characterType;
+//    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+//    @JoinColumn(name = "character_type_id", nullable = false)
+//    private CharacterType characterType;
 
     @Column(length = 100, nullable = false)
     private String name;
@@ -64,7 +64,7 @@ public class Character extends BaseTimeEntity {
     @Builder
     private Character(Member member, CharacterType characterType, String name, CharacterStatusType currentStatus) {
         this.member = member;
-        this.characterType = characterType;
+//        this.characterType = characterType;
         this.name = name;
         this.level = 1;
         this.exp = 0;
@@ -73,8 +73,11 @@ public class Character extends BaseTimeEntity {
         this.lastStatusUpdatedAt = LocalDateTime.now();
     }
 
-    public static Character create(){
-        return Character.builder() // TODO: create() 메서드 완성
+    public static Character create(final Member member, final CharacterType characterType) {
+        return Character.builder()
+                .member(member)
+//                .characterType(characterType)
+                .name("캐릭터명") //TODO: 캐릭터 타입 넣기
                 .build();
     }
 

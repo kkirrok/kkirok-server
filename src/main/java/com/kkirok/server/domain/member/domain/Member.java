@@ -1,7 +1,9 @@
 package com.kkirok.server.domain.member.domain;
 
 import com.kkirok.server.domain.BaseTimeEntity;
+import com.kkirok.server.domain.member.application.dto.request.ProfileSettingRequest;
 import com.kkirok.server.domain.user.domain.Users;
+import com.kkirok.server.global.auth.client.dto.MemberInfoResponse;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -10,7 +12,9 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 @Getter
@@ -22,8 +26,11 @@ public class Member extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "nickname", length = 20)
     private String nickname;
+
+    @Column(name = "name", length = 20)
+    private String name;
 
     @Column(nullable = false, length = 50)
     private String email;
@@ -53,55 +60,77 @@ public class Member extends BaseTimeEntity {
     @Column(length = 10)
     private Gender gender;
 
-    private Integer age;
+    @Column(name = "birthday")
+    private LocalDate birthday;
+
+    @Column(name = "phone", length = 20)
+    private String phone;
+
+    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Onboarding onboarding;
 
     @Builder
-    private Member(String nickname, String email, String profileImage, boolean onboardingCompleted,
-                   LocalDateTime deletedAt, Users user, Long socialId, SocialType socialType,
-                   Gender gender, Integer age) {
-        this.nickname = nickname;
+    private Member(String email, String profileImage,
+                   Users user, Long socialId, SocialType socialType
+                   ) {
         this.email = email;
         this.profileImage = profileImage;
-        this.onboardingCompleted = onboardingCompleted;
-        this.deletedAt = deletedAt;
         this.user = user;
         this.socialId = socialId;
         this.socialType = socialType;
-        this.gender = gender;
-        this.age = age;
     }
 
     public static Member create(
-            final String nickname,
-            final String email,
-            final Users user,
-            final Long socialId,
-            final SocialType socialType
+            final MemberInfoResponse memberInfoResponse,
+            final Users user
     ) {
         return Member.builder()
-                .nickname(nickname)
-                .email(email)
+                .email(memberInfoResponse.email())
                 .profileImage(null)
-                .onboardingCompleted(false)
                 .user(user)
-                .socialId(socialId)
-                .socialType(socialType)
+                .socialId(memberInfoResponse.socialId())
+                .socialType(memberInfoResponse.socialType())
                 .build();
     }
 
     public static Member createLocal(
-            final String nickname,
             final String email,
             final Users user
     ) {
         return Member.builder()
-                .nickname(nickname)
                 .email(email)
                 .profileImage(null)
-                .onboardingCompleted(false)
                 .user(user)
                 .socialId(null)
                 .socialType(null)
                 .build();
     }
+
+    public void updateOnboarding(ProfileSettingRequest dto, String profileImageKey){
+        if (profileImageKey != null) {
+            this.profileImage = profileImageKey;
+        }
+        this.name = dto.name();
+        this.nickname = dto.nickname();
+        this.phone = dto.phone();
+        this.gender = dto.gender();
+        this.birthday = dto.birth();
+        this.onboardingCompleted = true;
+
+        if (Objects.isNull(this.onboarding)) {
+            this.onboarding = Onboarding.create(this, dto);
+            return;
+        }
+
+        this.onboarding.update(dto);
+    }
+
+    void assignOnboarding(final Onboarding onboarding) {
+        this.onboarding = onboarding;
+    }
+
+    public void quit(){
+        this.deletedAt = LocalDateTime.now();
+    }
+
 }

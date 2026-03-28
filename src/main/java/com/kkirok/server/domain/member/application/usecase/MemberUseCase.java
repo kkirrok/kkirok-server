@@ -13,4 +13,11 @@ public interface MemberUseCase {
     void deleteUser(Long id);
 
     long countMembers();
+
+    void updateMember(Member member);
+
+    Member findWithOnboarding(Long memberId);
+
+    void quit(Long memberId);
+
 }

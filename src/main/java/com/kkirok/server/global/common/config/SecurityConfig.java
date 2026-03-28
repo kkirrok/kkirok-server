@@ -28,9 +28,8 @@ public class SecurityConfig {
 
     public String[] getAuthWhitelist() {
         return new String[] {
-                "/v1/users/sign-up",
-                "/v1/users/local/sign-up",
-                "/v1/users/local/login",
+                "/v1/users/login/**",
+                "/v1/users/sign-up/local",
                 "/v1/users/refresh-token",
                 "/v1/main",
                 "/api-docs/**",
