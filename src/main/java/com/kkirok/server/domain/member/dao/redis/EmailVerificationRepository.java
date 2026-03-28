@@ -77,6 +77,10 @@ public class EmailVerificationRepository {
         delete(verifiedKey(email), email);
     }
 
+    public static Duration verificationCodeTtl() {
+        return VERIFICATION_CODE_TTL;
+    }
+
     private String codeKey(final String email) {
         return VERIFICATION_CODE_KEY + email;
     }

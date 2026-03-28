@@ -1,6 +1,8 @@
 package com.kkirok.server.domain.member.application.service;
 
+import com.kkirok.server.domain.member.dao.EmailVerificationHistoryRepository;
 import com.kkirok.server.domain.member.dao.redis.EmailVerificationRepository;
+import com.kkirok.server.domain.member.domain.EmailVerificationHistory;
 import com.kkirok.server.domain.member.exception.EmailErrorCode;
 import com.kkirok.server.domain.member.exception.EmailException;
 import org.junit.jupiter.api.DisplayName;
@@ -22,6 +24,9 @@ class EmailVerificationStateServiceTest {
     @Mock
     private EmailVerificationRepository emailVerificationRepository;
 
+    @Mock
+    private EmailVerificationHistoryRepository emailVerificationHistoryRepository;
+
     @InjectMocks
     private EmailVerificationStateService emailVerificationStateService;
 
@@ -31,12 +36,17 @@ class EmailVerificationStateServiceTest {
         // Given
         String email = "kkirok@test.com";
         String code = "123456";
+        EmailVerificationHistory history = EmailVerificationHistory.create(email, code);
         given(emailVerificationRepository.getVerificationCode(email)).willReturn(Optional.of(code));
+        given(emailVerificationHistoryRepository.findLatestPendingHistory(email, code))
+                .willReturn(Optional.of(history));
 
         // When
         emailVerificationStateService.verify(email, code);
 
         // Then
+        then(emailVerificationHistoryRepository).should()
+                .findLatestPendingHistory(email, code);
         then(emailVerificationRepository).should().deleteVerificationCode(email);
         then(emailVerificationRepository).should().markVerified(email);
     }

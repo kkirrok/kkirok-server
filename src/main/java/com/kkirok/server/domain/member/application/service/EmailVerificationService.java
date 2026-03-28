@@ -1,6 +1,8 @@
 package com.kkirok.server.domain.member.application.service;
 
+import com.kkirok.server.domain.member.dao.EmailVerificationHistoryRepository;
 import com.kkirok.server.domain.member.dao.redis.EmailVerificationRepository;
+import com.kkirok.server.domain.member.domain.EmailVerificationHistory;
 import com.kkirok.server.domain.member.util.EmailCodeGenerator;
 import com.kkirok.server.global.common.redis.exception.RedisException;
 import lombok.RequiredArgsConstructor;
@@ -14,9 +16,11 @@ public class EmailVerificationService {
 
     private final EmailSender emailSender;
     private final EmailVerificationRepository emailVerificationRepository;
+    private final EmailVerificationHistoryRepository emailVerificationHistoryRepository;
 
     public void sendVerificationCode(final String email) {
         String code = EmailCodeGenerator.generate();
+        emailVerificationHistoryRepository.save(EmailVerificationHistory.create(email, code));
         emailVerificationRepository.saveVerificationCode(email, code);
         try {
             emailVerificationRepository.deleteVerified(email);
