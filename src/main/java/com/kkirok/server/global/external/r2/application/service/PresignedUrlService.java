@@ -1,7 +1,7 @@
 package com.kkirok.server.global.external.r2.application.service;
 
-import com.kkirok.server.global.external.r2.exception.R2ErrorCode;
-import com.kkirok.server.global.external.r2.exception.R2Exception;
+import com.kkirok.server.global.external.exception.ExternalErrorCode;
+import com.kkirok.server.global.external.exception.R2Exception;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,7 +30,7 @@ public class PresignedUrlService {
 
         // key 없으면 예외 발생
         if (key == null || key.isBlank()) {
-            throw new R2Exception(R2ErrorCode.INVALID_OBJECT_KEY);
+            throw new R2Exception(ExternalErrorCode.R2_INVALID_OBJECT_KEY);
         }
 
         // key와 버킷으로 이미지 url 조회
@@ -48,7 +48,7 @@ public class PresignedUrlService {
             return r2Presigner.presignGetObject(presignRequest).url();
         } catch (software.amazon.awssdk.services.s3.model.S3Exception | SdkClientException exception) {
             log.error("Presigned URL 발급 실패 : ", exception);
-            throw new R2Exception(R2ErrorCode.PRESIGNED_URL_GENERATION_FAILED);
+            throw new R2Exception(ExternalErrorCode.R2_PRESIGNED_URL_GENERATION_FAILED, exception);
         }
     }
 

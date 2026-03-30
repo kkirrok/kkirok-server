@@ -2,6 +2,7 @@ package com.kkirok.server.global.common.handler;
 
 import com.kkirok.server.global.common.dto.ErrorResponse;
 import com.kkirok.server.global.common.exception.*;
+import com.kkirok.server.global.external.exception.OpenAiException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -103,6 +104,15 @@ public class GlobalExceptionHandler {
 	protected ResponseEntity<ErrorResponse> handleConflictException(final ConflictException e) {
 		log.warn("ConflictException: {}", e.getMessage());
 		return ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResponse.from(e.getBaseErrorCode()));
+	}
+
+	/**
+	 * EXTERNAL_ERROR
+	 */
+	@ExceptionHandler(OpenAiException.class)
+	public ResponseEntity<ErrorResponse> handleOpenAiClientException(final OpenAiException e) {
+		log.warn("OpenAiClientException occurred: ", e);
+		return ResponseEntity.status(e.getBaseErrorCode().getStatus()).body(ErrorResponse.from(e.getBaseErrorCode()));
 	}
 
 	/**

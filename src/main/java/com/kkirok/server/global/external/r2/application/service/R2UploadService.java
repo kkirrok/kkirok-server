@@ -1,7 +1,7 @@
 package com.kkirok.server.global.external.r2.application.service;
 
-import com.kkirok.server.global.external.r2.exception.R2ErrorCode;
-import com.kkirok.server.global.external.r2.exception.R2Exception;
+import com.kkirok.server.global.external.exception.ExternalErrorCode;
+import com.kkirok.server.global.external.exception.R2Exception;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,10 +39,10 @@ public class R2UploadService {
         try {
             r2Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
         } catch (IOException exception) {
-            throw new R2Exception(R2ErrorCode.FILE_STREAM_READ_FAILED);
+            throw new R2Exception(ExternalErrorCode.R2_FILE_STREAM_READ_FAILED, exception);
         } catch (software.amazon.awssdk.services.s3.model.S3Exception | SdkClientException exception) {
             log.error("파일 업로드 실패 : ", exception);
-            throw new R2Exception(R2ErrorCode.FILE_UPLOAD_FAILED);
+            throw new R2Exception(ExternalErrorCode.R2_FILE_UPLOAD_FAILED, exception);
         }
 
         return key;
@@ -50,7 +50,7 @@ public class R2UploadService {
 
     private void validateFile(final MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new R2Exception(R2ErrorCode.INVALID_FILE_REQUEST);
+            throw new R2Exception(ExternalErrorCode.R2_INVALID_FILE_REQUEST);
         }
     }
 
