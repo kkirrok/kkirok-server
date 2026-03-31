@@ -11,6 +11,10 @@ public enum ExternalErrorCode implements BaseErrorCode {
 	// OpenAI
 	OPENAI_CLIENT_ERROR(502, "OpenAI 호출에 실패했습니다."),
 
+	// FastAPI
+	FAST_API_CLIENT_ERROR(502, "FastAPI 호출에 실패했습니다."),
+	FAST_API_INVALID_REQUEST(400, "FastAPI 요청 정보가 유효하지 않습니다."),
+
 	// R2
 	R2_INVALID_FILE_REQUEST(400, "업로드할 파일이 유효하지 않습니다."),
 	R2_INVALID_OBJECT_KEY(400, "R2 객체 키가 유효하지 않습니다."),

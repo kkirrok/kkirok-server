@@ -7,6 +7,7 @@ import com.kkirok.server.global.external.openai.OpenAiRestClient;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
@@ -36,7 +37,9 @@ public class OpenAiClientConfig {
 	}
 
 	@Bean
-	public OpenAiClient openAiClient(RestClient openAiRestClient, ObjectMapper objectMapper, OpenAiProperties properties) {
+	public OpenAiClient openAiClient(@Qualifier("openAiRestClient") RestClient openAiRestClient,
+									 ObjectMapper objectMapper,
+									 OpenAiProperties properties) {
 		return new OpenAiRestClient(openAiRestClient, objectMapper, properties);
 	}
 	
