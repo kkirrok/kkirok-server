@@ -12,4 +12,9 @@ public class KkirokException extends RuntimeException {
 		super(baseErrorCode.getMessage());
 		this.baseErrorCode = baseErrorCode;
 	}
+
+	public KkirokException(BaseErrorCode baseErrorCode, Throwable cause) {
+		super(baseErrorCode.getMessage(), cause);
+		this.baseErrorCode = baseErrorCode;
+	}
 }

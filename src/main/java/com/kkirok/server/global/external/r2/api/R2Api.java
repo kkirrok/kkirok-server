@@ -1,9 +1,9 @@
 package com.kkirok.server.global.external.r2.api;
 
 import com.kkirok.server.global.common.dto.SuccessResponse;
+import com.kkirok.server.global.external.exception.ExternalErrorCode;
+import com.kkirok.server.global.external.exception.ExternalSuccessCode;
 import com.kkirok.server.global.external.r2.application.dto.response.PresignedResponse;
-import com.kkirok.server.global.external.r2.exception.R2ErrorCode;
-import com.kkirok.server.global.external.r2.exception.R2SuccessCode;
 import com.kkirok.server.global.swagger.annotation.ApiErrorCodeExample;
 import com.kkirok.server.global.swagger.annotation.ApiErrorCodeExamples;
 import com.kkirok.server.global.swagger.annotation.ApiSuccessCodeExample;
@@ -30,10 +30,10 @@ public interface R2Api {
             """
     )
     @ApiErrorCodeExamples({
-            @ApiErrorCodeExample(codeType = R2ErrorCode.class, code = "INVALID_OBJECT_KEY"),
-            @ApiErrorCodeExample(codeType = R2ErrorCode.class, code = "PRESIGNED_URL_GENERATION_FAILED")
+            @ApiErrorCodeExample(codeType = ExternalErrorCode.class, code = "R2_INVALID_OBJECT_KEY"),
+            @ApiErrorCodeExample(codeType = ExternalErrorCode.class, code = "R2_PRESIGNED_URL_GENERATION_FAILED")
     })
-    @ApiSuccessCodeExample(codeType = R2SuccessCode.class, code = "DOWNLOAD_PRESIGNED_URL_SUCCESS")
+    @ApiSuccessCodeExample(codeType = ExternalSuccessCode.class, code = "R2_DOWNLOAD_PRESIGNED_URL_SUCCESS")
     ResponseEntity<SuccessResponse<PresignedResponse>> download(
             @Parameter(description = "다운로드할 R2 객체 키", required = true)
             @PathVariable String key

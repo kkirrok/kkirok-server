@@ -139,3 +139,22 @@ aws:
     secret-key: ${DEV_AWS_SES_SECRET_KEY}
     region: ${DEV_AWS_SES_REGION}
     source-email: ${DEV_AWS_SES_SOURCE_EMAIL}
+
+openai:
+  api-key: ${OPENAI_API_KEY:}
+  base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+  model: ${OPENAI_MODEL:gpt-4.1-mini}
+  fallback-model: ${OPENAI_FALLBACK_MODEL:gpt-4.1}
+  connect-timeout-seconds: ${OPENAI_CONNECT_TIMEOUT_SECONDS:2}
+  read-timeout-seconds: ${OPENAI_READ_TIMEOUT_SECONDS:120}
+  max-retries: ${OPENAI_MAX_RETRIES:2}
+  initial-backoff-millis: ${OPENAI_INITIAL_BACKOFF_MILLIS:200}
+  max-output-token: ${OPENAI_MAX_OUTPUT_TOKEN:2000}
+
+fastapi:
+  base-url: ${FAST_API_BASE_URL:}
+  api-key: ${FAST_API_API_KEY:}
+  connect-timeout-seconds: ${FAST_API_CONNECT_TIMEOUT_SECONDS:3}
+  read-timeout-seconds: ${FAST_API_READ_TIMEOUT_SECONDS:60}
+  max-retries: ${FAST_API_MAX_RETRIES:1}
+  initial-backoff-millis: ${FAST_API_INITIAL_BACKOFF_MILLIS:200}

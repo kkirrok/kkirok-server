@@ -1,0 +1,14 @@
+package com.kkirok.server.global.external.openai.prompt;
+
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor
+public enum PromptType {
+
+	MEAL_ANALYSIS("prompts/meal-analysis-v1.txt", "v1");
+
+	private final String resourcePath;
+	private final String version;
+}

@@ -11,7 +11,7 @@ import com.kkirok.server.domain.member.exception.MemberSuccessCode;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
 import com.kkirok.server.global.common.dto.SuccessResponse;
 import com.kkirok.server.global.common.redis.exception.RedisErrorCode;
-import com.kkirok.server.global.external.r2.exception.R2ErrorCode;
+import com.kkirok.server.global.external.exception.ExternalErrorCode;
 import com.kkirok.server.global.swagger.annotation.ApiErrorCodeExample;
 import com.kkirok.server.global.swagger.annotation.ApiErrorCodeExamples;
 import com.kkirok.server.global.swagger.annotation.ApiSuccessCodeExample;
@@ -99,8 +99,8 @@ public interface MemberApi {
             @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
             @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "ONBOARDING_HABIT_MAX_COUNT"),
             @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "MEMBER_NOT_FOUND"),
-            @ApiErrorCodeExample(codeType = R2ErrorCode.class, code = "FILE_STREAM_READ_FAILED"),
-            @ApiErrorCodeExample(codeType = R2ErrorCode.class, code = "FILE_UPLOAD_FAILED")
+            @ApiErrorCodeExample(codeType = ExternalErrorCode.class, code = "R2_FILE_STREAM_READ_FAILED"),
+            @ApiErrorCodeExample(codeType = ExternalErrorCode.class, code = "R2_FILE_UPLOAD_FAILED")
     })
     @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "PROFILE_SETTING_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> updateProfile(
