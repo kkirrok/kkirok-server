@@ -1,4 +1,4 @@
-package com.kkirok.server.global.external.openai;
+package com.kkirok.server.global.external.openai.client;
 
 
 import com.kkirok.server.global.external.ExternalClient;
@@ -13,5 +13,4 @@ public interface OpenAiClient extends ExternalClient<OpenAiResponseRequest, Open
 	default OpenAiResponse execute(OpenAiResponseRequest request) {
 		return createResponse(request);
 	}
-
 }

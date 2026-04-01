@@ -10,6 +10,8 @@ public enum ExternalErrorCode implements BaseErrorCode {
 
 	// OpenAI
 	OPENAI_CLIENT_ERROR(502, "OpenAI 호출에 실패했습니다."),
+	OPENAI_RESPONSE_PARSE_FAILED(502, "OpenAI 응답을 원하는 형식으로 변환하지 못했습니다."),
+	OPENAI_PROMPT_LOAD_FAILED(500, "OpenAI 프롬프트를 불러오지 못했습니다."),
 
 	// FastAPI
 	FAST_API_CLIENT_ERROR(502, "FastAPI 호출에 실패했습니다."),

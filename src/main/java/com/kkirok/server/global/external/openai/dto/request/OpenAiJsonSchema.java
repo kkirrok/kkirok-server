@@ -11,4 +11,8 @@ public record OpenAiJsonSchema(
 		Map<String, Object> schema,
 		Boolean strict
 ) {
+
+	public OpenAiResponseFormat toResponseFormat() {
+		return OpenAiResponseFormat.jsonSchema(name, schema, strict);
+	}
 }

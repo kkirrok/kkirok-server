@@ -1,4 +1,4 @@
-package com.kkirok.server.global.external.openai;
+package com.kkirok.server.global.external.openai.client;
 
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -21,6 +21,11 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.Map;
 
+/*
+	OpenAI Responses API를 호출하는 클라이언트
+	- OpenAiResponseRequest를 직접 받아 호출
+	- 재시도, 에러 로깅, 요청/응답 로깅 처리
+ */
 @Slf4j
 @RequiredArgsConstructor
 public class OpenAiRestClient implements OpenAiClient {
@@ -33,7 +38,6 @@ public class OpenAiRestClient implements OpenAiClient {
 
 	@Override
 	public OpenAiResponse createResponse(OpenAiResponseRequest request) {
-
 		OpenAiResponseRequest normalized = request.withModelDefaults(properties.getModel(), properties.getFallbackModel());
 		int maxRetries = Math.max(0, properties.getMaxRetries());
 		long backoffMillis = Math.max(0, properties.getInitialBackoffMillis());
@@ -107,6 +111,7 @@ public class OpenAiRestClient implements OpenAiClient {
 		}
 	}
 
+
 	private void logSuccess(OpenAiResponseRequest request, OpenAiResponse response, boolean parsed) {
 
 		String requestId = response != null ? response.requestId() : null;
@@ -117,7 +122,7 @@ public class OpenAiRestClient implements OpenAiClient {
 				requestId,
 				model,
 				extractPromptVersion(request.metadata()),
-				hashInput(request.input()),
+				hashPayload(request.instructions(), request.input()),
 				totalTokens,
 				parsed);
 	}
@@ -134,7 +139,7 @@ public class OpenAiRestClient implements OpenAiClient {
 				code,
 				willRetry,
 				extractPromptVersion(request.metadata()),
-				hashInput(request.input()));
+				hashPayload(request.instructions(), request.input()));
 	}
 
 	private String extractPromptVersion(Map<String, Object> metadata) {
@@ -148,14 +153,23 @@ public class OpenAiRestClient implements OpenAiClient {
 		return value != null ? String.valueOf(value) : null;
 	}
 
-	private String hashInput(Object input) {
-		if (input == null) {
+	private String hashPayload(String instructions, Object input) {
+		if (instructions == null && input == null) {
 			return null;
 		}
-		String text = input instanceof String ? (String) input : input.toString();
+		StringBuilder payload = new StringBuilder();
+		if (instructions != null) {
+			payload.append(instructions);
+		}
+		if (input != null) {
+			if (!payload.isEmpty()) {
+				payload.append('\n');
+			}
+			payload.append(input instanceof String ? (String) input : input.toString());
+		}
 		try {
 			MessageDigest digest = MessageDigest.getInstance("SHA-256");
-			byte[] hashed = digest.digest(text.getBytes(StandardCharsets.UTF_8));
+			byte[] hashed = digest.digest(payload.toString().getBytes(StandardCharsets.UTF_8));
 			return HexFormat.of().formatHex(hashed);
 		} catch (NoSuchAlgorithmException e) {
 			return null;

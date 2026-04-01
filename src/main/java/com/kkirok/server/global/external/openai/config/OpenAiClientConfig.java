@@ -2,8 +2,8 @@ package com.kkirok.server.global.external.openai.config;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kkirok.server.global.external.openai.OpenAiClient;
-import com.kkirok.server.global.external.openai.OpenAiRestClient;
+import com.kkirok.server.global.external.openai.client.OpenAiClient;
+import com.kkirok.server.global.external.openai.client.OpenAiRestClient;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
