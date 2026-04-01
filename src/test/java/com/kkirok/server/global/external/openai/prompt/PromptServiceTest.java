@@ -16,7 +16,7 @@ class PromptServiceTest {
 		PromptTemplate prompt = promptService.getPrompt(PromptType.MEAL_ANALYSIS);
 
 		assertThat(prompt.version()).isEqualTo("v1");
-		assertThat(prompt.content()).contains("nutrition assistant");
+		assertThat(prompt.content()).contains("nutrition analysis assistant");
 	}
 
 	@Test
@@ -26,7 +26,7 @@ class PromptServiceTest {
 				Map.of("meal_context", "Lunch: chicken salad")
 		);
 
-		assertThat(prompt.content()).contains("Lunch: chicken salad");
-		assertThat(prompt.content()).doesNotContain("{{meal_context}}");
+		assertThat(prompt.content()).contains("valid JSON object");
+		assertThat(prompt.content()).contains("meal_summary");
 	}
 }

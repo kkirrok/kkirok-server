@@ -1,7 +1,7 @@
 package com.kkirok.server.global.external.r2.application.service;
 
-import com.kkirok.server.global.external.r2.exception.R2ErrorCode;
-import com.kkirok.server.global.external.r2.exception.R2Exception;
+import com.kkirok.server.global.external.exception.ExternalErrorCode;
+import com.kkirok.server.global.external.exception.R2Exception;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -70,7 +70,7 @@ class PresignedUrlServiceTest {
         assertThatThrownBy(() -> presignedUrlService.getPresignedUrl(" "))
                 .isInstanceOf(R2Exception.class)
                 .extracting("baseErrorCode")
-                .isEqualTo(R2ErrorCode.INVALID_OBJECT_KEY);
+                .isEqualTo(ExternalErrorCode.R2_INVALID_OBJECT_KEY);
     }
 
     @Test
@@ -85,6 +85,6 @@ class PresignedUrlServiceTest {
         assertThatThrownBy(() -> presignedUrlService.getPresignedUrl("profile.png"))
                 .isInstanceOf(R2Exception.class)
                 .extracting("baseErrorCode")
-                .isEqualTo(R2ErrorCode.PRESIGNED_URL_GENERATION_FAILED);
+                .isEqualTo(ExternalErrorCode.R2_PRESIGNED_URL_GENERATION_FAILED);
     }
 }

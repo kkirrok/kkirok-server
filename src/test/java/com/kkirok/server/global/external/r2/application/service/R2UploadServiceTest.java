@@ -1,7 +1,7 @@
 package com.kkirok.server.global.external.r2.application.service;
 
-import com.kkirok.server.global.external.r2.exception.R2ErrorCode;
-import com.kkirok.server.global.external.r2.exception.R2Exception;
+import com.kkirok.server.global.external.exception.ExternalErrorCode;
+import com.kkirok.server.global.external.exception.R2Exception;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -97,7 +97,7 @@ class R2UploadServiceTest {
         assertThatThrownBy(() -> r2UploadService.upload(emptyFile))
                 .isInstanceOf(R2Exception.class)
                 .extracting("baseErrorCode")
-                .isEqualTo(R2ErrorCode.INVALID_FILE_REQUEST);
+                .isEqualTo(ExternalErrorCode.R2_INVALID_FILE_REQUEST);
     }
 
     @Test
@@ -116,7 +116,7 @@ class R2UploadServiceTest {
         assertThatThrownBy(() -> r2UploadService.upload(file))
                 .isInstanceOf(R2Exception.class)
                 .extracting("baseErrorCode")
-                .isEqualTo(R2ErrorCode.FILE_STREAM_READ_FAILED);
+                .isEqualTo(ExternalErrorCode.R2_FILE_STREAM_READ_FAILED);
     }
 
     @Test
@@ -138,6 +138,6 @@ class R2UploadServiceTest {
         assertThatThrownBy(() -> r2UploadService.upload(file))
                 .isInstanceOf(R2Exception.class)
                 .extracting("baseErrorCode")
-                .isEqualTo(R2ErrorCode.FILE_UPLOAD_FAILED);
+                .isEqualTo(ExternalErrorCode.R2_FILE_UPLOAD_FAILED);
     }
 }

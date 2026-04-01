@@ -80,3 +80,10 @@ aws:
     secret-key: test-secret-key
     region: ap-northeast-2
     source-email: no-reply@test.com
+
+openai:
+  api-key: test-openai-api-key
+  base-url: http://localhost:18080
+
+fastapi:
+  base-url: http://localhost:18081
