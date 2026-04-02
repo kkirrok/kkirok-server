@@ -10,6 +10,7 @@ import com.kkirok.server.domain.member.application.service.MemberService;
 import com.kkirok.server.domain.member.application.service.OnboardingService;
 import com.kkirok.server.domain.member.exception.MemberSuccessCode;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
+import com.kkirok.server.global.auth.annotation.RoleUserAuth;
 import com.kkirok.server.global.common.dto.SuccessResponse;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
@@ -38,6 +39,7 @@ public class MemberController implements MemberApi {
 
     @Override
     @PostMapping("/recovery/password")
+    @RoleUserAuth
     public ResponseEntity<SuccessResponse<Void>> resetPassword(
             @Parameter(hidden = true) @CurrentMember final Long memberId,
             @Valid @RequestBody final ResetPasswordRequest request
@@ -48,6 +50,7 @@ public class MemberController implements MemberApi {
 
     @Override
     @GetMapping("/profile")
+    @RoleUserAuth
     public ResponseEntity<OnboardingProfileResponse> getOnboardingProfile(
             @Parameter(hidden = true) @CurrentMember final Long memberId
     ) {
@@ -56,6 +59,7 @@ public class MemberController implements MemberApi {
 
     @Override
     @PostMapping("/profile")
+    @RoleUserAuth
     public ResponseEntity<SuccessResponse<Void>> updateProfile(
             @Parameter(hidden = true) @CurrentMember Long memberId,
             @ModelAttribute @Valid ProfileSettingRequest request,
@@ -67,6 +71,7 @@ public class MemberController implements MemberApi {
 
     @Override
     @DeleteMapping
+    @RoleUserAuth
     public ResponseEntity<SuccessResponse<Void>> quitMember( @Parameter(hidden = true) @CurrentMember Long memberId){
         memberService.quit(memberId);
         return ResponseEntity.ok()

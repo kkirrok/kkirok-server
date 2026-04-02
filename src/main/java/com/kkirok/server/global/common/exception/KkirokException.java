@@ -17,4 +17,10 @@ public class KkirokException extends RuntimeException {
 		super(baseErrorCode.getMessage(), cause);
 		this.baseErrorCode = baseErrorCode;
 	}
+
+	public KkirokException(BaseErrorCode baseErrorCode, String role) {
+		super(baseErrorCode.getMessage() + " - 요구 권한 : " + role);
+	 	this.baseErrorCode = baseErrorCode;
+	}
+
 }

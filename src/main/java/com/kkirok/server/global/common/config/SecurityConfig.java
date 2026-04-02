@@ -1,6 +1,5 @@
 package com.kkirok.server.global.common.config;
 
-import com.kkirok.server.domain.user.domain.Role;
 import com.kkirok.server.global.auth.jwt.filter.JwtAuthenticationFilter;
 import com.kkirok.server.global.auth.security.CustomAccessDeniedHandler;
 import com.kkirok.server.global.auth.security.CustomJwtAuthenticationEntryPoint;
@@ -47,10 +46,6 @@ public class SecurityConfig {
         };
     }
 
-    private static final String[] AUTH_ADMIN_ONLY = {
-            "/api/admin/**"
-    };
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.cors(Customizer.withDefaults())
@@ -70,7 +65,6 @@ public class SecurityConfig {
                                 .requestMatchers("/swagger-ui/index.html", "/swagger-ui.html").denyAll()
                                 .requestMatchers("/api-specs/**").denyAll()
                                 .requestMatchers(getAuthWhitelist()).permitAll()
-                                .requestMatchers(AUTH_ADMIN_ONLY).hasAuthority(Role.ADMIN.getRoleName())
                                 .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

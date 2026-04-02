@@ -17,6 +17,7 @@ public enum MemberErrorCode implements BaseErrorCode {
 	/*
 	401 Unauthorized
 	*/
+	AUTHENTICATION_REQUIRED(401, "인증이 필요합니다."),
 	LOCAL_LOGIN_PASSWORD_MISMATCH(401, "비밀번호가 올바르지 않습니다."),
 
 	/*
@@ -26,6 +27,7 @@ public enum MemberErrorCode implements BaseErrorCode {
 	SOCIAL_ACCOUNT_LOCAL_LOGIN_FORBIDDEN(403, "소셜 로그인 계정입니다. 소셜 로그인으로 진행해주세요."),
 	USER_LOGIN_FOR_ADMIN_ACCOUNT(403, "관리자 계정은 일반 사용자 로그인으로 로그인할 수 없습니다."),
 	ADMIN_LOGIN_FOR_USER_ACCOUNT(403, "일반 사용자 계정은 관리자 로그인으로 로그인할 수 없습니다."),
+	INVALID_ROLE(403, "해당 기능에 대한 권한이 없습니다."),
 
 	/*
 	409 Conflict

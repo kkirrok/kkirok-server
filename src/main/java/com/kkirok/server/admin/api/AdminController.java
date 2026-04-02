@@ -7,6 +7,7 @@ import com.kkirok.server.admin.application.service.AdminAccountRequestService;
 import com.kkirok.server.admin.domain.AdminRequestStatus;
 import com.kkirok.server.admin.exception.AdminSuccessCode;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
+import com.kkirok.server.global.auth.annotation.RoleAdminAuth;
 import com.kkirok.server.global.common.dto.SuccessResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ public class AdminController implements AdminApi {
 	}
 
 	@GetMapping("/account-requests")
+	@RoleAdminAuth
 	public ResponseEntity<SuccessResponse<List<AdminAccountRequestResponse>>> getAdminAccountRequests(
 			@RequestParam(defaultValue = "PENDING") AdminRequestStatus status
 	) {
@@ -41,6 +43,7 @@ public class AdminController implements AdminApi {
 	}
 
 	@PatchMapping("/account-requests/{requestId}/status")
+	@RoleAdminAuth
 	public ResponseEntity<SuccessResponse<AdminApprovalResponse>> processAdminAccountRequest(
 			@CurrentMember Long memberId,
 			@PathVariable Long requestId,

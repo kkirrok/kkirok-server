@@ -6,6 +6,7 @@ import com.kkirok.server.domain.character.application.service.CharacterInfoServi
 import com.kkirok.server.domain.character.application.service.CharacterWearingService;
 import com.kkirok.server.domain.character.exception.CharacterSuccessCode;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
+import com.kkirok.server.global.auth.annotation.RoleUserAuth;
 import com.kkirok.server.global.common.dto.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/v1/character")
+@RoleUserAuth
 public class CharacterController implements CharacterApi {
 
     private final CharacterInfoService characterInfoService;
