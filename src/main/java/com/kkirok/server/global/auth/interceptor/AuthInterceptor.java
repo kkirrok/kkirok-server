@@ -16,7 +16,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 
 @Component
@@ -73,14 +75,12 @@ public class AuthInterceptor implements HandlerInterceptor {
         throw new ForbiddenException(MemberErrorCode.INVALID_ROLE, makeRolesString(roles));
     }
 
-    private String makeRolesString(Role[] roles){
-        StringBuilder sb = new StringBuilder();
-        sb.append("[");
-        for (Role role : roles) {
-            sb.append(role.getRoleName()).append(",");
-        }
-        sb.append("]");
-        return sb.toString();
+    private String makeRolesString(Role[] roles) {
+        return "필요한 권한 : [ " +
+                Arrays.stream(roles)
+                        .map(Role::getRoleName)
+                        .collect(Collectors.joining(", ")) +
+                " ]";
     }
 
 }

@@ -26,7 +26,7 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(BadRequestException.class)
 	public ResponseEntity<ErrorResponse> handleBadRequestException(final BadRequestException e) {
 		log.warn("BadRequestException: {}", e.getMessage());
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ErrorResponse.from(e.getBaseErrorCode()));
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ErrorResponse.from(e));
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
@@ -76,7 +76,7 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(UnauthorizedException.class)
 	public ResponseEntity<ErrorResponse> handleUnauthorizedException(final UnauthorizedException e) {
 		log.warn("UnauthorizedException: {}", e.getMessage());
-		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ErrorResponse.from(e.getBaseErrorCode()));
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ErrorResponse.from(e));
 	}
 
 	/**
@@ -85,7 +85,7 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(ForbiddenException.class)
 	public ResponseEntity<ErrorResponse> handleForbiddenException(final ForbiddenException e) {
 		log.warn("ForbiddenException: {}", e.getMessage());
-		return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ErrorResponse.from(e.getBaseErrorCode()));
+		return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ErrorResponse.from(e));
 	}
 
 	/**
@@ -94,7 +94,7 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(NotFoundException.class)
 	protected ResponseEntity<ErrorResponse> handleNotFoundException(final NotFoundException e) {
 		log.warn("NotFoundException: {}", e.getMessage());
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ErrorResponse.from(e.getBaseErrorCode()));
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ErrorResponse.from(e));
 	}
 
 	/**
@@ -103,7 +103,7 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(ConflictException.class)
 	protected ResponseEntity<ErrorResponse> handleConflictException(final ConflictException e) {
 		log.warn("ConflictException: {}", e.getMessage());
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResponse.from(e.getBaseErrorCode()));
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResponse.from(e));
 	}
 
 	/**
@@ -131,6 +131,6 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(KkirokException.class)
 	public ResponseEntity<ErrorResponse> handleBeatException(final KkirokException e) {
 		log.warn("BeatException occurred: ", e);
-		return ResponseEntity.status(e.getBaseErrorCode().getStatus()).body(ErrorResponse.from(e.getBaseErrorCode()));
+		return ResponseEntity.status(e.getBaseErrorCode().getStatus()).body(ErrorResponse.from(e));
 	}
 }

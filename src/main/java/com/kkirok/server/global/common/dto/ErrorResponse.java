@@ -1,5 +1,6 @@
 package com.kkirok.server.global.common.dto;
 
+import com.kkirok.server.global.common.exception.KkirokException;
 import com.kkirok.server.global.common.exception.base.BaseErrorCode;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -21,6 +22,18 @@ public record ErrorResponse(
 
 	public static ErrorResponse from(final BaseErrorCode baseErrorCode) {
 		return new ErrorResponse(extractCode(baseErrorCode), baseErrorCode.getStatus(), baseErrorCode.getMessage());
+	}
+
+	public static ErrorResponse from(final KkirokException exception) {
+		BaseErrorCode baseErrorCode = exception.getBaseErrorCode();
+		String message = baseErrorCode.getMessage();
+		String additionalException = exception.getAdditionalException();
+
+		if (additionalException != null && !additionalException.isBlank()) {
+			message = message + " - " + additionalException;
+		}
+
+		return new ErrorResponse(extractCode(baseErrorCode), baseErrorCode.getStatus(), message);
 	}
 
 	private static String extractCode(BaseErrorCode baseErrorCode) {
