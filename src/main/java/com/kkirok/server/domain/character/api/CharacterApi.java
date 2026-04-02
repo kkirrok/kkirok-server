@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface CharacterApi {
 
     @Operation(
-            summary = "캐릭터 기본 정보 조회",
+            summary = "캐릭터 기본 정보 조회 [USER]",
             description = """
                     현재 로그인한 사용자의 캐릭터 기본 정보를 조회합니다.
 
@@ -38,7 +38,7 @@ public interface CharacterApi {
     );
 
     @Operation(
-            summary = "보유 아이템 조회",
+            summary = "보유 아이템 조회 [USER]",
             description = """
                     현재 로그인한 사용자가 보유한 아이템 목록을 조회합니다.
 
@@ -55,7 +55,7 @@ public interface CharacterApi {
     );
 
     @Operation(
-            summary = "아이템 장착",
+            summary = "아이템 장착 [USER]",
             description = """
                     현재 로그인한 사용자의 캐릭터에 특정 아이템을 장착합니다.
 
@@ -80,7 +80,7 @@ public interface CharacterApi {
     );
 
     @Operation(
-            summary = "아이템 해제",
+            summary = "아이템 해제 [USER]",
             description = """
                     현재 로그인한 사용자의 캐릭터에서 특정 아이템 장착을 해제합니다.
 

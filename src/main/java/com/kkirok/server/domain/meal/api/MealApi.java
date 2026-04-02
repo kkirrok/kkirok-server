@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface MealApi {
 
     @Operation(
-            summary = "오늘의 캐릭터 상태 조회",
+            summary = "오늘의 캐릭터 상태 조회 [USER]",
             description = """
                     사용자의 오늘 식단 기록 상태를 기반으로 캐릭터 상태를 조회합니다.
                     
@@ -36,7 +36,7 @@ public interface MealApi {
     );
 
     @Operation(
-            summary = "식단 조회",
+            summary = "식단 조회 [USER]",
             description = """
                     사용자의 식단 기록을 조회합니다.
                     
@@ -52,7 +52,7 @@ public interface MealApi {
     );
 
     @Operation(
-            summary = "카메라로 식단 기록",
+            summary = "카메라로 식단 기록 [USER]",
             description = """
                     카메라로 촬영한 음식 정보를 바탕으로 식단을 기록합니다.
                     
@@ -68,7 +68,7 @@ public interface MealApi {
     );
 
     @Operation(
-            summary = "앨범 사진으로 식단 기록",
+            summary = "앨범 사진으로 식단 기록 [USER]",
             description = """
                     앨범에서 선택한 음식 사진 정보를 바탕으로 식단을 기록합니다.
                     
@@ -85,7 +85,7 @@ public interface MealApi {
     );
 
     @Operation(
-            summary = "직접 입력으로 식단 기록",
+            summary = "직접 입력으로 식단 기록 [USER]",
             description = """
                     사용자가 음식 정보를 직접 입력하여 식단을 기록합니다.
                    
@@ -101,7 +101,7 @@ public interface MealApi {
     );
 
     @Operation(
-            summary = "운동 및 음식 추천",
+            summary = "운동 및 음식 추천 [USER]",
             description = """
                     사용자의 현재 식단 상태를 기반으로 운동 및 음식 추천 정보를 반환합니다.
                     
@@ -117,7 +117,7 @@ public interface MealApi {
     );
 
     @Operation(
-            summary = "식단 수정",
+            summary = "식단 수정 [USER]",
             description = """
                     특정 식단을 수정합니다.
                     
@@ -135,7 +135,7 @@ public interface MealApi {
             );
 
     @Operation(
-            summary = "식단 삭제",
+            summary = "식단 삭제 [USER]",
             description = """
                     특정 식단 기록을 삭제합니다.
                     

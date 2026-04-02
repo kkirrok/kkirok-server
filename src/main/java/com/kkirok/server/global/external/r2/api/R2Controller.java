@@ -1,5 +1,7 @@
 package com.kkirok.server.global.external.r2.api;
 
+import com.kkirok.server.domain.user.domain.Role;
+import com.kkirok.server.global.auth.annotation.RoleAuth;
 import com.kkirok.server.global.common.dto.SuccessResponse;
 import com.kkirok.server.global.external.exception.ExternalSuccessCode;
 import com.kkirok.server.global.external.r2.application.dto.response.PresignedResponse;
@@ -16,6 +18,7 @@ import java.net.URL;
 @RestController
 @RequestMapping("/v1/r2")
 @RequiredArgsConstructor
+@RoleAuth(role = {Role.USER, Role.ADMIN})
 public class R2Controller implements R2Api {
 
     private final PresignedUrlService presignedUrlService;

@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 public interface ReportApi {
 
     @Operation(
-            summary = "주간 리포트 조회",
+            summary = "주간 리포트 조회 [USER]",
             description = """
                     일주일 식단기록을 분석한 주간 리포트를 조회합니다.
                     

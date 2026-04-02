@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface AdminAuthApi {
 
 	@Operation(
-			summary = "관리자 로컬 로그인",
+			summary = "관리자 로컬 로그인 []",
 			description = """
 					이메일/비밀번호 기반 관리자 로그인을 수행합니다.
 

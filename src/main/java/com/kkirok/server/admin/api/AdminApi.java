@@ -26,7 +26,7 @@ import java.util.List;
 public interface AdminApi {
 
 	@Operation(
-			summary = "관리자 계정 신청",
+			summary = "관리자 계정 신청 []",
 			description = """
 					관리자 계정 생성을 요청합니다.
 
@@ -46,7 +46,7 @@ public interface AdminApi {
 	);
 
 	@Operation(
-			summary = "관리자 계정 신청 목록 조회",
+			summary = "관리자 계정 신청 목록 조회 [ADMIN]",
 			description = """
 					승인 대기 중이거나 이미 처리된 관리자 계정 신청 목록을 조회합니다.
 
@@ -67,7 +67,7 @@ public interface AdminApi {
 	);
 
 	@Operation(
-			summary = "관리자 계정 신청 상태 처리",
+			summary = "관리자 계정 신청 상태 처리 [ADMIN]",
 			description = """
 					관리자 계정 신청 상태를 처리합니다.
 

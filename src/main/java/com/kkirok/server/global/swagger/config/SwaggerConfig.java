@@ -97,7 +97,22 @@ public class SwaggerConfig {
 	private Info apiInfo(String title) {
 		return new Info()
 			.title(title)
-			.description("살빼자")
+			.description("""
+					### 끼록 API 명세서입니다.
+
+					각 API 문서에서 HTTP Method, Endpoint, API 이름, 필요한 권한을 함께 확인할 수 있습니다.
+
+					### API 기본 정보
+					- `GET /v1/meals` 식단 조회 `[USER]`
+					- `PATCH /api/admin/account-requests/{requestId}/status` 관리자 계정 요청 상태 처리 `[ADMIN]`
+					- 권한이 필요 없는 API는 `[]` 로 표시됩니다.
+
+					즉, 대괄호 안의 값은 해당 API를 호출하기 위해 필요한 권한을 의미합니다.
+					
+					### API 응답정보
+					각 API에는 응답으로 나올 수 있는 응답코드 종류와 각 예시를 확인할 수 있습니다. 참고 바랍니다.
+					
+					""")
 			.version("0.0.1");
 	}
 }

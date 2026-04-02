@@ -29,7 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 public interface MemberApi {
 
     @Operation(
-            summary = "이메일 찾기",
+            summary = "이메일 찾기 []",
             description = """
                     이름, 생년월일, 전화번호가 일치하는 회원의 이메일을 조회합니다.
 
@@ -46,7 +46,7 @@ public interface MemberApi {
     );
 
     @Operation(
-            summary = "비밀번호 재설정",
+            summary = "비밀번호 재설정 [USER]",
             description = """
                     이메일 인증이 완료된 이메일과 이름이 일치하면 로컬 계정 비밀번호를 재설정합니다.
 
@@ -69,7 +69,7 @@ public interface MemberApi {
             @Valid @RequestBody final ResetPasswordRequest request
     );
 
-    @Operation(summary = "프로필 조회(온보딩)", description = """
+    @Operation(summary = "프로필 조회(온보딩) [USER]", description = """
             프로필 설정 전, 기본 정보를 조회합니다.
             멤버 기본 정보( 닉네임, 성별, 프로필사진 )와 목표•식습관 유형 정보(라벨, 선택여부)를 반환합니다.
             """)
@@ -82,7 +82,7 @@ public interface MemberApi {
     );
 
     @Operation(
-            summary = "프로필 설정(온보딩)",
+            summary = "프로필 설정(온보딩) [USER]",
             description = """
                     회원가입 이후 프로필 정보와 온보딩 정보를 함께 설정합니다.
 
@@ -109,7 +109,7 @@ public interface MemberApi {
             @RequestPart(required = false) MultipartFile profileImage
     );
 
-    @Operation(summary = "회원 탈퇴", description = """
+    @Operation(summary = "회원 탈퇴 [USER]", description = """
             회원탈퇴입니다. 복구 정책을 대비하여 완전 삭제하지 않습니다.
             """)
     ResponseEntity<SuccessResponse<Void>> quitMember(
