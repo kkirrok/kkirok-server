@@ -70,9 +70,11 @@ public class Member extends BaseTimeEntity {
     private Onboarding onboarding;
 
     @Builder
-    private Member(String email, String profileImage,
+    private Member(String nickname, String name, String email, String profileImage,
                    Users user, Long socialId, SocialType socialType
                    ) {
+        this.nickname = nickname;
+        this.name = name;
         this.email = email;
         this.profileImage = profileImage;
         this.user = user;
@@ -85,6 +87,8 @@ public class Member extends BaseTimeEntity {
             final Users user
     ) {
         return Member.builder()
+                .nickname(null)
+                .name(null)
                 .email(memberInfoResponse.email())
                 .profileImage(null)
                 .user(user)
@@ -98,6 +102,24 @@ public class Member extends BaseTimeEntity {
             final Users user
     ) {
         return Member.builder()
+                .nickname(null)
+                .name(null)
+                .email(email)
+                .profileImage(null)
+                .user(user)
+                .socialId(null)
+                .socialType(null)
+                .build();
+    }
+
+    public static Member createAdminLocal(
+            final String email,
+            final String name,
+            final Users user
+    ) {
+        return Member.builder()
+                .nickname(name)
+                .name(name)
                 .email(email)
                 .profileImage(null)
                 .user(user)

@@ -1,5 +1,6 @@
 package com.kkirok.server.global.common.config;
 
+import com.kkirok.server.global.auth.interceptor.AuthInterceptor;
 import com.kkirok.server.global.auth.resolver.CurrentMemberArgumentResolver;
 import com.kkirok.server.global.common.converter.StringToEnumCustomConverterFactory;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.Arrays;
@@ -18,6 +20,7 @@ import java.util.List;
 public class WebConfig implements WebMvcConfigurer {
 
     private final CurrentMemberArgumentResolver currentMemberArgumentResolver;
+    private final AuthInterceptor authInterceptor;
 
     @Value("${cors.allowed-origins}")
     private String[] allowedOrigins;
@@ -46,4 +49,10 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedHeaders("*")
                 .allowCredentials(true);
     }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(authInterceptor);
+    }
+
 }

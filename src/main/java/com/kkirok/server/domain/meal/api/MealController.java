@@ -5,6 +5,7 @@ import com.kkirok.server.domain.meal.application.dto.response.MealResponse;
 import com.kkirok.server.domain.meal.application.dto.response.RecommendationResponse;
 import com.kkirok.server.domain.meal.application.dto.response.TodayStatusResponse;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
+import com.kkirok.server.global.auth.annotation.RoleUserAuth;
 import com.kkirok.server.global.common.dto.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/v1/meals")
 @RequiredArgsConstructor
+@RoleUserAuth
 public class MealController implements MealApi {
 
     @Override

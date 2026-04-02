@@ -1,6 +1,7 @@
 package com.kkirok.server.domain.meal.api;
 
 import com.kkirok.server.domain.meal.application.dto.response.CalendarMonthResponse;
+import com.kkirok.server.global.auth.annotation.RoleUserAuth;
 import com.kkirok.server.global.common.dto.SuccessResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/v1/calendar")
+@RoleUserAuth
 public class CalendarController implements CalendarApi{
 
     @Override

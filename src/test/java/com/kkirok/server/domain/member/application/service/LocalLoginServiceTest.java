@@ -7,15 +7,19 @@ import com.kkirok.server.domain.member.dao.AuthIdentityRepository;
 import com.kkirok.server.domain.member.domain.AuthIdentity;
 import com.kkirok.server.domain.member.domain.AuthProvider;
 import com.kkirok.server.domain.member.domain.Member;
+import com.kkirok.server.domain.member.domain.SocialType;
 import com.kkirok.server.domain.member.exception.EmailErrorCode;
 import com.kkirok.server.domain.member.exception.EmailException;
 import com.kkirok.server.domain.member.exception.MemberErrorCode;
 import com.kkirok.server.global.common.exception.ConflictException;
+import com.kkirok.server.global.common.exception.ForbiddenException;
+import com.kkirok.server.global.common.exception.NotFoundException;
 import com.kkirok.server.global.common.exception.UnauthorizedException;
 import com.kkirok.server.support.fixture.AuthIdentityFixture;
 import com.kkirok.server.support.fixture.LocalLoginRequestFixture;
 import com.kkirok.server.support.fixture.LocalSignUpRequestFixture;
 import com.kkirok.server.support.fixture.MemberFixture;
+import com.kkirok.server.support.fixture.UserFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static com.kkirok.server.domain.user.domain.Role.ADMIN;
 
 @ExtendWith(MockitoExtension.class)
 class LocalLoginServiceTest {
@@ -149,15 +154,35 @@ class LocalLoginServiceTest {
 
     @Test
     @DisplayName("가입되지 않은 이메일로는 로컬 로그인할 수 없다")
-    void shouldThrowUnauthorizedException_whenLocalAccountDoesNotExist() {
+    void shouldThrowNotFoundException_whenLocalAccountDoesNotExist() {
         // Given
         LocalLoginRequest request = LocalLoginRequestFixture.create();
 
         given(authIdentityRepository.findByProviderAndProviderUserId(AuthProvider.LOCAL, request.email()))
                 .willReturn(Optional.empty());
+        given(authIdentityRepository.existsByMemberEmailAndProviderNot(request.email(), AuthProvider.LOCAL))
+                .willReturn(false);
 
         // When, Then
-        assertUnauthorizedException(() -> localLoginService.login(request));
+        assertNotFoundException(() -> localLoginService.login(request), MemberErrorCode.LOCAL_ACCOUNT_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("소셜 계정 이메일로는 로컬 로그인할 수 없다")
+    void shouldThrowForbiddenException_whenSocialAccountAttemptsLocalLogin() {
+        // Given
+        LocalLoginRequest request = LocalLoginRequestFixture.create();
+
+        given(authIdentityRepository.findByProviderAndProviderUserId(AuthProvider.LOCAL, request.email()))
+                .willReturn(Optional.empty());
+        given(authIdentityRepository.existsByMemberEmailAndProviderNot(request.email(), AuthProvider.LOCAL))
+                .willReturn(true);
+
+        // When, Then
+        assertForbiddenException(
+                () -> localLoginService.login(request),
+                MemberErrorCode.SOCIAL_ACCOUNT_LOCAL_LOGIN_FORBIDDEN
+        );
     }
 
     @Test
@@ -172,7 +197,10 @@ class LocalLoginServiceTest {
                 .willReturn(Optional.of(authIdentity));
 
         // When, Then
-        assertUnauthorizedException(() -> localLoginService.login(request));
+        assertUnauthorizedException(
+                () -> localLoginService.login(request),
+                MemberErrorCode.LOCAL_LOGIN_PASSWORD_MISMATCH
+        );
     }
 
     @Test
@@ -188,13 +216,87 @@ class LocalLoginServiceTest {
         given(passwordEncoder.matches(request.password(), "encoded-password")).willReturn(false);
 
         // When, Then
-        assertUnauthorizedException(() -> localLoginService.login(request));
+        assertUnauthorizedException(
+                () -> localLoginService.login(request),
+                MemberErrorCode.LOCAL_LOGIN_PASSWORD_MISMATCH
+        );
     }
 
-    private void assertUnauthorizedException(Runnable action) {
+    @Test
+    @DisplayName("관리자 계정으로 일반 사용자 로그인 API를 호출하면 권한 예외가 발생한다")
+    void shouldThrowForbiddenException_whenAdminAccountAttemptsUserLogin() {
+        // Given
+        LocalLoginRequest request = LocalLoginRequestFixture.create();
+        Member adminMember = MemberFixture.createLocalMember("admin", request.email(), UserFixture.create(ADMIN));
+        AuthIdentity authIdentity = AuthIdentityFixture.createLocal(adminMember, request.email(), "encoded-password");
+
+        given(authIdentityRepository.findByProviderAndProviderUserId(AuthProvider.LOCAL, request.email()))
+                .willReturn(Optional.of(authIdentity));
+        given(passwordEncoder.matches(request.password(), "encoded-password")).willReturn(true);
+
+        // When, Then
+        assertForbiddenException(
+                () -> localLoginService.login(request),
+                MemberErrorCode.USER_LOGIN_FOR_ADMIN_ACCOUNT
+        );
+    }
+
+    @Test
+    @DisplayName("일반 사용자 계정으로 관리자 로그인 API를 호출하면 권한 예외가 발생한다")
+    void shouldThrowForbiddenException_whenUserAccountAttemptsAdminLogin() {
+        // Given
+        LocalLoginRequest request = LocalLoginRequestFixture.create();
+        Member member = MemberFixture.createLocalMember("kkirok", request.email());
+        AuthIdentity authIdentity = AuthIdentityFixture.createLocal(member, request.email(), "encoded-password");
+
+        given(authIdentityRepository.findByProviderAndProviderUserId(AuthProvider.LOCAL, request.email()))
+                .willReturn(Optional.of(authIdentity));
+        given(passwordEncoder.matches(request.password(), "encoded-password")).willReturn(true);
+
+        // When, Then
+        assertForbiddenException(
+                () -> localLoginService.adminLogin(request),
+                MemberErrorCode.ADMIN_LOGIN_FOR_USER_ACCOUNT
+        );
+    }
+
+    @Test
+    @DisplayName("탈퇴한 계정은 로컬 로그인할 수 없다")
+    void shouldThrowConflictException_whenDeletedMemberAttemptsLogin() {
+        // Given
+        LocalLoginRequest request = LocalLoginRequestFixture.create();
+        Member member = MemberFixture.createLocalMember("kkirok", request.email());
+        ReflectionTestUtils.setField(member, "deletedAt", java.time.LocalDateTime.now());
+        AuthIdentity authIdentity = AuthIdentityFixture.createLocal(member, request.email(), "encoded-password");
+
+        given(authIdentityRepository.findByProviderAndProviderUserId(AuthProvider.LOCAL, request.email()))
+                .willReturn(Optional.of(authIdentity));
+
+        // When, Then
+        assertThatThrownBy(() -> localLoginService.login(request))
+                .isInstanceOf(ConflictException.class)
+                .extracting("baseErrorCode")
+                .isEqualTo(MemberErrorCode.DELETED_MEMBER);
+    }
+
+    private void assertUnauthorizedException(Runnable action, MemberErrorCode errorCode) {
         assertThatThrownBy(action::run)
                 .isInstanceOf(UnauthorizedException.class)
                 .extracting("baseErrorCode")
-                .isEqualTo(MemberErrorCode.LOCAL_LOGIN_FAILED);
+                .isEqualTo(errorCode);
+    }
+
+    private void assertForbiddenException(Runnable action, MemberErrorCode errorCode) {
+        assertThatThrownBy(action::run)
+                .isInstanceOf(ForbiddenException.class)
+                .extracting("baseErrorCode")
+                .isEqualTo(errorCode);
+    }
+
+    private void assertNotFoundException(Runnable action, MemberErrorCode errorCode) {
+        assertThatThrownBy(action::run)
+                .isInstanceOf(NotFoundException.class)
+                .extracting("baseErrorCode")
+                .isEqualTo(errorCode);
     }
 }

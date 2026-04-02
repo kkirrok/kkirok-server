@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface R2Api {
 
     @Operation(
-            summary = "다운로드 Presigned URL 발급",
+            summary = "다운로드 Presigned URL 발급 [USER, ADMIN]",
             description = """
                 R2 객체 키로 다운로드용 Presigned URL을 발급합니다.
                 

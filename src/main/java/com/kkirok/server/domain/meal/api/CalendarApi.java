@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 public interface CalendarApi {
 
     @Operation(
-            summary = "월간 상태 조회",
+            summary = "월간 상태 조회 [USER]",
             description = """
                     특정 월의 상태 정보를 조회합니다.
                     

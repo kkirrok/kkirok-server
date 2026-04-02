@@ -28,13 +28,13 @@ import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@Tag(name = "Auth API", description = "인증 관련 API")
+@Tag(name = "User Auth API", description = "일반 사용자 인증 관련 API")
 public interface AuthApi {
 
     String REFRESH_TOKEN = "refreshToken";
 
     @Operation(
-            summary = "소셜 로그인/회원가입",
+            summary = "소셜 로그인/회원가입 []",
             description = """
                     소셜 authorizationCode로 로그인합니다.
                     회원이 없으면 자동으로 회원가입 후 로그인 처리됩니다.
@@ -58,7 +58,7 @@ public interface AuthApi {
     );
 
     @Operation(
-            summary = "이메일 인증번호 발송",
+            summary = "이메일 인증번호 발송 []",
             description = """
                     입력한 이메일로 숫자 6자리 인증번호를 발송합니다.
 
@@ -76,7 +76,7 @@ public interface AuthApi {
     );
 
     @Operation(
-            summary = "이메일 인증번호 확인",
+            summary = "이메일 인증번호 확인 []",
             description = """
                     이메일과 숫자 6자리 인증번호를 검증합니다.
 
@@ -97,7 +97,7 @@ public interface AuthApi {
     );
 
     @Operation(
-            summary = "로컬 회원가입",
+            summary = "로컬 회원가입 []",
             description = """
                     이메일/비밀번호 기반 로컬 회원가입을 수행합니다.
                     회원가입 성공 시 즉시 로그인 처리됩니다.
@@ -120,7 +120,7 @@ public interface AuthApi {
     );
 
     @Operation(
-            summary = "로컬 로그인",
+            summary = "로컬 로그인 []",
             description = """
                     이메일/비밀번호 기반 로컬 로그인을 수행합니다.
 
@@ -130,16 +130,20 @@ public interface AuthApi {
                     """
     )
     @ApiErrorCodeExamples({
-            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "LOCAL_LOGIN_FAILED")
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "LOCAL_ACCOUNT_NOT_FOUND"),
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "LOCAL_LOGIN_PASSWORD_MISMATCH"),
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "SOCIAL_ACCOUNT_LOCAL_LOGIN_FORBIDDEN"),
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "DELETED_MEMBER"),
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "USER_LOGIN_FOR_ADMIN_ACCOUNT")
     })
     @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "LOCAL_LOGIN_SUCCESS")
-    ResponseEntity<SuccessResponse<MemberLoginResponse>> localLogin(
+    ResponseEntity<SuccessResponse<MemberLoginResponse>> userLocalLogin(
             @Valid @RequestBody final LocalLoginRequest request,
             HttpServletResponse httpServletResponse
     );
 
     @Operation(
-            summary = "액세스 토큰 재발급",
+            summary = "액세스 토큰 재발급 []",
             description = """
                     `refreshToken` 쿠키를 검증해 액세스 토큰을 재발급합니다.
 
@@ -164,7 +168,7 @@ public interface AuthApi {
     );
 
     @Operation(
-            summary = "로그아웃",
+            summary = "로그아웃 [USER, ADMIN]",
             description = """
                     현재 로그인 사용자의 refreshToken을 서버 저장소에서 삭제합니다.
                     """

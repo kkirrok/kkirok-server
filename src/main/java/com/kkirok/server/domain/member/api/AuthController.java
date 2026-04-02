@@ -14,7 +14,9 @@ import com.kkirok.server.domain.member.application.service.EmailVerificationStat
 import com.kkirok.server.domain.member.application.service.LocalLoginService;
 import com.kkirok.server.domain.member.application.service.SocialLoginService;
 import com.kkirok.server.domain.member.exception.MemberSuccessCode;
+import com.kkirok.server.domain.user.domain.Role;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
+import com.kkirok.server.global.auth.annotation.RoleAuth;
 import com.kkirok.server.global.auth.client.dto.MemberLoginRequest;
 import com.kkirok.server.global.auth.jwt.application.TokenService;
 import com.kkirok.server.global.common.dto.SuccessResponse;
@@ -92,7 +94,7 @@ public class AuthController implements AuthApi {
 
     @Override
     @PostMapping("/login/local")
-    public ResponseEntity<SuccessResponse<MemberLoginResponse>> localLogin(
+    public ResponseEntity<SuccessResponse<MemberLoginResponse>> userLocalLogin(
             @Valid @RequestBody final LocalLoginRequest request,
             HttpServletResponse httpServletResponse
     ) {
@@ -112,6 +114,7 @@ public class AuthController implements AuthApi {
 
     @Override
     @PostMapping("/sign-out")
+    @RoleAuth(role = {Role.USER, Role.ADMIN})
     public ResponseEntity<SuccessResponse<Void>> signOut(@CurrentMember final Long memberId) {
         tokenService.deleteRefreshToken(memberId);
         return ResponseEntity.ok().body(SuccessResponse.from(MemberSuccessCode.SIGN_OUT_SUCCESS));
