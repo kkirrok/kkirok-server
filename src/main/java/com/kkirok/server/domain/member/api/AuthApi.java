@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@Tag(name = "Auth API", description = "인증 관련 API")
+@Tag(name = "User Auth API", description = "일반 사용자 인증 관련 API")
 public interface AuthApi {
 
     String REFRESH_TOKEN = "refreshToken";
@@ -130,10 +130,14 @@ public interface AuthApi {
                     """
     )
     @ApiErrorCodeExamples({
-            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "LOCAL_LOGIN_FAILED")
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "LOCAL_ACCOUNT_NOT_FOUND"),
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "LOCAL_LOGIN_PASSWORD_MISMATCH"),
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "SOCIAL_ACCOUNT_LOCAL_LOGIN_FORBIDDEN"),
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "DELETED_MEMBER"),
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "USER_LOGIN_FOR_ADMIN_ACCOUNT")
     })
     @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "LOCAL_LOGIN_SUCCESS")
-    ResponseEntity<SuccessResponse<MemberLoginResponse>> localLogin(
+    ResponseEntity<SuccessResponse<MemberLoginResponse>> userLocalLogin(
             @Valid @RequestBody final LocalLoginRequest request,
             HttpServletResponse httpServletResponse
     );

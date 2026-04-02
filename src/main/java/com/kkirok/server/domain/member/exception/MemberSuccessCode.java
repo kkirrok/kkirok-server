@@ -13,6 +13,7 @@ public enum MemberSuccessCode implements BaseSuccessCode {
 	SOCIAL_LOGIN_SUCCESS(200, "소셜 로그인/회원가입 성공"),
 	LOCAL_SIGN_UP_SUCCESS(200, "로컬 회원가입 성공"),
 	LOCAL_LOGIN_SUCCESS(200, "로컬 로그인 성공"),
+	ADMIN_LOCAL_LOGIN_SUCCESS(200, "관리자 로그인 성공"),
 	EMAIL_VERIFICATION_CODE_SENT(200, "이메일 인증번호 발송 성공"),
 	EMAIL_VERIFIED_SUCCESS(200, "이메일 인증 성공"),
 	FIND_EMAIL_SUCCESS(200, "이메일 찾기 성공"),

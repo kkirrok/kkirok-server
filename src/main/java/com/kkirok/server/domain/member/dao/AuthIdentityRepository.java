@@ -11,4 +11,6 @@ public interface AuthIdentityRepository extends JpaRepository<AuthIdentity, Long
     Optional<AuthIdentity> findByProviderAndProviderUserId(AuthProvider provider, String providerUserId);
 
     boolean existsByProviderAndProviderUserId(AuthProvider provider, String providerUserId);
+
+    boolean existsByMemberEmailAndProviderNot(String email, AuthProvider provider);
 }

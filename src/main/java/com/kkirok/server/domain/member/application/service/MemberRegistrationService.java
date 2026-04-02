@@ -46,11 +46,12 @@ public class MemberRegistrationService {
 
     @Transactional
     public Member registerLocalMember(final String email, final String passwordHash) {
-        Member member = createLocalMember(email);
-        characterInitializationService.createInitialCharacter(member);
-        authIdentityRepository.save(AuthIdentity.createLocal(member, email, passwordHash));
-        eventPublisher.publishEvent(new MemberRegisteredEvent(member.getNickname()));
-        return member;
+        return registerLocalMember(email, passwordHash, Role.USER, null, true, true);
+    }
+
+    @Transactional
+    public Member registerAdminMember(final String email, final String passwordHash, final String name) {
+        return registerLocalMember(email, passwordHash, Role.ADMIN, name, false, false);
     }
 
     private Member createMember(final MemberInfoResponse memberInfoResponse) {
@@ -61,19 +62,45 @@ public class MemberRegistrationService {
         return member;
     }
 
-    private Member createLocalMember(final String email) {
-        Users users = createUserWithMemberRole();
-        Member member = Member.createLocal( email, users);
+    private Member createLocalMember(final String email, final Role role, final String name) {
+        Users users = createUserWithRole(role);
+        Member member = role == Role.ADMIN
+                ? Member.createAdminLocal(email, name, users)
+                : Member.createLocal(email, users);
         memberRepository.save(member);
         log.info("Local member registered with memberId: {}, role: {}", member.getId(), users.getRole());
         return member;
     }
 
     private Users createUserWithMemberRole() {
-        Users users = Users.createWithRole(Role.USER);
-        log.info("Granting USER role to new user with role: {}", users.getRole());
+        return createUserWithRole(Role.USER);
+    }
+
+    private Users createUserWithRole(final Role role) {
+        Users users = Users.createWithRole(role);
+        log.info("Granting {} role to new user", users.getRole());
         users = userRepository.save(users);
         userRepository.flush();
         return users;
+    }
+
+    // 멤버 생성. 캐릭터 생성 포함
+    private Member registerLocalMember(
+            final String email,
+            final String passwordHash,
+            final Role role,
+            final String name,
+            final boolean initializeCharacter,
+            final boolean publishRegisteredEvent
+    ) {
+        Member member = createLocalMember(email, role, name);
+        if (initializeCharacter) {
+            characterInitializationService.createInitialCharacter(member);
+        }
+        authIdentityRepository.save(AuthIdentity.createLocal(member, email, passwordHash));
+        if (publishRegisteredEvent) {
+            eventPublisher.publishEvent(new MemberRegisteredEvent(member.getNickname()));
+        }
+        return member;
     }
 }

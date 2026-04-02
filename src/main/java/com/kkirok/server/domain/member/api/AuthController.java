@@ -92,7 +92,7 @@ public class AuthController implements AuthApi {
 
     @Override
     @PostMapping("/login/local")
-    public ResponseEntity<SuccessResponse<MemberLoginResponse>> localLogin(
+    public ResponseEntity<SuccessResponse<MemberLoginResponse>> userLocalLogin(
             @Valid @RequestBody final LocalLoginRequest request,
             HttpServletResponse httpServletResponse
     ) {
