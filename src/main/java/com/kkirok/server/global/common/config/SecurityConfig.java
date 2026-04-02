@@ -60,8 +60,8 @@ public class SecurityConfig {
 
         http.authorizeHttpRequests(auth ->
                         auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/admin/login").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/admin/account-requests").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/v1/admin/login").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/v1/admin/account-requests").permitAll()
                                 .requestMatchers("/swagger-ui/index.html", "/swagger-ui.html").denyAll()
                                 .requestMatchers("/api-specs/**").denyAll()
                                 .requestMatchers(getAuthWhitelist()).permitAll()
