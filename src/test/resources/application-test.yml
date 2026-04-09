@@ -87,3 +87,7 @@ openai:
 
 fastapi:
   base-url: http://localhost:18081
+
+webhook:
+  discord:
+    internal_server_url:

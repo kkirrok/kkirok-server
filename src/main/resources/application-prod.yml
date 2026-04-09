@@ -156,3 +156,7 @@ fastapi:
   read-timeout-seconds: ${FAST_API_READ_TIMEOUT_SECONDS:60}
   max-retries: ${FAST_API_MAX_RETRIES:1}
   initial-backoff-millis: ${FAST_API_INITIAL_BACKOFF_MILLIS:200}
+
+webhook:
+  discord:
+    internal_server_url: ${WEBHOOK_INTERNAL_SERVER_URL:}
