@@ -9,6 +9,12 @@ public class Pointcuts {
 	@Pointcut("execution(* com.kkirok.server..*Service.*(..)) || execution(* com.kkirok.server..*UseCase.*(..)) || execution(* com.kkirok.server..*Facade.*(..))")
 	public void allService() {}
 
+	@Pointcut(
+		"execution(* com.kkirok.server..dao.redis..*(..))" +
+			" || execution(* com.kkirok.server.global.auth.jwt.dao.TokenRepository+.*(..))"
+	)
+	public void allRedisAccess() {}
+
 	@Pointcut("execution(* com.kkirok.server..*(..))" +
 		" && !within(com.kkirok.server.global..*)")
 	public void allApplicationLogic() {}
