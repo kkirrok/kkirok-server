@@ -10,6 +10,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -50,4 +51,14 @@ public record ProfileSettingRequest(
         List<OnboardingHabit> habits
 
 ) {
+        public record ProfileSettingMultipartRequest(
+
+                @Schema(implementation = ProfileSettingRequest.class, description = "프로필 설정 요청 JSON")
+                ProfileSettingRequest request,
+
+                @Schema(type = "string", format = "binary", description = "프로필 이미지 파일", nullable = true)
+                MultipartFile image
+
+        ) {
+        }
 }

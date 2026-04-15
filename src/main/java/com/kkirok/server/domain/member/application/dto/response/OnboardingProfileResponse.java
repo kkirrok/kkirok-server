@@ -63,6 +63,10 @@ public record OnboardingProfileResponse(
 
     @Schema(name = "OnboardingLabelInfo", description = "온보딩 선택지와 선택 여부")
     public record OnboardingLabelInfo(
+
+            @Schema(example = "EXAMPLE", description = "enum 상수")
+            String value,
+
             @Schema(example = "감량", description = "선택지 라벨")
             String label,
 
@@ -70,11 +74,11 @@ public record OnboardingProfileResponse(
             Boolean isSelected
     ) {
         public static OnboardingLabelInfo of(OnboardingPurpose purpose, boolean isSelected) {
-            return new OnboardingLabelInfo(purpose.getLabel(), isSelected);
+            return new OnboardingLabelInfo(purpose.name(), purpose.getLabel(), isSelected);
         }
 
         public static OnboardingLabelInfo of(OnboardingHabit habit, boolean isSelected) {
-            return new OnboardingLabelInfo(habit.getLabel(), isSelected);
+            return new OnboardingLabelInfo(habit.name(), habit.getLabel(), isSelected);
         }
     }
 }

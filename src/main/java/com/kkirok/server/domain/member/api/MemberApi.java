@@ -16,11 +16,13 @@ import com.kkirok.server.global.swagger.annotation.ApiErrorCodeExample;
 import com.kkirok.server.global.swagger.annotation.ApiErrorCodeExamples;
 import com.kkirok.server.global.swagger.annotation.ApiSuccessCodeExample;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
@@ -84,15 +86,46 @@ public interface MemberApi {
             summary = "프로필 설정(온보딩) [USER, PENDING]",
             description = """
                     회원가입 이후 프로필 정보와 온보딩 정보를 함께 설정합니다.
+                    
+                    목표(purpose)는 하나(필수), 식습관 유형(habits)는 5개 이하이어야 합니다. 식습관 유형은 선택되지 않아도 됩니다.
 
-                    요청 전체는 `multipart/form-data`로 전송하며, 텍스트 필드와 `profileImage` 파일 파트를 함께 보냅니다.
-                    - 프로필 설정: `name`, `birth`, `phone`, `nickname`, `gender`
-                    - 온보딩 정보: `purpose`, `habits`
-                    - 선택값: `profileImage`, `purpose`, `habits`
-                    - `profileImage`는 URL 문자열이 아니라 파일 파트로 업로드합니다.
-                    - 업로드된 프로필 이미지는 R2에 저장되고, DB에는 이미지 URL이 아닌 저장 key가 보관됩니다.
-                    - 식습관을 선택하지 않으면 빈 리스트로 저장됩니다.
-                    """
+                    프로필을 수정하는 경우, 프로필 조회 API에서 응답 받은 결과를 기준으로 호출해주세요.
+                    예를 들어 닉네임만 바꾸고 싶다면 프로필 조회 API 응답값에서 닉네임만 변경해서 전송하면 됩니다.
+                    프로필 이미지를 업로드하지 않으면 기존 이미지가 유지됩니다.
+                    프로필 이미지를 기본 이미지로 바꾸고 싶다면 기본 이미지 파일을 업로드해주세요.
+
+                    ## API 호출 방법
+
+                    `multipart/form-data`로 요청합니다. `request` 파트는 JSON Blob으로 추가하고, `image` 파트는 선택값입니다.
+
+                    | Part name | Required | Value |
+                    | --- | --- | --- |
+                    | `request` | O | `application/json` 타입의 JSON Blob |
+                    | `image` | X | 이미지 파일 |
+
+                    ### request JSON
+
+                    ```json
+                    {
+                      "name": "김준용",
+                      "birth": "2002-04-13",
+                      "phone": "01012345678",
+                      "nickname": "멋진닉네임",
+                      "gender": "MALE",
+                      "purpose": "LOSE_WEIGHT",
+                      "habits": ["MEAT"]
+                    }
+                    ```
+
+                    `Content-Type`은 직접 지정하지 않습니다. 브라우저가 boundary를 포함한 `multipart/form-data` 값을 자동으로 생성해야 합니다.
+                    """,
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    content = @Content(
+                            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                            schema = @Schema(implementation = ProfileSettingRequest.ProfileSettingMultipartRequest.class),
+                            encoding = @Encoding(name = "request", contentType = MediaType.APPLICATION_JSON_VALUE)
+                    )
+            )
     )
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
@@ -104,8 +137,8 @@ public interface MemberApi {
     @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "PROFILE_SETTING_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> updateProfile(
             @CurrentMember Long memberId,
-            @Valid @ModelAttribute ProfileSettingRequest request
-//            @RequestPart(required = false) MultipartFile profileImage
+            @Valid @RequestPart(name = "request") ProfileSettingRequest request,
+            @RequestPart(name = "image", required = false) MultipartFile profileImage
     );
 
     @Operation(summary = "회원 탈퇴 [USER]", description = """

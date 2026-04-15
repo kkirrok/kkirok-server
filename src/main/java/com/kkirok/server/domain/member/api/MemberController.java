@@ -14,9 +14,9 @@ import com.kkirok.server.global.auth.annotation.CurrentMember;
 import com.kkirok.server.global.auth.annotation.RoleAuth;
 import com.kkirok.server.global.auth.annotation.RoleUserAuth;
 import com.kkirok.server.global.common.dto.SuccessResponse;
-import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -60,14 +60,14 @@ public class MemberController implements MemberApi {
     }
 
     @Override
-    @PatchMapping("/profile")
+    @PatchMapping(value = "/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @RoleAuth(role = {Role.USER, Role.PENDING})
     public ResponseEntity<SuccessResponse<Void>> updateProfile(
             @CurrentMember Long memberId,
-            @ModelAttribute @Valid ProfileSettingRequest request
-//            @RequestPart(required = false) MultipartFile profileImage
+            @Valid @RequestPart(name = "request") ProfileSettingRequest request,
+            @RequestPart(name = "image", required = false) MultipartFile profileImage
     ) {
-        onboardingService.updateProfile(memberId, request, null);
+        onboardingService.updateProfile(memberId, request, profileImage);
         return ResponseEntity.ok().body(SuccessResponse.from(MemberSuccessCode.PROFILE_SETTING_SUCCESS));
     }
 
