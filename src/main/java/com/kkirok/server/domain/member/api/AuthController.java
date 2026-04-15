@@ -5,9 +5,11 @@ import com.kkirok.server.domain.member.application.dto.request.EmailVerification
 import com.kkirok.server.domain.member.application.dto.request.LocalLoginRequest;
 import com.kkirok.server.domain.member.application.dto.request.LocalSignUpRequest;
 import com.kkirok.server.domain.member.application.dto.response.AccessTokenGenerateResponse;
+import com.kkirok.server.domain.member.application.dto.response.CurrentRoleResponse;
 import com.kkirok.server.domain.member.application.dto.response.EmailVerificationStatusResponse;
 import com.kkirok.server.domain.member.application.dto.response.LoginSuccessResponse;
 import com.kkirok.server.domain.member.application.dto.response.MemberLoginResponse;
+import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
 import com.kkirok.server.domain.member.application.service.AuthenticationService;
 import com.kkirok.server.domain.member.application.service.EmailVerificationService;
 import com.kkirok.server.domain.member.application.service.EmailVerificationStateService;
@@ -26,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,6 +46,7 @@ public class AuthController implements AuthApi {
     private final LocalLoginService localLoginService;
     private final EmailVerificationService emailVerificationService;
     private final EmailVerificationStateService emailVerificationStateService;
+    private final MemberUseCase memberUseCase;
 
     private static final int COOKIE_MAX_AGE = 7 * 24 * 60 * 60;
 
@@ -113,6 +117,17 @@ public class AuthController implements AuthApi {
     }
 
     @Override
+    @GetMapping("/auth/role")
+    @RoleAuth(role = {Role.PENDING, Role.USER, Role.ADMIN})
+    public ResponseEntity<SuccessResponse<CurrentRoleResponse>> getCurrentRole(
+            @CurrentMember final Long memberId
+    ) {
+        CurrentRoleResponse response = CurrentRoleResponse.from(memberUseCase.findMemberByMemberId(memberId).getUser().getRole());
+        return ResponseEntity.ok()
+                .body(SuccessResponse.of(MemberSuccessCode.CURRENT_ROLE_GET_SUCCESS, response));
+    }
+
+    @Override
     @PostMapping("/sign-out")
     @RoleAuth(role = {Role.USER, Role.ADMIN})
     public ResponseEntity<SuccessResponse<Void>> signOut(@CurrentMember final Long memberId) {
@@ -135,7 +150,8 @@ public class AuthController implements AuthApi {
         return MemberLoginResponse.of(
                 loginSuccessResponse.accessToken(),
                 loginSuccessResponse.nickname(),
-                loginSuccessResponse.role()
+                loginSuccessResponse.role(),
+                loginSuccessResponse.onboardingCompleted()
         );
     }
 }

@@ -1,6 +1,8 @@
 package com.kkirok.server.global.auth.interceptor;
 
 import com.kkirok.server.domain.member.exception.MemberErrorCode;
+import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
+import com.kkirok.server.domain.member.domain.Member;
 import com.kkirok.server.domain.user.domain.Role;
 import com.kkirok.server.global.auth.annotation.RoleAuth;
 import com.kkirok.server.global.common.exception.UnauthorizedException;
@@ -10,20 +12,20 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.stream.Collectors;
 
 
 @Component
 @RequiredArgsConstructor
 public class AuthInterceptor implements HandlerInterceptor {
+
+    private final MemberUseCase memberUseCase;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -44,7 +46,7 @@ public class AuthInterceptor implements HandlerInterceptor {
 
         // 검증
         validateAuthentication(authentication);
-        validateRoles(roleAuth.role(), authentication.getAuthorities());
+        validateRoles(roleAuth.role(), resolveCurrentRole(authentication));
         return true;
     }
 
@@ -64,15 +66,19 @@ public class AuthInterceptor implements HandlerInterceptor {
     }
 
     // 역할(권한) 검증
-    private void validateRoles(Role[] roles, Collection<? extends GrantedAuthority> authorities){
+    private void validateRoles(Role[] roles, Role currentRole){
         for (Role role : roles) {
-            boolean matched = authorities.stream()
-                    .anyMatch(authority -> authority.getAuthority().equals(role.getRoleName()));
-            if (matched) {
+            if (role == currentRole) {
                 return;
             }
         }
         throw new ForbiddenException(MemberErrorCode.INVALID_ROLE, makeRolesString(roles));
+    }
+
+    private Role resolveCurrentRole(Authentication authentication) {
+        Long memberId = Long.valueOf(authentication.getPrincipal().toString());
+        Member member = memberUseCase.findMemberByMemberId(memberId);
+        return member.getUser().getRole();
     }
 
     private String makeRolesString(Role[] roles) {

@@ -3,6 +3,7 @@ package com.kkirok.server.domain.member.api;
 import com.kkirok.server.domain.member.application.dto.request.FindEmailRequest;
 import com.kkirok.server.domain.member.application.dto.request.ProfileSettingRequest;
 import com.kkirok.server.domain.member.application.dto.request.ResetPasswordRequest;
+import com.kkirok.server.domain.member.application.dto.response.OnboardingOptionResponse;
 import com.kkirok.server.domain.member.application.dto.response.FoundEmailResponse;
 import com.kkirok.server.domain.member.application.dto.response.OnboardingProfileResponse;
 import com.kkirok.server.domain.member.exception.EmailErrorCode;
@@ -16,14 +17,18 @@ import com.kkirok.server.global.swagger.annotation.ApiErrorCodeExample;
 import com.kkirok.server.global.swagger.annotation.ApiErrorCodeExamples;
 import com.kkirok.server.global.swagger.annotation.ApiSuccessCodeExample;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Tag(name = "Member API", description = "서비스 내 Member 관련 API")
 public interface MemberApi {
@@ -64,7 +69,6 @@ public interface MemberApi {
     })
     @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "RESET_PASSWORD_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> resetPassword(
-            @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
             @CurrentMember final Long memberId,
             @Valid @RequestBody final ResetPasswordRequest request
     );
@@ -78,22 +82,71 @@ public interface MemberApi {
             @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "MEMBER_NOT_FOUND")
     })
     ResponseEntity<OnboardingProfileResponse> getOnboardingProfile(
-            @Parameter(hidden = true) @CurrentMember final Long memberId
+            @CurrentMember final Long memberId
     );
 
+    @Operation(summary = "온보딩 목표 목록 조회 [USER, PENDING]", description = """
+            프로필 설정에서 선택할 수 있는 온보딩 목표 목록을 조회합니다.
+            응답은 `value`, `label` 리스트입니다.
+            """)
+    @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "ONBOARDING_PURPOSE_LIST_SUCCESS")
+    ResponseEntity<SuccessResponse<List<OnboardingOptionResponse>>> getOnboardingPurposes();
+
+    @Operation(summary = "식습관 유형 목록 조회 [USER, PENDING]", description = """
+            프로필 설정에서 선택할 수 있는 식습관 유형 목록을 조회합니다.
+            응답은 `value`, `label` 리스트입니다.
+            """)
+    @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "ONBOARDING_HABIT_LIST_SUCCESS")
+    ResponseEntity<SuccessResponse<List<OnboardingOptionResponse>>> getOnboardingHabits();
+
     @Operation(
-            summary = "프로필 설정(온보딩) [USER]",
+            summary = "프로필 설정(온보딩) [USER, PENDING]",
             description = """
                     회원가입 이후 프로필 정보와 온보딩 정보를 함께 설정합니다.
+                    
+                    해당 기능으로 프로필 정보를 설정해야 서비스를 이용할 수 있습니다.
+                    가입 초기에는 PENDING 권한이고, 그 상태에서 프로필 설정을 하면 권한이 USER로 변경됩니다.
+                    
+                    목표(purpose)는 하나(필수), 식습관 유형(habits)는 5개 이하이어야 합니다. 식습관 유형은 선택되지 않아도 됩니다.
+                    목표와 식습관 유형 종류는 온보딩/식습관 목록 조회 api를 조회하여 확인할 수 있습니다.
 
-                    요청 전체는 `multipart/form-data`로 전송하며, 텍스트 필드와 `profileImage` 파일 파트를 함께 보냅니다.
-                    - 프로필 설정: `name`, `birth`, `phone`, `nickname`, `gender`
-                    - 온보딩 정보: `purpose`, `habits`
-                    - 선택값: `profileImage`, `purpose`, `habits`
-                    - `profileImage`는 URL 문자열이 아니라 파일 파트로 업로드합니다.
-                    - 업로드된 프로필 이미지는 R2에 저장되고, DB에는 이미지 URL이 아닌 저장 key가 보관됩니다.
-                    - 식습관을 선택하지 않으면 빈 리스트로 저장됩니다.
-                    """
+                    프로필을 수정하는 경우, 프로필 조회 API에서 응답 받은 결과를 기준으로 호출해주세요.
+                    예를 들어 닉네임만 바꾸고 싶다면 프로필 조회 API 응답값에서 닉네임만 변경해서 전송하면 됩니다.
+                    프로필 이미지를 업로드하지 않으면 기존 이미지가 유지됩니다.
+                    프로필 이미지를 기본 이미지로 바꾸고 싶다면 기본 이미지 파일을 업로드해주세요.
+
+                    ## API 호출 방법
+
+                    `multipart/form-data`로 요청합니다. `request` 파트는 JSON Blob으로 추가하고, `image` 파트는 선택값입니다.
+
+                    | Part name | Required | Value |
+                    | --- | --- | --- |
+                    | `request` | O | `application/json` 타입의 JSON Blob |
+                    | `image` | X | 이미지 파일 |
+
+                    ### request JSON
+
+                    ```json
+                    {
+                      "name": "김준용",
+                      "birth": "2002-04-13",
+                      "phone": "01012345678",
+                      "nickname": "멋진닉네임",
+                      "gender": "MALE",
+                      "purpose": "LOSE_WEIGHT",
+                      "habits": ["MEAT"]
+                    }
+                    ```
+
+                    `Content-Type`은 직접 지정하지 않습니다. 브라우저가 boundary를 포함한 `multipart/form-data` 값을 자동으로 생성해야 합니다.
+                    """,
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    content = @Content(
+                            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                            schema = @Schema(implementation = ProfileSettingRequest.ProfileSettingMultipartRequest.class),
+                            encoding = @Encoding(name = "request", contentType = MediaType.APPLICATION_JSON_VALUE)
+                    )
+            )
     )
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
@@ -104,16 +157,16 @@ public interface MemberApi {
     })
     @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "PROFILE_SETTING_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> updateProfile(
-            @Parameter(hidden = true) @CurrentMember Long memberId,
-            @Valid @ModelAttribute ProfileSettingRequest request,
-            @RequestPart(required = false) MultipartFile profileImage
+            @CurrentMember Long memberId,
+            @Valid @RequestPart(name = "request") ProfileSettingRequest request,
+            @RequestPart(name = "image", required = false) MultipartFile profileImage
     );
 
     @Operation(summary = "회원 탈퇴 [USER]", description = """
             회원탈퇴입니다. 복구 정책을 대비하여 완전 삭제하지 않습니다.
             """)
     ResponseEntity<SuccessResponse<Void>> quitMember(
-            @Parameter(hidden = true) @CurrentMember Long memberId
+            @CurrentMember Long memberId
     );
 
 }

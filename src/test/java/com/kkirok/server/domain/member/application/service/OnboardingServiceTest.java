@@ -7,6 +7,7 @@ import com.kkirok.server.domain.member.domain.Member;
 import com.kkirok.server.domain.member.domain.OnboardingHabit;
 import com.kkirok.server.domain.member.domain.OnboardingPurpose;
 import com.kkirok.server.domain.member.exception.MemberErrorCode;
+import com.kkirok.server.domain.user.application.service.UserRoleService;
 import com.kkirok.server.global.common.exception.BadRequestException;
 import com.kkirok.server.global.external.r2.application.service.R2UploadService;
 import com.kkirok.server.support.fixture.MemberFixture;
@@ -35,6 +36,9 @@ class OnboardingServiceTest {
 
     @Mock
     private R2UploadService r2UploadService;
+
+    @Mock
+    private UserRoleService userRoleService;
 
     @InjectMocks
     private OnboardingService onboardingService;
@@ -69,6 +73,7 @@ class OnboardingServiceTest {
 
         then(memberUseCase).should().findMemberByMemberId(memberId);
         then(r2UploadService).should().upload(profileImage);
+        then(userRoleService).should().promoteToUser(member.getUser());
         then(memberUseCase).should().updateMember(member);
     }
 

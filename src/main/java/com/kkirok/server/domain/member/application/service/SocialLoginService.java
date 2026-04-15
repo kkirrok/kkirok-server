@@ -92,11 +92,8 @@ public class SocialLoginService {
         log.info("Found or registered member with memberId: {}", memberId);
 
         Member member = memberUseCase.findMemberByMemberId(memberId);
-        Users user = member.getUser();
-
-        log.info("User role before generating token: {}", user.getRole());
-
-        return authenticationService.generateLoginSuccessResponse(memberId, user, memberInfoResponse);
+        log.info("User role before generating token: {}", member.getUser().getRole());
+        return authenticationService.generateLoginSuccessResponse(member);
     }
 
     /**

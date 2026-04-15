@@ -12,6 +12,8 @@ public enum MemberErrorCode implements BaseErrorCode {
 	*/
 	SOCIAL_TYPE_BAD_REQUEST(400, "로그인 요청이 유효하지 않습니다."),
 	LOCAL_LOGIN_BAD_REQUEST(400, "로컬 로그인 요청이 유효하지 않습니다."),
+	INVALID_PASSWORD_FORMAT(400, "비밀번호는 영문, 숫자, 특수문자를 각각 1개 이상 포함해야 합니다."),
+	INVALID_PHONE_FORMAT(400, "휴대전화 번호는 010-1111-1111 형식이어야 합니다."),
 	ONBOARDING_HABIT_MAX_COUNT(400, "식습관 유형은 최대 5개까지입니다."),
 
 	/*

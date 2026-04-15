@@ -28,7 +28,7 @@ public class Users extends BaseTimeEntity {
 
     public static Users of() {
         return Users.builder()
-                .role(Role.USER)
+                .role(Role.PENDING)
                 .build();
     }
 
@@ -36,6 +36,10 @@ public class Users extends BaseTimeEntity {
         return Users.builder()
                 .role(role)
                 .build();
+    }
+
+    public void changeRole(final Role role) {
+        this.role = role;
     }
 
 }

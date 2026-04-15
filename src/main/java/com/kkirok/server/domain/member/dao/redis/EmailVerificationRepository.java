@@ -28,52 +28,52 @@ public class EmailVerificationRepository {
     private final RedisTemplate<String, String> redisTemplate;
 
     // 인증코드 저장
-    public void saveVerificationCode(final String email, final String code) {
+    public void saveVerificationCode(String email, String code) {
         try {
             redisTemplate.opsForValue().set(codeKey(email), code, VERIFICATION_CODE_TTL);
         } catch (DataAccessException exception) {
             log.error("Failed to save email verification code. email={}", email, exception);
-            throw new RedisException(RedisErrorCode.REDIS_SAVE_FAILED);
+            throw new RedisException(RedisErrorCode.REDIS_SAVE_FAILED, exception);
         }
     }
 
     // 인증코드 조회
-    public Optional<String> getVerificationCode(final String email) {
+    public Optional<String> getVerificationCode(String email) {
         try {
             return Optional.ofNullable(redisTemplate.opsForValue().get(codeKey(email)));
         } catch (DataAccessException exception) {
             log.error("Failed to read email verification code. email={}", email, exception);
-            throw new RedisException(RedisErrorCode.REDIS_READ_FAILED);
+            throw new RedisException(RedisErrorCode.REDIS_READ_FAILED, exception);
         }
     }
 
     // 인증코드 제거
-    public void deleteVerificationCode(final String email) {
+    public void deleteVerificationCode(String email) {
         delete(codeKey(email), email);
     }
 
     // 인증완료 처리
-    public void markVerified(final String email) {
+    public void markVerified(String email) {
         try {
             redisTemplate.opsForValue().set(verifiedKey(email), VERIFIED_VALUE, VERIFIED_EMAIL_TTL);
         } catch (DataAccessException exception) {
             log.error("Failed to save verified email marker. email={}", email, exception);
-            throw new RedisException(RedisErrorCode.REDIS_SAVE_FAILED);
+            throw new RedisException(RedisErrorCode.REDIS_SAVE_FAILED, exception);
         }
     }
 
     // 인증 여부 조회
-    public boolean isVerified(final String email) {
+    public boolean isVerified(String email) {
         try {
             return redisTemplate.hasKey(verifiedKey(email));
         } catch (DataAccessException exception) {
             log.error("Failed to read verified email marker. email={}", email, exception);
-            throw new RedisException(RedisErrorCode.REDIS_READ_FAILED);
+            throw new RedisException(RedisErrorCode.REDIS_READ_FAILED, exception);
         }
     }
 
     // 인증 여부 삭제
-    public void deleteVerified(final String email) {
+    public void deleteVerified(String email) {
         delete(verifiedKey(email), email);
     }
 
@@ -81,20 +81,20 @@ public class EmailVerificationRepository {
         return VERIFICATION_CODE_TTL;
     }
 
-    private String codeKey(final String email) {
+    private String codeKey(String email) {
         return VERIFICATION_CODE_KEY + email;
     }
 
-    private String verifiedKey(final String email) {
+    private String verifiedKey(String email) {
         return VERIFIED_EMAIL_KEY + email;
     }
 
-    private void delete(final String key, final String email) {
+    private void delete(String key, String email) {
         try {
             redisTemplate.delete(key);
         } catch (DataAccessException exception) {
             log.error("Failed to delete redis data. email={}, key={}", email, key, exception);
-            throw new RedisException(RedisErrorCode.REDIS_DELETE_FAILED);
+            throw new RedisException(RedisErrorCode.REDIS_DELETE_FAILED, exception);
         }
     }
 }

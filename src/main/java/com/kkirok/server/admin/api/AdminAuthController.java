@@ -40,7 +40,8 @@ public class AdminAuthController implements AdminAuthApi {
 						MemberLoginResponse.of(
 								loginSuccessResponse.accessToken(),
 								loginSuccessResponse.nickname(),
-								loginSuccessResponse.role()
+								loginSuccessResponse.role(),
+								true
 						)
 				)
 		);

@@ -36,8 +36,7 @@ public class AccountRecoveryService {
                         request.name(),
                         request.birth(),
                         request.phone()
-                )
-                .orElseThrow(() -> new NotFoundException(MemberErrorCode.ACCOUNT_RECOVERY_INFO_MISMATCH));
+                ).orElseThrow(() -> new NotFoundException(MemberErrorCode.ACCOUNT_RECOVERY_INFO_MISMATCH));
 
         return member.getEmail();
     }

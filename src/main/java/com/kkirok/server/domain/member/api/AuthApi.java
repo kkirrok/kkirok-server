@@ -5,6 +5,7 @@ import com.kkirok.server.domain.member.application.dto.request.EmailVerification
 import com.kkirok.server.domain.member.application.dto.request.LocalLoginRequest;
 import com.kkirok.server.domain.member.application.dto.request.LocalSignUpRequest;
 import com.kkirok.server.domain.member.application.dto.response.AccessTokenGenerateResponse;
+import com.kkirok.server.domain.member.application.dto.response.CurrentRoleResponse;
 import com.kkirok.server.domain.member.application.dto.response.EmailVerificationStatusResponse;
 import com.kkirok.server.domain.member.application.dto.response.MemberLoginResponse;
 import com.kkirok.server.domain.member.exception.EmailErrorCode;
@@ -101,6 +102,9 @@ public interface AuthApi {
             description = """
                     이메일/비밀번호 기반 로컬 회원가입을 수행합니다.
                     회원가입 성공 시 즉시 로그인 처리됩니다.
+                    
+                    회원가입 후, 초기 권한은 PENDING 입니다. USER 권한을 획득하기 위해서는 프로필을 설정해야 합니다.
+                    프로필을 설정하지 않으면 서비스를 이용할 수 없습니다.( PENDING은 권한이 부족함 )
 
                     - 요청 바디: `email`, `password`
                     - 응답: accessToken + 사용자 정보
@@ -165,6 +169,20 @@ public interface AuthApi {
     ResponseEntity<SuccessResponse<AccessTokenGenerateResponse>> issueAccessTokenUsingRefreshToken(
             @Parameter(description = "리프레시 토큰 쿠키", required = true)
             @CookieValue(value = REFRESH_TOKEN) final String refreshToken
+    );
+
+    @Operation(
+            summary = "현재 권한 조회 [PENDING, USER, ADMIN]",
+            description = """
+                    현재 액세스 토큰에 담긴 사용자 권한을 조회합니다.
+
+                    - 응답: `role`, `authority`
+                    """
+    )
+    @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED")
+    @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "CURRENT_ROLE_GET_SUCCESS")
+    ResponseEntity<SuccessResponse<CurrentRoleResponse>> getCurrentRole(
+            @CurrentMember final Long memberId
     );
 
     @Operation(

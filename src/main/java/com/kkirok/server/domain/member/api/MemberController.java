@@ -4,20 +4,27 @@ import com.kkirok.server.domain.member.application.dto.request.FindEmailRequest;
 import com.kkirok.server.domain.member.application.dto.request.ProfileSettingRequest;
 import com.kkirok.server.domain.member.application.dto.request.ResetPasswordRequest;
 import com.kkirok.server.domain.member.application.dto.response.FoundEmailResponse;
+import com.kkirok.server.domain.member.application.dto.response.OnboardingOptionResponse;
 import com.kkirok.server.domain.member.application.dto.response.OnboardingProfileResponse;
 import com.kkirok.server.domain.member.application.service.AccountRecoveryService;
 import com.kkirok.server.domain.member.application.service.MemberService;
 import com.kkirok.server.domain.member.application.service.OnboardingService;
+import com.kkirok.server.domain.member.domain.OnboardingHabit;
+import com.kkirok.server.domain.member.domain.OnboardingPurpose;
 import com.kkirok.server.domain.member.exception.MemberSuccessCode;
+import com.kkirok.server.domain.user.domain.Role;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
+import com.kkirok.server.global.auth.annotation.RoleAuth;
 import com.kkirok.server.global.auth.annotation.RoleUserAuth;
 import com.kkirok.server.global.common.dto.SuccessResponse;
-import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/v1/users")
@@ -41,7 +48,7 @@ public class MemberController implements MemberApi {
     @PostMapping("/recovery/password")
     @RoleUserAuth
     public ResponseEntity<SuccessResponse<Void>> resetPassword(
-            @Parameter(hidden = true) @CurrentMember final Long memberId,
+            @CurrentMember final Long memberId,
             @Valid @RequestBody final ResetPasswordRequest request
     ) {
         accountRecoveryService.resetPassword(memberId, request);
@@ -52,18 +59,42 @@ public class MemberController implements MemberApi {
     @GetMapping("/profile")
     @RoleUserAuth
     public ResponseEntity<OnboardingProfileResponse> getOnboardingProfile(
-            @Parameter(hidden = true) @CurrentMember final Long memberId
+            @CurrentMember final Long memberId
     ) {
         return ResponseEntity.ok(onboardingService.getOnboardingInfo(memberId));
     }
 
     @Override
-    @PostMapping("/profile")
-    @RoleUserAuth
+    @GetMapping("/profile/purposes")
+    @RoleAuth(role = {Role.USER, Role.PENDING})
+    public ResponseEntity<SuccessResponse<List<OnboardingOptionResponse>>> getOnboardingPurposes() {
+        List<OnboardingOptionResponse> response = List.of(OnboardingPurpose.values()).stream()
+                .map(OnboardingOptionResponse::from)
+                .toList();
+
+        return ResponseEntity.ok()
+                .body(SuccessResponse.of(MemberSuccessCode.ONBOARDING_PURPOSE_LIST_SUCCESS, response));
+    }
+
+    @Override
+    @GetMapping("/profile/habits")
+    @RoleAuth(role = {Role.USER, Role.PENDING})
+    public ResponseEntity<SuccessResponse<List<OnboardingOptionResponse>>> getOnboardingHabits() {
+        List<OnboardingOptionResponse> response = List.of(OnboardingHabit.values()).stream()
+                .map(OnboardingOptionResponse::from)
+                .toList();
+
+        return ResponseEntity.ok()
+                .body(SuccessResponse.of(MemberSuccessCode.ONBOARDING_HABIT_LIST_SUCCESS, response));
+    }
+
+    @Override
+    @PatchMapping(value = "/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @RoleAuth(role = {Role.USER, Role.PENDING})
     public ResponseEntity<SuccessResponse<Void>> updateProfile(
-            @Parameter(hidden = true) @CurrentMember Long memberId,
-            @ModelAttribute @Valid ProfileSettingRequest request,
-            @RequestPart(required = false) MultipartFile profileImage
+            @CurrentMember Long memberId,
+            @Valid @RequestPart(name = "request") ProfileSettingRequest request,
+            @RequestPart(name = "image", required = false) MultipartFile profileImage
     ) {
         onboardingService.updateProfile(memberId, request, profileImage);
         return ResponseEntity.ok().body(SuccessResponse.from(MemberSuccessCode.PROFILE_SETTING_SUCCESS));
@@ -72,7 +103,8 @@ public class MemberController implements MemberApi {
     @Override
     @DeleteMapping
     @RoleUserAuth
-    public ResponseEntity<SuccessResponse<Void>> quitMember( @Parameter(hidden = true) @CurrentMember Long memberId){
+    public ResponseEntity<SuccessResponse<Void>> quitMember(
+            @CurrentMember Long memberId){
         memberService.quit(memberId);
         return ResponseEntity.ok()
                 .body(SuccessResponse.from(MemberSuccessCode.USER_DELETE_SUCCESS));

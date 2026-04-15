@@ -38,6 +38,8 @@ repositories {
 
 dependencies {
 
+	implementation platform('software.amazon.awssdk:bom:2.29.46')
+
 	// spring boot
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 //	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
@@ -87,11 +89,11 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-aop'
 
 	// R2
-	implementation 'software.amazon.awssdk:s3:2.25.4'
-	implementation 'software.amazon.awssdk:auth:2.25.4'
+	implementation 'software.amazon.awssdk:s3'
+	implementation 'software.amazon.awssdk:auth'
 
 	// Email
-	implementation 'software.amazon.awssdk:ses:2.29.46'
+	implementation 'software.amazon.awssdk:ses'
 
 }
 

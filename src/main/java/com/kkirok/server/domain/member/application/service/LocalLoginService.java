@@ -8,6 +8,7 @@ import com.kkirok.server.domain.member.domain.AuthIdentity;
 import com.kkirok.server.domain.member.domain.AuthProvider;
 import com.kkirok.server.domain.member.domain.Member;
 import com.kkirok.server.domain.member.exception.MemberErrorCode;
+import com.kkirok.server.global.common.exception.BadRequestException;
 import com.kkirok.server.domain.user.domain.Role;
 import com.kkirok.server.global.common.exception.ConflictException;
 import com.kkirok.server.global.common.exception.ForbiddenException;
@@ -17,6 +18,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +38,7 @@ public class LocalLoginService {
             throw new ConflictException(MemberErrorCode.LOCAL_EMAIL_ALREADY_EXISTS);
         }
         emailVerificationStateService.consumeVerifiedEmail(request.email());
+        checkPasswordValidation(request.password());
 
         String encodedPassword = passwordEncoder.encode(request.password());
         Member member = memberRegistrationService.registerLocalMember(
@@ -41,24 +46,20 @@ public class LocalLoginService {
                 encodedPassword
         );
 
-        return authenticationService.generateLoginSuccessResponse(
-                member.getId(),
-                member.getUser(),
-                member.getNickname()
-        );
+        return authenticationService.generateLoginSuccessResponse(member);
     }
 
     @Transactional
     public LoginSuccessResponse login(LocalLoginRequest request) {
-        return login(request, Role.USER);
+        return login(request, List.of(Role.PENDING, Role.USER));
     }
 
     @Transactional
     public LoginSuccessResponse adminLogin(LocalLoginRequest request) {
-        return login(request, Role.ADMIN);
+        return login(request, List.of(Role.ADMIN));
     }
 
-    private LoginSuccessResponse login(LocalLoginRequest request, Role expectedRole) {
+    private LoginSuccessResponse login(LocalLoginRequest request, List<Role> expectedRoles) {
         AuthIdentity authIdentity = authIdentityRepository
                 .findByProviderAndProviderUserId(AuthProvider.LOCAL, request.email())
                 .orElseThrow(() -> resolveMissingLocalAccount(request.email()));
@@ -73,22 +74,22 @@ public class LocalLoginService {
         }
 
         Member member = authIdentity.getMember();
-        if (member.getUser().getRole() != expectedRole) {
-            throwRoleMismatchException(expectedRole);
+        if (!expectedRoles.contains(member.getUser().getRole())) {
+            throwRoleMismatchException(expectedRoles);
         }
-        return authenticationService.generateLoginSuccessResponse(
-                member.getId(),
-                member.getUser(),
-                member.getNickname()
-        );
+        return authenticationService.generateLoginSuccessResponse(member);
     }
 
     // 올바르지 않은 권한에 대해 처리
-    private void throwRoleMismatchException(Role expectedRole) {
-        if (expectedRole == Role.ADMIN) {
+    private void throwRoleMismatchException(List<Role> expectedRoles) {
+        if (expectedRoles.contains(Role.ADMIN) && !expectedRoles.contains(Role.USER)) {
             throw new ForbiddenException(MemberErrorCode.ADMIN_LOGIN_FOR_USER_ACCOUNT);
         }
-        throw new ForbiddenException(MemberErrorCode.USER_LOGIN_FOR_ADMIN_ACCOUNT);
+        if ((expectedRoles.contains(Role.USER) || expectedRoles.contains(Role.PENDING))
+                && !expectedRoles.contains(Role.ADMIN)) {
+            throw new ForbiddenException(MemberErrorCode.USER_LOGIN_FOR_ADMIN_ACCOUNT);
+        }
+        throw new ForbiddenException(MemberErrorCode.INVALID_ROLE);
     }
 
     private RuntimeException resolveMissingLocalAccount(String email) {
@@ -97,4 +98,15 @@ public class LocalLoginService {
         }
         return new NotFoundException(MemberErrorCode.LOCAL_ACCOUNT_NOT_FOUND);
     }
+
+    // 비밀번호가 정해진 규격에 맞는지
+    private void checkPasswordValidation(String password){
+
+        Pattern PASSWORD_PATTERN = Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[^A-Za-z\\d]).+$"); // 비밀번호는 영문,숫자,특수문자의 조합이어야 함
+
+        if (password == null || !PASSWORD_PATTERN.matcher(password).matches()) {
+            throw new BadRequestException(MemberErrorCode.INVALID_PASSWORD_FORMAT);
+        }
+    }
+
 }

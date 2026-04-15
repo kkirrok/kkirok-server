@@ -8,13 +8,16 @@ public record MemberLoginResponse(
 	@Schema(description = "로그인한 사용자의 닉네임", example = "끼록이")
 	String nickname,
 	@Schema(description = "시스템 내부 역할 값", example = "ROLE_USER")
-	String role
+	String role,
+	@Schema(description = "온보딩 완료 여부", example = "false")
+	boolean onboardingCompleted
 ) {
 	public static MemberLoginResponse of(
 		final String accessToken,
 		final String nickname,
-		final String role
+		final String role,
+		final boolean onboardingCompleted
 	) {
-		return new MemberLoginResponse(accessToken, nickname, role);
+		return new MemberLoginResponse(accessToken, nickname, role, onboardingCompleted);
 	}
 }
