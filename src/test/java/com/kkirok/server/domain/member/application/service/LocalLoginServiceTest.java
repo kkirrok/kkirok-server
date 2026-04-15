@@ -37,6 +37,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static com.kkirok.server.domain.user.domain.Role.ADMIN;
+import static com.kkirok.server.domain.user.domain.Role.PENDING;
 
 @ExtendWith(MockitoExtension.class)
 class LocalLoginServiceTest {
@@ -64,17 +65,18 @@ class LocalLoginServiceTest {
     void shouldReturnLoginSuccessResponse_whenLocalSignUpSucceeds() {
         // Given
         LocalSignUpRequest request = LocalSignUpRequestFixture.create();
-        Member member = MemberFixture.createLocalMember("unused", request.email());
+        Member member = MemberFixture.createLocalMember("unused", request.email(), UserFixture.create(PENDING));
         ReflectionTestUtils.setField(member, "id", 1L);
+        ReflectionTestUtils.setField(member, "nickname", "kkirok");
         LoginSuccessResponse expected = LoginSuccessResponse.of("access-token", "refresh-token", "kkirok",
-                "ROLE_MEMBER");
+                "ROLE_PENDING", false);
 
         given(authIdentityRepository.existsByProviderAndProviderUserId(AuthProvider.LOCAL, request.email()))
                 .willReturn(false);
         given(passwordEncoder.encode(request.password())).willReturn("encoded-password");
         given(memberRegistrationService.registerLocalMember(request.email(), "encoded-password"))
                 .willReturn(member);
-        given(authenticationService.generateLoginSuccessResponse(member.getId(), member.getUser(), member.getNickname()))
+        given(authenticationService.generateLoginSuccessResponse(member))
                 .willReturn(expected);
 
         // When
@@ -87,7 +89,7 @@ class LocalLoginServiceTest {
         then(memberRegistrationService).should()
                 .registerLocalMember(request.email(), "encoded-password");
         then(authenticationService).should()
-                .generateLoginSuccessResponse(member.getId(), member.getUser(), member.getNickname());
+                .generateLoginSuccessResponse(member);
     }
 
     @Test
@@ -132,14 +134,15 @@ class LocalLoginServiceTest {
         LocalLoginRequest request = LocalLoginRequestFixture.create();
         Member member = MemberFixture.createLocalMember("kkirok", request.email());
         ReflectionTestUtils.setField(member, "id", 1L);
+        ReflectionTestUtils.setField(member, "nickname", "kkirok");
         AuthIdentity authIdentity = AuthIdentityFixture.createLocal(member, request.email(), "encoded-password");
         LoginSuccessResponse expected = LoginSuccessResponse.of("access-token", "refresh-token", "kkirok",
-                "ROLE_MEMBER");
+                "ROLE_USER", false);
 
         given(authIdentityRepository.findByProviderAndProviderUserId(AuthProvider.LOCAL, request.email()))
                 .willReturn(Optional.of(authIdentity));
         given(passwordEncoder.matches(request.password(), "encoded-password")).willReturn(true);
-        given(authenticationService.generateLoginSuccessResponse(member.getId(), member.getUser(), member.getNickname()))
+        given(authenticationService.generateLoginSuccessResponse(member))
                 .willReturn(expected);
 
         // When
@@ -149,7 +152,7 @@ class LocalLoginServiceTest {
         assertThat(response).isEqualTo(expected);
         then(passwordEncoder).should().matches(request.password(), "encoded-password");
         then(authenticationService).should()
-                .generateLoginSuccessResponse(member.getId(), member.getUser(), member.getNickname());
+                .generateLoginSuccessResponse(member);
     }
 
     @Test

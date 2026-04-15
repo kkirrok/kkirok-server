@@ -2,6 +2,8 @@ package com.kkirok.server.domain.member.application.service;
 
 import com.kkirok.server.domain.member.application.dto.response.AccessTokenGenerateResponse;
 import com.kkirok.server.domain.member.application.dto.response.LoginSuccessResponse;
+import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
+import com.kkirok.server.domain.member.domain.Member;
 import com.kkirok.server.domain.user.domain.Role;
 import com.kkirok.server.domain.user.domain.Users;
 import com.kkirok.server.global.auth.jwt.application.TokenService;
@@ -12,6 +14,7 @@ import com.kkirok.server.global.auth.security.AdminAuthentication;
 import com.kkirok.server.global.auth.security.MemberAuthentication;
 import com.kkirok.server.global.common.exception.BadRequestException;
 import com.kkirok.server.global.common.exception.UnauthorizedException;
+import com.kkirok.server.support.fixture.MemberFixture;
 import com.kkirok.server.support.fixture.UserFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,6 +40,9 @@ class AuthenticationServiceTest {
     @Mock
     private TokenService tokenService;
 
+    @Mock
+    private MemberUseCase memberUseCase;
+
     @InjectMocks
     private AuthenticationService authenticationService;
 
@@ -45,6 +51,9 @@ class AuthenticationServiceTest {
     void shouldReturnLoginSuccessResponseWithMemberAuthentication_whenMemberLogsIn() {
         // Given
         Users user = UserFixture.create(Role.USER);
+        Member member = MemberFixture.createLocalMember("kkirok", "kkirok@test.com", user);
+        org.springframework.test.util.ReflectionTestUtils.setField(member, "id", 1L);
+        org.springframework.test.util.ReflectionTestUtils.setField(member, "nickname", "kkirok");
         ArgumentCaptor<UsernamePasswordAuthenticationToken> authCaptor =
                 ArgumentCaptor.forClass(UsernamePasswordAuthenticationToken.class);
 
@@ -54,7 +63,7 @@ class AuthenticationServiceTest {
                 .willReturn("access-token");
 
         // When
-        LoginSuccessResponse response = authenticationService.generateLoginSuccessResponse(1L, user, "kkirok");
+        LoginSuccessResponse response = authenticationService.generateLoginSuccessResponse(member);
 
         // Then
         assertThat(response.accessToken()).isEqualTo("access-token");
@@ -73,6 +82,9 @@ class AuthenticationServiceTest {
     void shouldReturnLoginSuccessResponseWithAdminAuthentication_whenAdminLogsIn() {
         // Given
         Users admin = UserFixture.create(Role.ADMIN);
+        Member member = MemberFixture.createLocalMember("admin", "admin@test.com", admin);
+        org.springframework.test.util.ReflectionTestUtils.setField(member, "id", 99L);
+        org.springframework.test.util.ReflectionTestUtils.setField(member, "nickname", "admin");
         ArgumentCaptor<UsernamePasswordAuthenticationToken> authCaptor =
                 ArgumentCaptor.forClass(UsernamePasswordAuthenticationToken.class);
 
@@ -82,7 +94,7 @@ class AuthenticationServiceTest {
                 .willReturn("access-token");
 
         // When
-        LoginSuccessResponse response = authenticationService.generateLoginSuccessResponse(99L, admin, "admin");
+        LoginSuccessResponse response = authenticationService.generateLoginSuccessResponse(member);
 
         // Then
         assertThat(response.role()).isEqualTo(Role.ADMIN.getRoleName());
@@ -102,7 +114,8 @@ class AuthenticationServiceTest {
         given(jwtTokenProvider.validateToken("refresh-token")).willReturn(JwtValidationType.VALID_JWT);
         given(jwtTokenProvider.getMemberIdFromJwt("refresh-token")).willReturn(1L);
         given(tokenService.findIdByRefreshToken("refresh-token")).willReturn(1L);
-        given(jwtTokenProvider.getRoleFromJwt("refresh-token")).willReturn(Role.USER);
+        given(memberUseCase.findMemberByMemberId(1L))
+                .willReturn(MemberFixture.createLocalMember("kkirok", "kkirok@test.com", UserFixture.create(Role.USER)));
         given(jwtTokenProvider.issueAccessToken(any(UsernamePasswordAuthenticationToken.class)))
                 .willReturn("new-access-token");
 

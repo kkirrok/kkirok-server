@@ -63,16 +63,17 @@ class SocialLoginServiceTest {
         Member member = MemberFixture.createSocialMember("kkirok", "kkirok@test.com",
                 MemberFixture.createLocalMember().getUser(), 1001L, memberInfoResponse.socialType());
         ReflectionTestUtils.setField(member, "id", 1L);
+        ReflectionTestUtils.setField(member, "nickname", "kkirok");
         AuthIdentity authIdentity = AuthIdentityFixture.createSocial(member, AuthProvider.KAKAO,
                 memberInfoResponse.providerUserId());
         LoginSuccessResponse expected = LoginSuccessResponse.of("access-token", "refresh-token", "kkirok",
-                "ROLE_MEMBER");
+                "ROLE_USER", false);
 
         given(kakaoSocialService.login(authorizationCode, loginRequest)).willReturn(memberInfoResponse);
         given(authIdentityRepository.findByProviderAndProviderUserId(AuthProvider.KAKAO, memberInfoResponse.providerUserId()))
                 .willReturn(Optional.of(authIdentity));
         given(memberUseCase.findMemberByMemberId(1L)).willReturn(member);
-        given(authenticationService.generateLoginSuccessResponse(1L, member.getUser(), memberInfoResponse))
+        given(authenticationService.generateLoginSuccessResponse(member))
                 .willReturn(expected);
 
         // When
@@ -92,8 +93,9 @@ class SocialLoginServiceTest {
         MemberInfoResponse memberInfoResponse = MemberInfoResponseFixture.createNaverMember();
         Member member = MemberFixture.createSocialMember(2002L, memberInfoResponse.socialType());
         ReflectionTestUtils.setField(member, "id", 2L);
+        ReflectionTestUtils.setField(member, "nickname", "kkirok");
         LoginSuccessResponse expected = LoginSuccessResponse.of("access-token", "refresh-token", "kkirok",
-                "ROLE_MEMBER");
+                "ROLE_USER", false);
 
         given(naverSocialService.login(authorizationCode, loginRequest)).willReturn(memberInfoResponse);
         given(authIdentityRepository.findByProviderAndProviderUserId(AuthProvider.NAVER, memberInfoResponse.providerUserId()))
@@ -103,7 +105,7 @@ class SocialLoginServiceTest {
         given(memberUseCase.findMemberBySocialIdAndSocialType(2002L, memberInfoResponse.socialType()))
                 .willReturn(member);
         given(memberUseCase.findMemberByMemberId(2L)).willReturn(member);
-        given(authenticationService.generateLoginSuccessResponse(2L, member.getUser(), memberInfoResponse))
+        given(authenticationService.generateLoginSuccessResponse(member))
                 .willReturn(expected);
 
         // When
@@ -128,8 +130,9 @@ class SocialLoginServiceTest {
         MemberInfoResponse memberInfoResponse = MemberInfoResponseFixture.createKakaoMember();
         Member member = MemberFixture.createSocialMember(1001L, memberInfoResponse.socialType());
         ReflectionTestUtils.setField(member, "id", 3L);
+        ReflectionTestUtils.setField(member, "nickname", "kkirok");
         LoginSuccessResponse expected = LoginSuccessResponse.of("access-token", "refresh-token", "kkirok",
-                "ROLE_MEMBER");
+                "ROLE_USER", false);
 
         given(kakaoSocialService.login(authorizationCode, loginRequest)).willReturn(memberInfoResponse);
         given(authIdentityRepository.findByProviderAndProviderUserId(AuthProvider.KAKAO, memberInfoResponse.providerUserId()))
@@ -138,7 +141,7 @@ class SocialLoginServiceTest {
                 .willReturn(false);
         given(memberRegistrationService.registerMemberWithUserInfo(memberInfoResponse)).willReturn(3L);
         given(memberUseCase.findMemberByMemberId(3L)).willReturn(member);
-        given(authenticationService.generateLoginSuccessResponse(3L, member.getUser(), memberInfoResponse))
+        given(authenticationService.generateLoginSuccessResponse(member))
                 .willReturn(expected);
 
         // When
