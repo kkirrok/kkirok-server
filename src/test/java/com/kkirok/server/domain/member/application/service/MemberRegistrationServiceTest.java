@@ -74,7 +74,7 @@ class MemberRegistrationServiceTest {
         assertThat(registeredMember.getId()).isEqualTo(1L);
         assertThat(registeredMember.getNickname()).isNull();
         assertThat(registeredMember.getEmail()).isEqualTo("kkirok@test.com");
-        assertThat(registeredMember.getUser().getRole()).isEqualTo(Role.USER);
+        assertThat(registeredMember.getUser().getRole()).isEqualTo(Role.PENDING);
 
         ArgumentCaptor<AuthIdentity> authIdentityCaptor = ArgumentCaptor.forClass(AuthIdentity.class);
         ArgumentCaptor<MemberRegisteredEvent> eventCaptor = ArgumentCaptor.forClass(MemberRegisteredEvent.class);
@@ -135,6 +135,7 @@ class MemberRegistrationServiceTest {
         assertThat(authIdentity.getPasswordHash()).isNull();
         assertThat(authIdentity.getMember().getSocialId()).isEqualTo(1001L);
         assertThat(authIdentity.getMember().getSocialType()).isEqualTo(SocialType.KAKAO);
+        assertThat(authIdentity.getMember().getUser().getRole()).isEqualTo(Role.PENDING);
 
         assertThat(eventCaptor.getValue().nickname()).isNull();
     }

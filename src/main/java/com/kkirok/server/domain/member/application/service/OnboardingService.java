@@ -5,6 +5,7 @@ import com.kkirok.server.domain.member.application.dto.response.OnboardingProfil
 import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
 import com.kkirok.server.domain.member.domain.Member;
 import com.kkirok.server.domain.member.exception.MemberErrorCode;
+import com.kkirok.server.domain.user.application.service.UserRoleService;
 import com.kkirok.server.global.common.exception.BadRequestException;
 import com.kkirok.server.global.external.r2.application.service.R2UploadService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class OnboardingService {
 
     private final MemberUseCase memberUseCase;
     private final R2UploadService r2UploadService;
+    private final UserRoleService userRoleService;
 
     /*
         유저의 닉네임, 프로필이미지, 생년월일, 이름, 휴대폰번호, 온보딩 정보를 추가합니다.
@@ -41,6 +43,7 @@ public class OnboardingService {
 
         // Member와 Onboarding에 함께 적용
         member.updateOnboarding(request, imageKey);
+        userRoleService.promoteToUser(member.getUser());
         memberUseCase.updateMember(member);
 
     }

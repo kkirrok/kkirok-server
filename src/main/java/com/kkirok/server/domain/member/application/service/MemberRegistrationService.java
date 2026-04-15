@@ -45,7 +45,7 @@ public class MemberRegistrationService {
 
     @Transactional
     public Member registerLocalMember(final String email, final String passwordHash) {
-        return registerLocalMember(email, passwordHash, Role.USER, null, true, true);
+        return registerLocalMember(email, passwordHash, Role.PENDING, null, true, true);
     }
 
     @Transactional
@@ -72,7 +72,7 @@ public class MemberRegistrationService {
     }
 
     private Users createUserWithMemberRole() {
-        return createUserWithRole(Role.USER);
+        return createUserWithRole(Role.PENDING);
     }
 
     private Users createUserWithRole(final Role role) {
