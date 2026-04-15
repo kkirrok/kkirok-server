@@ -3,6 +3,7 @@ package com.kkirok.server.domain.member.api;
 import com.kkirok.server.domain.member.application.dto.request.FindEmailRequest;
 import com.kkirok.server.domain.member.application.dto.request.ProfileSettingRequest;
 import com.kkirok.server.domain.member.application.dto.request.ResetPasswordRequest;
+import com.kkirok.server.domain.member.application.dto.response.OnboardingOptionResponse;
 import com.kkirok.server.domain.member.application.dto.response.FoundEmailResponse;
 import com.kkirok.server.domain.member.application.dto.response.OnboardingProfileResponse;
 import com.kkirok.server.domain.member.exception.EmailErrorCode;
@@ -26,6 +27,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Tag(name = "Member API", description = "서비스 내 Member 관련 API")
 public interface MemberApi {
@@ -82,12 +85,27 @@ public interface MemberApi {
             @CurrentMember final Long memberId
     );
 
+    @Operation(summary = "온보딩 목표 목록 조회 [USER, PENDING]", description = """
+            프로필 설정에서 선택할 수 있는 온보딩 목표 목록을 조회합니다.
+            응답은 `value`, `label` 리스트입니다.
+            """)
+    @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "ONBOARDING_PURPOSE_LIST_SUCCESS")
+    ResponseEntity<SuccessResponse<List<OnboardingOptionResponse>>> getOnboardingPurposes();
+
+    @Operation(summary = "식습관 유형 목록 조회 [USER, PENDING]", description = """
+            프로필 설정에서 선택할 수 있는 식습관 유형 목록을 조회합니다.
+            응답은 `value`, `label` 리스트입니다.
+            """)
+    @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "ONBOARDING_HABIT_LIST_SUCCESS")
+    ResponseEntity<SuccessResponse<List<OnboardingOptionResponse>>> getOnboardingHabits();
+
     @Operation(
             summary = "프로필 설정(온보딩) [USER, PENDING]",
             description = """
                     회원가입 이후 프로필 정보와 온보딩 정보를 함께 설정합니다.
                     
                     목표(purpose)는 하나(필수), 식습관 유형(habits)는 5개 이하이어야 합니다. 식습관 유형은 선택되지 않아도 됩니다.
+                    목표와 식습관 유형 종류는 온보딩/식습관 목록 조회 api를 조회하여 확인할 수 있습니다.
 
                     프로필을 수정하는 경우, 프로필 조회 API에서 응답 받은 결과를 기준으로 호출해주세요.
                     예를 들어 닉네임만 바꾸고 싶다면 프로필 조회 API 응답값에서 닉네임만 변경해서 전송하면 됩니다.
