@@ -9,6 +9,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 @Getter
 public enum Role {
 
+    PENDING("ROLE_PENDING"),
     USER("ROLE_USER"),
     ADMIN("ROLE_ADMIN");
 

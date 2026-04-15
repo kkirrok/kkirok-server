@@ -64,7 +64,6 @@ public interface MemberApi {
     })
     @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "RESET_PASSWORD_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> resetPassword(
-            @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
             @CurrentMember final Long memberId,
             @Valid @RequestBody final ResetPasswordRequest request
     );
@@ -78,11 +77,11 @@ public interface MemberApi {
             @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "MEMBER_NOT_FOUND")
     })
     ResponseEntity<OnboardingProfileResponse> getOnboardingProfile(
-            @Parameter(hidden = true) @CurrentMember final Long memberId
+            @CurrentMember final Long memberId
     );
 
     @Operation(
-            summary = "프로필 설정(온보딩) [USER]",
+            summary = "프로필 설정(온보딩) [USER, PENDING]",
             description = """
                     회원가입 이후 프로필 정보와 온보딩 정보를 함께 설정합니다.
 
@@ -104,16 +103,16 @@ public interface MemberApi {
     })
     @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "PROFILE_SETTING_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> updateProfile(
-            @Parameter(hidden = true) @CurrentMember Long memberId,
-            @Valid @ModelAttribute ProfileSettingRequest request,
-            @RequestPart(required = false) MultipartFile profileImage
+            @CurrentMember Long memberId,
+            @Valid @ModelAttribute ProfileSettingRequest request
+//            @RequestPart(required = false) MultipartFile profileImage
     );
 
     @Operation(summary = "회원 탈퇴 [USER]", description = """
             회원탈퇴입니다. 복구 정책을 대비하여 완전 삭제하지 않습니다.
             """)
     ResponseEntity<SuccessResponse<Void>> quitMember(
-            @Parameter(hidden = true) @CurrentMember Long memberId
+            @CurrentMember Long memberId
     );
 
 }

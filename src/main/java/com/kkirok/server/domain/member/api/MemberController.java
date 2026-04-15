@@ -9,7 +9,9 @@ import com.kkirok.server.domain.member.application.service.AccountRecoveryServic
 import com.kkirok.server.domain.member.application.service.MemberService;
 import com.kkirok.server.domain.member.application.service.OnboardingService;
 import com.kkirok.server.domain.member.exception.MemberSuccessCode;
+import com.kkirok.server.domain.user.domain.Role;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
+import com.kkirok.server.global.auth.annotation.RoleAuth;
 import com.kkirok.server.global.auth.annotation.RoleUserAuth;
 import com.kkirok.server.global.common.dto.SuccessResponse;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -41,7 +43,7 @@ public class MemberController implements MemberApi {
     @PostMapping("/recovery/password")
     @RoleUserAuth
     public ResponseEntity<SuccessResponse<Void>> resetPassword(
-            @Parameter(hidden = true) @CurrentMember final Long memberId,
+            @CurrentMember final Long memberId,
             @Valid @RequestBody final ResetPasswordRequest request
     ) {
         accountRecoveryService.resetPassword(memberId, request);
@@ -52,27 +54,28 @@ public class MemberController implements MemberApi {
     @GetMapping("/profile")
     @RoleUserAuth
     public ResponseEntity<OnboardingProfileResponse> getOnboardingProfile(
-            @Parameter(hidden = true) @CurrentMember final Long memberId
+            @CurrentMember final Long memberId
     ) {
         return ResponseEntity.ok(onboardingService.getOnboardingInfo(memberId));
     }
 
     @Override
-    @PostMapping("/profile")
-    @RoleUserAuth
+    @PatchMapping("/profile")
+    @RoleAuth(role = {Role.USER, Role.PENDING})
     public ResponseEntity<SuccessResponse<Void>> updateProfile(
-            @Parameter(hidden = true) @CurrentMember Long memberId,
-            @ModelAttribute @Valid ProfileSettingRequest request,
-            @RequestPart(required = false) MultipartFile profileImage
+            @CurrentMember Long memberId,
+            @ModelAttribute @Valid ProfileSettingRequest request
+//            @RequestPart(required = false) MultipartFile profileImage
     ) {
-        onboardingService.updateProfile(memberId, request, profileImage);
+        onboardingService.updateProfile(memberId, request, null);
         return ResponseEntity.ok().body(SuccessResponse.from(MemberSuccessCode.PROFILE_SETTING_SUCCESS));
     }
 
     @Override
     @DeleteMapping
     @RoleUserAuth
-    public ResponseEntity<SuccessResponse<Void>> quitMember( @Parameter(hidden = true) @CurrentMember Long memberId){
+    public ResponseEntity<SuccessResponse<Void>> quitMember(
+            @CurrentMember Long memberId){
         memberService.quit(memberId);
         return ResponseEntity.ok()
                 .body(SuccessResponse.from(MemberSuccessCode.USER_DELETE_SUCCESS));

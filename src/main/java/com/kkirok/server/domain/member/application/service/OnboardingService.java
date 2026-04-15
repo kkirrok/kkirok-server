@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.regex.Pattern;
+
 @Service
 @RequiredArgsConstructor
 public class OnboardingService {
@@ -58,6 +60,16 @@ public class OnboardingService {
         }
 
         return r2UploadService.upload(profileImage);
+    }
+
+    // 휴대전화 번호 규격에 맞는지
+    private void checkPhoneValidation(String phone){
+
+        Pattern PHONE_PATTERN = Pattern.compile("^010-\\d{4}-\\d{4}$"); // 010-1111-1111 규격
+
+        if (phone == null || !PHONE_PATTERN.matcher(phone).matches()) {
+            throw new BadRequestException(MemberErrorCode.INVALID_PHONE_FORMAT);
+        }
     }
 
 }

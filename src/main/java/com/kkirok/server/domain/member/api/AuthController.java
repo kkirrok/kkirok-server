@@ -135,7 +135,8 @@ public class AuthController implements AuthApi {
         return MemberLoginResponse.of(
                 loginSuccessResponse.accessToken(),
                 loginSuccessResponse.nickname(),
-                loginSuccessResponse.role()
+                loginSuccessResponse.role(),
+                loginSuccessResponse.onboardingCompleted()
         );
     }
 }

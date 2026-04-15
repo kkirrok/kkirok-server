@@ -7,7 +7,6 @@ import com.kkirok.server.domain.member.dao.MemberRepository;
 import com.kkirok.server.domain.member.domain.AuthIdentity;
 import com.kkirok.server.domain.member.domain.AuthProvider;
 import com.kkirok.server.domain.member.domain.Member;
-import com.kkirok.server.domain.member.domain.SocialType;
 import com.kkirok.server.domain.user.dao.UserRepository;
 import com.kkirok.server.domain.user.domain.Role;
 import com.kkirok.server.domain.user.domain.Users;
