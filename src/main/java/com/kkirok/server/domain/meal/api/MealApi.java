@@ -67,7 +67,6 @@ public interface MealApi {
     @ApiErrorCodeExamples({})
     @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "TODAY_STATUS_GET_SUCCESS")
     ResponseEntity<SuccessResponse<TodayStatusResponse>> getTodayStatus(
-            @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
             @CurrentMember Long memberId
     );
 
@@ -83,7 +82,6 @@ public interface MealApi {
     @ApiErrorCodeExamples({})
     @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "MEAL_RECORD_SUCCESS")
     ResponseEntity<SuccessResponse<MealResponse>> recordMealManually(
-            @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
             @CurrentMember Long memberId,
 
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -108,7 +106,6 @@ public interface MealApi {
     })
     @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "MEAL_RECORD_SUCCESS")
     ResponseEntity<SuccessResponse<MealResponse>> recordMealByCamera(
-            @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
             @CurrentMember Long memberId,
 
             @Parameter(
@@ -172,7 +169,6 @@ public interface MealApi {
     })
     @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "MEAL_UPDATE_SUCCESS")
     ResponseEntity<SuccessResponse<MealResponse>> updateMeal(
-            @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
             @CurrentMember Long memberId,
 
             @Parameter(description = "수정할 식단 ID", required = true, example = "1")
@@ -200,7 +196,6 @@ public interface MealApi {
     })
     @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "MEAL_DELETE_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> deleteMeal(
-            @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
             @CurrentMember Long memberId,
 
             @Parameter(description = "삭제할 식단 ID", required = true, example = "1")

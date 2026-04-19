@@ -9,6 +9,7 @@ import com.kkirok.server.domain.meal.domain.MealRecord;
 import com.kkirok.server.domain.meal.domain.ScanType;
 import com.kkirok.server.domain.meal.exception.MealErrorCode;
 import com.kkirok.server.domain.meal.exception.MealException;
+import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
 import com.kkirok.server.domain.member.dao.MemberRepository;
 import com.kkirok.server.domain.member.domain.Member;
 import com.kkirok.server.global.common.exception.ForbiddenException;
@@ -29,6 +30,7 @@ public class MealRecordService implements MealRecordUseCase {
 
     private final MealRecordRepository mealRecordRepository;
     private final MemberRepository memberRepository;
+    private final MemberUseCase memberUseCase;
 
     @Override
     public List<MealRecord> getTodayRecords(Long memberId) {
@@ -48,7 +50,7 @@ public class MealRecordService implements MealRecordUseCase {
     @Override
     @Transactional
     public MealResponse create(Long memberId, MealCreateRequest request) {
-        Member member = findMember(memberId);
+        Member member = memberUseCase.findMemberByMemberId(memberId);
         MealRecord meal = MealRecord.createManual(member, request);
         mealRecordRepository.save(meal);
         return MealResponse.fromManual(meal, request);
@@ -58,7 +60,7 @@ public class MealRecordService implements MealRecordUseCase {
     @Override
     @Transactional
     public MealResponse createMealByCamera(Long memberId, String imageUrl) {
-        Member member = findMember(memberId);
+        Member member = memberUseCase.findMemberByMemberId(memberId);
 
         MealRecord meal = MealRecord.createByAi(member, ScanType.CAMERA);
         mealRecordRepository.save(meal);
@@ -74,7 +76,7 @@ public class MealRecordService implements MealRecordUseCase {
     @Override
     @Transactional
     public MealResponse createMealByAlbum(Long memberId, MultipartFile file) {
-        Member member = findMember(memberId);
+        Member member = memberUseCase.findMemberByMemberId(memberId);
 
         if (file == null || file.isEmpty()) {
             throw new MealException(MealErrorCode.IMAGE_FILE_REQUIRED);
@@ -106,12 +108,7 @@ public class MealRecordService implements MealRecordUseCase {
         mealRecordRepository.delete(meal);
     }
 
-    private Member findMember(Long memberId) {
-        return memberRepository.findById(memberId)
-                .orElseThrow(() -> new NotFoundException(MealErrorCode.MEAL_NOT_FOUND));
-    }
-
-    private MealRecord findMealWithOwnerCheck(Long memberId, Long mealId) {
+    public MealRecord findMealWithOwnerCheck(Long memberId, Long mealId) {
         MealRecord meal = mealRecordRepository.findByIdWithAnalyses(mealId)
                 .orElseThrow(() -> new MealException(MealErrorCode.MEAL_NOT_FOUND));
 

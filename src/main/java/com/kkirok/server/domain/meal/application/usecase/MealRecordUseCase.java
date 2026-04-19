@@ -52,4 +52,6 @@ public interface MealRecordUseCase {
     MealResponse updateMeal(Long memberId, Long mealId, MealUpdateRequest request);
 
     void deleteMeal(Long memberId, Long mealId);
+
+    MealRecord findMealWithOwnerCheck(Long memberId, Long mealId);
 }
