@@ -7,22 +7,30 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface MealRecordRepository extends JpaRepository<MealRecord, Long> {
-
+    // 오늘 식단 조회
     @Query("""
-        SELECT mr FROM MealRecord as mr
-        LEFT JOIN FETCH MealAiAnalysis as mai
-            ON mai.mealRecord.id = mr.id
+        SELECT DISTINCT mr
+        FROM MealRecord mr
+        LEFT JOIN FETCH mr.mealAiAnalyses
         WHERE mr.member.id = :memberId
-            AND mr.createdAt >= :startOfDay
-            AND mr.createdAt < :endOfDay
-            AND mr.aiAnalyzed IS TRUE
-    """)
-    List<MealRecord> getSpecifiedDateMealRecords( // 특정 일시에 대해 MealRecord 목록 조회
+          AND mr.createdAt >= :startOfDay
+          AND mr.createdAt < :endOfDay
+        ORDER BY mr.createdAt DESC
+""")
+    List<MealRecord> getSpecifiedDateMealRecords(
             @Param("memberId") Long memberId,
             @Param("startOfDay") LocalDateTime startOfDay,
             @Param("endOfDay") LocalDateTime endOfDay
     );
 
+    // 식단 단건 조회
+    @Query("""
+        SELECT mr FROM MealRecord mr
+        LEFT JOIN FETCH mr.mealAiAnalyses
+        WHERE mr.id = :mealId
+    """)
+    Optional<MealRecord> findByIdWithAnalyses(@Param("mealId") Long mealId);
 }

@@ -1,19 +1,10 @@
 package com.kkirok.server.domain.meal.domain;
 
 import com.kkirok.server.domain.BaseTimeEntity;
+import com.kkirok.server.domain.meal.application.dto.request.MealCreateRequest;
+import com.kkirok.server.domain.meal.application.dto.request.MealUpdateRequest;
 import com.kkirok.server.domain.member.domain.Member;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -67,13 +58,13 @@ public class MealRecord extends BaseTimeEntity {
     @Column(columnDefinition = "TEXT")
     private String memo;
 
-    @OneToMany(mappedBy = "mealRecord")
+    @OneToMany(mappedBy = "mealRecord", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MealAiAnalysis> mealAiAnalyses = new ArrayList<>();
 
     @Builder
-    private MealRecord(Member member, LocalDateTime recordedAt, LocalDate mealDate, MealTimeSlot mealTimeSlot,
-                       String name, MealCategory category, boolean aiAnalyzed, ScanType scanType,
-                       Integer healthScore, String memo){
+    private MealRecord(Member member, LocalDateTime recordedAt, LocalDate mealDate,
+                       MealTimeSlot mealTimeSlot, String name, MealCategory category,
+                       boolean aiAnalyzed, ScanType scanType, Integer healthScore, String memo) {
         this.member = member;
         this.recordedAt = recordedAt;
         this.mealDate = mealDate;
@@ -86,12 +77,48 @@ public class MealRecord extends BaseTimeEntity {
         this.memo = memo;
     }
 
-    public static MealRecord create(Member member) { // TODO: Member와 요청 DTO 받아서 하도록 수정
+    /** 직접 입력으로 식단 기록 생성 */
+    public static MealRecord createManual(Member member, MealCreateRequest request) {
+        LocalDateTime now = LocalDateTime.now();
         return MealRecord.builder()
                 .member(member)
+                .recordedAt(now)
+                .mealDate(now.toLocalDate())
+                .mealTimeSlot(request.mealTimeSlot())
+                .name(request.foodName())
+                .category(request.category())
+                .aiAnalyzed(false)
+                .scanType(ScanType.DIRECT)
+                .memo(request.memo())
                 .build();
     }
 
+    /** 카메라/앨범 AI 분석으로 식단 기록 생성 */
+    public static MealRecord createByAi(Member member, ScanType scanType) {
+        LocalDateTime now = LocalDateTime.now();
+        return MealRecord.builder()
+                .member(member)
+                .recordedAt(now)
+                .mealDate(now.toLocalDate())
+                .mealTimeSlot(MealTimeSlot.BREAKFAST) // AI 분석 후 업데이트 가능
+                .name("")                             // AI 분석 후 업데이트
+                .category(MealCategory.MEAL)
+                .aiAnalyzed(true)
+                .scanType(scanType)
+                .build();
+    }
 
+    /** 식단 수정 */
+    public void update(MealUpdateRequest request) {
+        this.mealTimeSlot = request.mealTimeSlot();
+        this.category = request.category();
+        this.name = request.foodName();
+        this.memo = request.memo();
+    }
 
+    /** AI 분석 결과 반영 후 이름/시간대 업데이트 */
+    public void applyAiResult(String detectedName, MealTimeSlot timeSlot) {
+        this.name = detectedName;
+        this.mealTimeSlot = timeSlot;
+    }
 }

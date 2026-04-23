@@ -3,18 +3,17 @@ package com.kkirok.server.domain.meal.application.dto.request;
 import com.kkirok.server.domain.meal.domain.MealCategory;
 import com.kkirok.server.domain.meal.domain.MealTimeSlot;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PositiveOrZero;
 
-public record MealUpdateRequest(
-
+public record MealCreateRequest (
         @NotNull
         @Schema(description = "식사 시간대", example = "BREAKFAST")
         MealTimeSlot mealTimeSlot,
 
         @NotNull
-        @Schema(description = "식사 카테고리", example = "1")
+        @Schema(description = "식사 카테고리", example = "MEAL")
         MealCategory category,
 
         @NotBlank
@@ -45,6 +44,7 @@ public record MealUpdateRequest(
         @Schema(description = "나트륨(mg)", example = "6")
         Integer sodiumMg,
 
-        @Schema(description = "메모")
+        @Schema(description = "메모", example = "오늘 점심 맛있었다")
         String memo
-) {}
+){
+}

@@ -1,15 +1,24 @@
 package com.kkirok.server.domain.meal.api;
 
+import com.kkirok.server.domain.meal.application.dto.request.MealCreateRequest;
 import com.kkirok.server.domain.meal.application.dto.request.MealUpdateRequest;
 import com.kkirok.server.domain.meal.application.dto.response.MealResponse;
 import com.kkirok.server.domain.meal.application.dto.response.RecommendationResponse;
 import com.kkirok.server.domain.meal.application.dto.response.TodayStatusResponse;
+import com.kkirok.server.domain.meal.application.usecase.MealRecordUseCase;
+import com.kkirok.server.domain.meal.exception.MealSuccessCode;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
 import com.kkirok.server.global.auth.annotation.RoleUserAuth;
 import com.kkirok.server.global.common.dto.SuccessResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/v1/meals")
@@ -17,12 +26,19 @@ import org.springframework.web.bind.annotation.*;
 @RoleUserAuth
 public class MealController implements MealApi {
 
+    private final MealRecordUseCase mealRecordUseCase;
+
     @Override
     @GetMapping
-    public ResponseEntity<SuccessResponse<MealResponse>> getMeals(
+    public ResponseEntity<SuccessResponse<List<MealResponse>>> getMeals(
             @CurrentMember Long memberId
     ) {
-        return null;
+        List<MealResponse> responses = mealRecordUseCase.getTodayRecords(memberId)
+                .stream()
+                .map(MealResponse::from)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(SuccessResponse.of(MealSuccessCode.MEAL_GET_SUCCESS, responses));
     }
 
     @Override
@@ -30,38 +46,46 @@ public class MealController implements MealApi {
     public ResponseEntity<SuccessResponse<TodayStatusResponse>> getTodayStatus(
             @CurrentMember Long memberId
     ) {
+        // TODO: 캐릭터 상태 연동
         return null;
     }
 
     @Override
     @PostMapping("/record/camera")
     public ResponseEntity<SuccessResponse<MealResponse>> recordMealByCamera(
-            @CurrentMember Long memberId
+            @CurrentMember Long memberId,
+            @RequestParam("imageUrl") String imageUrl
     ) {
-        return null;
+        MealResponse response = mealRecordUseCase.createMealByCamera(memberId, imageUrl);
+        return ResponseEntity.ok(SuccessResponse.of(MealSuccessCode.MEAL_RECORD_SUCCESS, response));
     }
 
     @Override
-    @PostMapping("/record/album")
+    @PostMapping(value = "/record/album", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SuccessResponse<MealResponse>> recordMealByAlbum(
-            @CurrentMember Long memberId
+            @CurrentMember Long memberId,
+            @RequestPart("file") MultipartFile file
     ) {
-        return null;
+        MealResponse response = mealRecordUseCase.createMealByAlbum(memberId, file);
+        return ResponseEntity.ok(SuccessResponse.of(MealSuccessCode.MEAL_RECORD_SUCCESS, response));
     }
 
-    @Override
     @PostMapping("/record/manual")
+    @Override
     public ResponseEntity<SuccessResponse<MealResponse>> recordMealManually(
-            @CurrentMember Long memberId
+            @CurrentMember Long memberId,
+            @Valid @RequestBody MealCreateRequest request
     ) {
-        return null;
+        MealResponse response = mealRecordUseCase.create(memberId, request);
+        return ResponseEntity.ok(SuccessResponse.of(MealSuccessCode.MEAL_RECORD_SUCCESS, response));
     }
 
     @Override
     @PostMapping("/recommendations")
-    public ResponseEntity<SuccessResponse<RecommendationResponse>> recommendMeal(
+    public ResponseEntity<SuccessResponse<RecommendationResponse>> getRecommendation(
             @CurrentMember Long memberId
     ) {
+        // TODO: 추천 로직 연동
         return null;
     }
 
@@ -69,18 +93,20 @@ public class MealController implements MealApi {
     @PutMapping("/{mealId}")
     public ResponseEntity<SuccessResponse<MealResponse>> updateMeal(
             @CurrentMember Long memberId,
-            @PathVariable Long mealId,
-            @RequestBody MealUpdateRequest request
-            ) {
-        return null;
+            @PathVariable("mealId") Long mealId,
+            @Valid @RequestBody MealUpdateRequest request
+    ) {
+        MealResponse response = mealRecordUseCase.updateMeal(memberId, mealId, request);
+        return ResponseEntity.ok(SuccessResponse.of(MealSuccessCode.MEAL_UPDATE_SUCCESS, response));
     }
 
     @Override
     @DeleteMapping("/{mealId}")
     public ResponseEntity<SuccessResponse<Void>> deleteMeal(
             @CurrentMember Long memberId,
-            @PathVariable Long mealId
+            @PathVariable("mealId") Long mealId
     ) {
-        return null;
+        mealRecordUseCase.deleteMeal(memberId, mealId);
+        return ResponseEntity.ok(SuccessResponse.from(MealSuccessCode.MEAL_DELETE_SUCCESS));
     }
 }
