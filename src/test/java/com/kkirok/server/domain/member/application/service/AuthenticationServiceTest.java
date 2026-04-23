@@ -113,9 +113,8 @@ class AuthenticationServiceTest {
 
         given(jwtTokenProvider.validateToken("refresh-token")).willReturn(JwtValidationType.VALID_JWT);
         given(jwtTokenProvider.getMemberIdFromJwt("refresh-token")).willReturn(1L);
+        given(jwtTokenProvider.getRoleFromJwt("refresh-token")).willReturn(Role.USER);
         given(tokenService.findIdByRefreshToken("refresh-token")).willReturn(1L);
-        given(memberUseCase.findMemberByMemberId(1L))
-                .willReturn(MemberFixture.createLocalMember("kkirok", "kkirok@test.com", UserFixture.create(Role.USER)));
         given(jwtTokenProvider.issueAccessToken(any(UsernamePasswordAuthenticationToken.class)))
                 .willReturn("new-access-token");
 
