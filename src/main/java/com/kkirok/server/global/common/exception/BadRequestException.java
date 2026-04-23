@@ -6,4 +6,7 @@ public class BadRequestException extends KkirokException {
 	public BadRequestException(final BaseErrorCode baseErrorCode) {
 		super(baseErrorCode);
 	}
+	public BadRequestException(final BaseErrorCode baseErrorCode, final Throwable cause) {
+		super(baseErrorCode, cause);
+	}
 }

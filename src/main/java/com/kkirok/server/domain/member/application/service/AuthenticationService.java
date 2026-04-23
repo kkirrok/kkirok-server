@@ -77,7 +77,7 @@ public class AuthenticationService {
         Long memberId = jwtTokenProvider.getMemberIdFromJwt(refreshToken);
         verifyMemberIdWithStoredToken(refreshToken, memberId);
 
-        Role role = memberUseCase.findMemberByMemberId(memberId).getUser().getRole();
+        Role role = jwtTokenProvider.getRoleFromJwt(refreshToken);
         Collection<GrantedAuthority> authorities = List.of(role.toGrantedAuthority());
 
         UsernamePasswordAuthenticationToken authenticationToken = createAuthenticationToken(memberId, role, authorities);

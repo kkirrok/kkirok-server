@@ -155,4 +155,14 @@ public class Member extends BaseTimeEntity {
         this.deletedAt = LocalDateTime.now();
     }
 
+    public String getDisplayName() {
+        if (nickname != null && !nickname.isBlank()) {
+            return nickname;
+        }
+        if (name != null && !name.isBlank()) {
+            return name;
+        }
+        return "이름없음";
+    }
+
 }

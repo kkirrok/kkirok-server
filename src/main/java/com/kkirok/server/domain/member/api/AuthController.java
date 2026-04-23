@@ -9,7 +9,6 @@ import com.kkirok.server.domain.member.application.dto.response.CurrentRoleRespo
 import com.kkirok.server.domain.member.application.dto.response.EmailVerificationStatusResponse;
 import com.kkirok.server.domain.member.application.dto.response.LoginSuccessResponse;
 import com.kkirok.server.domain.member.application.dto.response.MemberLoginResponse;
-import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
 import com.kkirok.server.domain.member.application.service.AuthenticationService;
 import com.kkirok.server.domain.member.application.service.EmailVerificationService;
 import com.kkirok.server.domain.member.application.service.EmailVerificationStateService;
@@ -27,6 +26,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,7 +47,6 @@ public class AuthController implements AuthApi {
     private final LocalLoginService localLoginService;
     private final EmailVerificationService emailVerificationService;
     private final EmailVerificationStateService emailVerificationStateService;
-    private final MemberUseCase memberUseCase;
 
     private static final int COOKIE_MAX_AGE = 7 * 24 * 60 * 60;
 
@@ -122,7 +122,9 @@ public class AuthController implements AuthApi {
     public ResponseEntity<SuccessResponse<CurrentRoleResponse>> getCurrentRole(
             @CurrentMember final Long memberId
     ) {
-        CurrentRoleResponse response = CurrentRoleResponse.from(memberUseCase.findMemberByMemberId(memberId).getUser().getRole());
+        CurrentRoleResponse response = CurrentRoleResponse.from(
+                resolveRole(SecurityContextHolder.getContext().getAuthentication())
+        );
         return ResponseEntity.ok()
                 .body(SuccessResponse.of(MemberSuccessCode.CURRENT_ROLE_GET_SUCCESS, response));
     }
@@ -153,5 +155,18 @@ public class AuthController implements AuthApi {
                 loginSuccessResponse.role(),
                 loginSuccessResponse.onboardingCompleted()
         );
+    }
+
+    private Role resolveRole(org.springframework.security.core.Authentication authentication) {
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .map(this::toRole)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No authorities found for current authentication"));
+    }
+
+    private Role toRole(String authority) {
+        String roleName = authority.replace("ROLE_", "");
+        return Role.valueOf(roleName);
     }
 }

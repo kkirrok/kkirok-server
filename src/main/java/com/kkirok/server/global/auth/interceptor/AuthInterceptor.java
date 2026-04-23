@@ -1,17 +1,16 @@
 package com.kkirok.server.global.auth.interceptor;
 
 import com.kkirok.server.domain.member.exception.MemberErrorCode;
-import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
-import com.kkirok.server.domain.member.domain.Member;
 import com.kkirok.server.domain.user.domain.Role;
 import com.kkirok.server.global.auth.annotation.RoleAuth;
-import com.kkirok.server.global.common.exception.UnauthorizedException;
 import com.kkirok.server.global.common.exception.ForbiddenException;
+import com.kkirok.server.global.common.exception.UnauthorizedException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
@@ -24,8 +23,6 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class AuthInterceptor implements HandlerInterceptor {
-
-    private final MemberUseCase memberUseCase;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -76,9 +73,16 @@ public class AuthInterceptor implements HandlerInterceptor {
     }
 
     private Role resolveCurrentRole(Authentication authentication) {
-        Long memberId = Long.valueOf(authentication.getPrincipal().toString());
-        Member member = memberUseCase.findMemberByMemberId(memberId);
-        return member.getUser().getRole();
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .map(this::toRole)
+                .findFirst()
+                .orElseThrow(() -> new UnauthorizedException(MemberErrorCode.AUTHENTICATION_REQUIRED));
+    }
+
+    private Role toRole(String authority) {
+        String roleName = authority.replace("ROLE_", "");
+        return Role.valueOf(roleName);
     }
 
     private String makeRolesString(Role[] roles) {
