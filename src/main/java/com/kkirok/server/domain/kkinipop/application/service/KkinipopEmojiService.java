@@ -29,7 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class KkinipopEmojiService {
 
-    private static final int CUSTOM_EMOJI_LIMIT = 3;
+    private static final int CUSTOM_EMOJI_LIMIT = 2;
 
     private final KkinipopUseCase kkinipopUseCase;
     private final KkinipopCustomEmojiRepository customEmojiRepository;
