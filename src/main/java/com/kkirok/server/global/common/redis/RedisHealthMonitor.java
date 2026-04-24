@@ -1,10 +1,9 @@
 package com.kkirok.server.global.common.redis;
 
-import com.kkirok.server.global.webhook.RedisWebhookSender;
+import com.kkirok.server.global.webhook.sender.RedisWebhookSender;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
-import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.connection.RedisConnectionCommands;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.RedisCallback;

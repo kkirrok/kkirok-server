@@ -1,4 +1,4 @@
-package com.kkirok.server.global.common.aop;
+package com.kkirok.server.global.common.aop.aspects;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;

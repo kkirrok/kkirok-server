@@ -424,9 +424,10 @@ public interface KkinipopApi {
                     오늘 날짜로 등록된 미션만 조회합니다.
 
                     - 사전 조건: 요청한 사용자가 해당 그룹에 속해 있어야 합니다.
-                    - 응답:
-                      - `realtimeMission`: 현재 시간에 해당하는 실시간 미션 1개 또는 null
-                      - `missions`: 일반 미션 목록
+                    - 모든 미션은 10분 동안 진행됩니다.
+                    - 응답의 `missions`는 시작 시각이 오래된 순으로 정렬됩니다.
+                    - 현재 시간에 해당하는 미션은 `isRealTime=true`로 표시됩니다.
+                    - 현재 시간에 해당하는 미션이 없으면 조회할 수 없습니다.
                     """
     )
     @ApiErrorCodeExamples({

@@ -1,5 +1,6 @@
-package com.kkirok.server.global.webhook;
+package com.kkirok.server.global.webhook.sender;
 
+import com.kkirok.server.global.webhook.DiscordWebhookPayload;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;

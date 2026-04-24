@@ -15,6 +15,7 @@ public enum KkinipopErrorCode implements BaseErrorCode {
     INVALID_POST_REQUEST(400, "게시글 요청이 올바르지 않습니다."),
     PHOTO_REQUIRED(400, "사진은 필수입니다."),
     INVALID_REACTION_REQUEST(400, "리액션 요청이 올바르지 않습니다."),
+    MISSION_GENERATION_FAILED(500, "끼니팝 미션 생성에 실패했습니다."),
 
     GROUP_ACCESS_FORBIDDEN(403, "해당 그룹에 접근할 수 없습니다."),
     GROUP_MANAGEMENT_FORBIDDEN(403, "방장만 그룹을 관리할 수 있습니다."),

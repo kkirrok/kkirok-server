@@ -1,7 +1,7 @@
-package com.kkirok.server.global.common.aop;
+package com.kkirok.server.global.common.aop.aspects;
 
 import com.kkirok.server.global.common.redis.exception.RedisException;
-import com.kkirok.server.global.webhook.RedisWebhookSender;
+import com.kkirok.server.global.webhook.sender.RedisWebhookSender;
 import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.context.annotation.Profile;

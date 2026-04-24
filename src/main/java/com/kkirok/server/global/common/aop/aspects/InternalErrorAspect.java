@@ -1,4 +1,4 @@
-package com.kkirok.server.global.common.aop;
+package com.kkirok.server.global.common.aop.aspects;
 
 import com.kkirok.server.global.common.exception.KkirokException;
 import com.kkirok.server.global.webhook.InternalServerWebhook;

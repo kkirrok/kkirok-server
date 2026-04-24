@@ -1,6 +1,6 @@
-package com.kkirok.server.global.common.aop;
+package com.kkirok.server.global.common.aop.aspects;
 
-import com.kkirok.server.global.webhook.WebhookSender;
+import com.kkirok.server.global.webhook.sender.WebhookSender;
 
 // 웹훅을 위한 aspect
 public abstract class ExceptionWebhookAspect {

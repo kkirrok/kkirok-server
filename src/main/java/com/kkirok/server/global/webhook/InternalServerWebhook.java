@@ -1,5 +1,6 @@
 package com.kkirok.server.global.webhook;
 
+import com.kkirok.server.global.webhook.sender.WebhookSender;
 import org.springframework.stereotype.Component;
 
 // 500 에러로 인한 웹훅 발생

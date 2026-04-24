@@ -7,7 +7,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum PromptType {
 
-	MEAL_ANALYSIS("prompts/meal-analysis-v1.txt", "v1");
+	MEAL_ANALYSIS("prompts/meal-analysis-v1.txt", "v1"),
+	KKINIPOP_MISSION("prompts/kkinipop-mission-v1.txt", "v1");
 
 	private final String resourcePath;
 	private final String version;
