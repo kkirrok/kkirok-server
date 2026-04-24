@@ -12,10 +12,8 @@ public record KkinipopMissionResponse(
         Long missionId,
         @Schema(description = "미션 제목", example = "10분 안에 과일 올리기")
         String title,
-        @Schema(description = "실시간 미션 여부", example = "true")
-        boolean realtime,
-        @Schema(description = "현재 실시간 진행 여부", example = "true")
-        boolean isLive,
+        @Schema(description = "현재 실시간 미션 여부", example = "true")
+        boolean isRealTime,
         @Schema(description = "종료 여부", example = "false")
         boolean isEnd,
         @Schema(description = "시작 시각", example = "2026-04-22T12:00:00")
@@ -32,14 +30,13 @@ public record KkinipopMissionResponse(
             LocalDateTime now,
             List<KkinipopMissionSuccessMemberResponse> successMembers
     ) {
-        boolean live = mission.isLive(now);
+        boolean realTime = mission.isLive(now);
         boolean ended = mission.isEnded(now);
 
         return new KkinipopMissionResponse(
                 mission.getId(),
                 mission.getTitle(),
-                mission.isRealtime(),
-                live,
+                realTime,
                 ended,
                 mission.getStartAt(),
                 mission.getEndAt(),

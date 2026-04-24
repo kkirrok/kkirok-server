@@ -1,6 +1,7 @@
 package com.kkirok.server.domain.kkinipop.domain;
 
 import com.kkirok.server.domain.BaseTimeEntity;
+import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopMissionGenerateResponse;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -11,6 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -56,8 +58,28 @@ public class KkinipopMission extends BaseTimeEntity {
         this.endAt = endAt;
     }
 
-    public boolean isRealtime() {
-        return Duration.between(startAt, endAt).equals(Duration.ofMinutes(10));
+    public static KkinipopMission create(
+            KkinipopGroup group,
+            String title,
+            LocalDateTime startAt,
+            LocalDateTime endAt
+    ) {
+        return KkinipopMission.builder()
+                .group(group)
+                .title(title)
+                .startAt(startAt)
+                .endAt(endAt)
+                .build();
+    }
+
+    public static KkinipopMission create(KkinipopGroup group, LocalDate targetDate, KkinipopMissionGenerateResponse.MissionCandidate candidate){
+        LocalDateTime startAt = targetDate.atTime(candidate.startTime());
+        return KkinipopMission.create(
+                group,
+                candidate.title(),
+                startAt,
+                startAt.plusMinutes(candidate.durationMinutes())
+        );
     }
 
     public boolean isLive(LocalDateTime now) {

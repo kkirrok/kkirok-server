@@ -3,8 +3,10 @@ package com.kkirok.server.domain.kkinipop.application.service;
 import com.kkirok.server.domain.kkinipop.application.usecase.KkinipopUseCase;
 import com.kkirok.server.domain.kkinipop.dao.KkinipopCustomEmojiRepository;
 import com.kkirok.server.domain.kkinipop.dao.KkinipopGroupMemberRepository;
+import com.kkirok.server.domain.kkinipop.dao.KkinipopGroupRepository;
 import com.kkirok.server.domain.kkinipop.dao.KkinipopPostRepository;
 import com.kkirok.server.domain.kkinipop.domain.KkinipopCustomEmoji;
+import com.kkirok.server.domain.kkinipop.domain.KkinipopGroup;
 import com.kkirok.server.domain.kkinipop.domain.KkinipopGroupMember;
 import com.kkirok.server.domain.kkinipop.domain.KkinipopPost;
 import com.kkirok.server.domain.kkinipop.exception.KkinipopErrorCode;
@@ -12,6 +14,8 @@ import com.kkirok.server.global.common.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +25,7 @@ public class KkinipopService implements KkinipopUseCase {
     private final KkinipopGroupMemberRepository groupMemberRepository;
     private final KkinipopPostRepository postRepository;
     private final KkinipopCustomEmojiRepository customEmojiRepository;
+    private final KkinipopGroupRepository groupRepository;
 
     @Override
     public KkinipopGroupMember findGroupMember(Long groupId, Long memberId) {
@@ -41,5 +46,9 @@ public class KkinipopService implements KkinipopUseCase {
                 .orElseThrow(() -> new NotFoundException(KkinipopErrorCode.CUSTOM_EMOJI_NOT_FOUND));
     }
 
+    @Override
+    public List<KkinipopGroup> findAllGroup() {
+        return groupRepository.findAll();
+    }
 
 }

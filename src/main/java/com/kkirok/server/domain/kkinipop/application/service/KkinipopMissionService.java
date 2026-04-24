@@ -3,16 +3,12 @@ package com.kkirok.server.domain.kkinipop.application.service;
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopMissionDateResponse;
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopMissionSuccessMemberResponse;
 import com.kkirok.server.domain.kkinipop.application.usecase.KkinipopUseCase;
-import com.kkirok.server.domain.kkinipop.dao.KkinipopGroupMemberRepository;
 import com.kkirok.server.domain.kkinipop.dao.KkinipopMissionRepository;
 import com.kkirok.server.domain.kkinipop.dao.KkinipopPostRepository;
-import com.kkirok.server.domain.kkinipop.domain.KkinipopGroupMember;
 import com.kkirok.server.domain.kkinipop.domain.KkinipopMission;
 import com.kkirok.server.domain.kkinipop.domain.KkinipopPost;
 import com.kkirok.server.domain.kkinipop.exception.KkinipopErrorCode;
 import com.kkirok.server.global.common.exception.BadRequestException;
-import com.kkirok.server.global.common.exception.ForbiddenException;
-import com.kkirok.server.global.common.exception.NotFoundException;
 import com.kkirok.server.global.common.util.DateTimeProvider;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -30,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class KkinipopMissionService {
 
     private final KkinipopUseCase kkinipopUseCase;
-    private final KkinipopGroupMemberRepository groupMemberRepository;
     private final KkinipopMissionRepository missionRepository;
     private final KkinipopPostRepository postRepository;
     private final DateTimeProvider dateTimeProvider;
@@ -47,33 +42,23 @@ public class KkinipopMissionService {
 
         // mission 조회
         List<KkinipopMission> missions = missionRepository.findMissionsByDate(groupId, startOfDay, endOfDay);
-        validateLiveRealtimeMission(missions, currentTime);
+        validateLiveMission(missions, currentTime);
         List<KkinipopPost> posts = postRepository.findDailyPosts(groupId, targetDate);
         Map<Long, List<KkinipopMissionSuccessMemberResponse>> successMembersByMission = getSuccessMembersByMission(posts);
 
         return KkinipopMissionDateResponse.from(targetDate, missions, currentTime, successMembersByMission);
     }
 
-    private void validateLiveRealtimeMission(List<KkinipopMission> missions, LocalDateTime currentTime) {
-        long liveRealtimeMissionCount = missions.stream()
-                .filter(KkinipopMission::isRealtime)
+    private void validateLiveMission(List<KkinipopMission> missions, LocalDateTime currentTime) {
+        long liveMissionCount = missions.stream()
                 .filter(mission -> mission.isLive(currentTime))
                 .count();
 
-        if (liveRealtimeMissionCount > 1) {
+        if (liveMissionCount == 0) {
             throw new BadRequestException(KkinipopErrorCode.INVALID_MISSION_REQUEST);
         }
-    }
-
-    private KkinipopGroupMember findLeaderMembership(Long memberId) {
-        return groupMemberRepository.findLeaderMemberships(memberId).stream()
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException(KkinipopErrorCode.GROUP_MEMBER_NOT_FOUND));
-    }
-
-    private void validateLeader(KkinipopGroupMember groupMember) {
-        if (!groupMember.isLeader()) {
-            throw new ForbiddenException(KkinipopErrorCode.GROUP_MANAGEMENT_FORBIDDEN);
+        if (liveMissionCount > 1) {
+            throw new BadRequestException(KkinipopErrorCode.INVALID_MISSION_REQUEST);
         }
     }
 

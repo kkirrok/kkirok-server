@@ -17,9 +17,7 @@ public record KkinipopMissionDateResponse(
         String label,
         @Schema(description = "시작 요일 (0:일 ~ 6:토)", example = "4")
         int dayOfWeek,
-        @Schema(description = "현재 시간에 해당하는 실시간 미션. 없으면 null")
-        KkinipopMissionResponse realtimeMission,
-        @Schema(description = "일반 미션 목록")
+        @Schema(description = "오늘의 미션 목록")
         List<KkinipopMissionResponse> missions
 ) {
     public static KkinipopMissionDateResponse from(
@@ -28,20 +26,7 @@ public record KkinipopMissionDateResponse(
             LocalDateTime now,
             Map<Long, List<KkinipopMissionSuccessMemberResponse>> successMembersByMission
     ) {
-        KkinipopMissionResponse realtimeMission = missions.stream()
-                .filter(KkinipopMission::isRealtime)
-                .filter(mission -> mission.isLive(now))
-                .sorted(Comparator.comparing(KkinipopMission::getStartAt))
-                .map(mission -> KkinipopMissionResponse.from(
-                        mission,
-                        now,
-                        successMembersByMission.getOrDefault(mission.getId(), List.of())
-                ))
-                .findFirst()
-                .orElse(null);
-
-        List<KkinipopMissionResponse> missionsWithoutRealtime = missions.stream()
-                .filter(mission -> !mission.isRealtime())
+        List<KkinipopMissionResponse> missionResponses = missions.stream()
                 .sorted(Comparator.comparing(com.kkirok.server.domain.kkinipop.domain.KkinipopMission::getStartAt))
                 .map(mission -> KkinipopMissionResponse.from(
                         mission,
@@ -54,8 +39,7 @@ public record KkinipopMissionDateResponse(
                 date,
                 DateTimeUtils.toDayLabel(date),
                 DateTimeUtils.toDayOfWeekNumber(date),
-                realtimeMission,
-                missionsWithoutRealtime
+                missionResponses
         );
     }
 }
