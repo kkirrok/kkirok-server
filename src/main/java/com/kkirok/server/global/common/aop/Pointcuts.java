@@ -18,4 +18,7 @@ public class Pointcuts {
 	@Pointcut("execution(* com.kkirok.server..*(..))" +
 		" && !within(com.kkirok.server.global..*)")
 	public void allApplicationLogic() {}
+
+	@Pointcut("execution(* com.kkirok.server.domain.kkinipop.application.service.KkinipopMissionGenerateService.*(..))")
+	public void kkinipopMissionGeneration() {}
 }
