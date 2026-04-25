@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 spring:
   config:
@@ -38,9 +38,9 @@ spring:
 
   data:
     redis:
-      host: ${PROD_REDIS_HOST}
-      port: ${PROD_REDIS_PORT}
-      password: ${PROD_REDIS_PASSWORD}
+      host: ${PROD_REDIS_HOST:${REDISHOST:localhost}}
+      port: ${PROD_REDIS_PORT:${REDISPORT:6379}}
+      password: ${PROD_REDIS_PASSWORD:${REDISPASSWORD:}}
 
   security:
     oauth2:
