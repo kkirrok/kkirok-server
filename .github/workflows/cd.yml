@@ -113,7 +113,8 @@ jobs:
               \"docker compose -f $COMPOSE_FILE_PATH rm -f $SPRING_SERVICE_NAME || true\",
               \"docker compose -f $COMPOSE_FILE_PATH pull $SPRING_SERVICE_NAME\",
               \"docker compose -f $COMPOSE_FILE_PATH up -d $SPRING_SERVICE_NAME\",
-              \"docker images $ECR_REGISTRY/$ECR_REPOSITORY --format '{{.Repository}}:{{.Tag}}' | grep -v ':$IMAGE_TAG$' | xargs -r docker rmi -f || true\",
+              \"CURRENT_IMAGE_ID=$(docker inspect -f '{{.Image}}' $SPRING_SERVICE_NAME 2>/dev/null || true)\",
+              \"docker images $ECR_REGISTRY/$ECR_REPOSITORY --format '{{.Repository}}:{{.Tag}} {{.ID}}' | while read IMAGE IMAGE_ID; do if [ \\\"$IMAGE_ID\\\" != \\\"$CURRENT_IMAGE_ID\\\" ]; then docker rmi -f \\\"$IMAGE\\\" || true; fi; done\",
               \"docker image prune -f\"
             ]" \
             --query "Command.CommandId" \
@@ -243,7 +244,8 @@ jobs:
               \"docker compose -f $COMPOSE_FILE_PATH rm -f $SPRING_SERVICE_NAME || true\",
               \"docker compose -f $COMPOSE_FILE_PATH pull $SPRING_SERVICE_NAME\",
               \"docker compose -f $COMPOSE_FILE_PATH up -d $SPRING_SERVICE_NAME\",
-              \"docker images $ECR_REGISTRY/$ECR_REPOSITORY --format '{{.Repository}}:{{.Tag}}' | grep -v ':$IMAGE_TAG$' | xargs -r docker rmi -f || true\",
+              \"CURRENT_IMAGE_ID=$(docker inspect -f '{{.Image}}' $SPRING_SERVICE_NAME 2>/dev/null || true)\",
+              \"docker images $ECR_REGISTRY/$ECR_REPOSITORY --format '{{.Repository}}:{{.Tag}} {{.ID}}' | while read IMAGE IMAGE_ID; do if [ \\\"$IMAGE_ID\\\" != \\\"$CURRENT_IMAGE_ID\\\" ]; then docker rmi -f \\\"$IMAGE\\\" || true; fi; done\",
               \"docker image prune -f\"
             ]" \
             --query "Command.CommandId" \
