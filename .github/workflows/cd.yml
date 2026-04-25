@@ -59,6 +59,9 @@ jobs:
           SHORT_SHA="${GITHUB_SHA::7}"
           echo "image_tag=dev-${BUILD_TIME}-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
 
+      - name: Build dev jar
+        run: ./gradlew bootJar -x test
+
       - name: Build and push dev image
         env:
           IMAGE_TAG: ${{ steps.meta.outputs.image_tag }}
@@ -187,6 +190,9 @@ jobs:
           BUILD_TIME="$(date -u +'%Y%m%d-%H%M%S')"
           SHORT_SHA="${GITHUB_SHA::7}"
           echo "image_tag=prod-${BUILD_TIME}-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Build prod jar
+        run: ./gradlew bootJar -x test
 
       - name: Build and push prod image
         env:
