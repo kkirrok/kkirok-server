@@ -44,8 +44,13 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
-        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Compute image tag
         id: meta
@@ -58,8 +63,12 @@ jobs:
         env:
           IMAGE_TAG: ${{ steps.meta.outputs.image_tag }}
         run: |
-          docker build --target dev -t "$ECR_REGISTRY/$ECR_REPOSITORY_SPRINGBOOT_DEV:$IMAGE_TAG" .
-          docker push "$ECR_REGISTRY/$ECR_REPOSITORY_SPRINGBOOT_DEV:$IMAGE_TAG"
+          docker buildx build \
+            --platform linux/arm64 \
+            --target dev \
+            -t "$ECR_REGISTRY/$ECR_REPOSITORY_SPRINGBOOT_DEV:$IMAGE_TAG" \
+            --push \
+            .
 
   deploy-dev:
     needs: build-and-push-dev
@@ -76,21 +85,13 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # Legacy SSH deploy is disabled. Use SSM-based deploy below.
-      # - name: Start ssh-agent
-      #   uses: webfactory/ssh-agent@v0.9.0
-      #   with:
-      #     ssh-private-key: ${{ secrets.DEV_EC2_SSH_PRIVATE_KEY }}
-      #
-      # - name: Deploy to dev EC2
-      #   env:
-      #     DEV_HOST: ${{ secrets.DEV_EC2_HOST }}
-      #     DEV_USER: ${{ secrets.DEV_EC2_USER }}
-      #     IMAGE_TAG: ${{ needs.build-and-push-dev.outputs.image_tag }}
-      #   run: |
-      #     ssh -o StrictHostKeyChecking=no "$DEV_USER@$DEV_HOST" << EOF_REMOTE
-      #       ...
-      #     EOF_REMOTE
+      - name: Debug deploy target
+        env:
+          DEV_INSTANCE_ID: ${{ secrets.DEV_EC2_INSTANCE_ID }}
+        run: |
+          echo "DEV_INSTANCE_ID=$DEV_INSTANCE_ID"
+          aws sts get-caller-identity
+          aws ssm describe-instance-information --region "$AWS_REGION"
 
       - name: Deploy to dev EC2 with SSM
         env:
@@ -103,6 +104,7 @@ jobs:
             --comment "Deploy dev spring container" \
             --parameters "commands=[
               \"set -e\",
+              \"command -v aws >/dev/null 2>&1 || sudo snap install aws-cli --classic\",
               \"aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY\",
               \"export IMAGE_TAG=$IMAGE_TAG\",
               \"export SPRING_SERVICE_NAME=$SPRING_SERVICE_NAME\",
@@ -171,8 +173,13 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
-        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Compute image tag
         id: meta
@@ -185,8 +192,12 @@ jobs:
         env:
           IMAGE_TAG: ${{ steps.meta.outputs.image_tag }}
         run: |
-          docker build --target prod -t "$ECR_REGISTRY/$ECR_REPOSITORY_SPRINGBOOT_PROD:$IMAGE_TAG" .
-          docker push "$ECR_REGISTRY/$ECR_REPOSITORY_SPRINGBOOT_PROD:$IMAGE_TAG"
+          docker buildx build \
+            --platform linux/amd64 \
+            --target prod \
+            -t "$ECR_REGISTRY/$ECR_REPOSITORY_SPRINGBOOT_PROD:$IMAGE_TAG" \
+            --push \
+            .
 
   deploy-prod:
     needs: build-and-push-prod
@@ -204,22 +215,13 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # Legacy SSH deploy is disabled. Use SSM-based deploy below.
-      # - name: Start ssh-agent
-      #   uses: webfactory/ssh-agent@v0.9.0
-      #   with:
-      #     ssh-private-key: |
-      #       ${{ secrets.PROD_BASTION_SSH_PRIVATE_KEY }}
-      #       ${{ secrets.PROD_PRIVATE_EC2_SSH_PRIVATE_KEY }}
-      #
-      # - name: Deploy to prod private EC2 through bastion
-      #   env:
-      #     BASTION_HOST: ${{ secrets.PROD_BASTION_HOST }}
-      #     BASTION_USER: ${{ secrets.PROD_BASTION_USER }}
-      #     PROD_HOST: ${{ secrets.PROD_PRIVATE_EC2_HOST }}
-      #     PROD_USER: ${{ secrets.PROD_PRIVATE_EC2_USER }}
-      #   run: |
-      #     ssh -J "$BASTION_USER@$BASTION_HOST" ...
+      - name: Debug deploy target
+        env:
+          PROD_INSTANCE_ID: ${{ secrets.PROD_PRIVATE_EC2_INSTANCE_ID }}
+        run: |
+          echo "PROD_INSTANCE_ID=$PROD_INSTANCE_ID"
+          aws sts get-caller-identity
+          aws ssm describe-instance-information --region "$AWS_REGION"
 
       - name: Deploy to prod private EC2 with SSM
         env:
@@ -232,6 +234,7 @@ jobs:
             --comment "Deploy prod spring container" \
             --parameters "commands=[
               \"set -e\",
+              \"command -v aws >/dev/null 2>&1 || sudo snap install aws-cli --classic\",
               \"aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY\",
               \"export IMAGE_TAG=$IMAGE_TAG\",
               \"export SPRING_SERVICE_NAME=$SPRING_SERVICE_NAME\",
