@@ -13,7 +13,6 @@ import com.kkirok.server.global.common.util.DateTimeProvider;
 import com.kkirok.server.global.external.openai.OpenAiService;
 import com.kkirok.server.global.external.openai.prompt.PromptType;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;

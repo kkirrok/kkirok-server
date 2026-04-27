@@ -8,6 +8,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -25,6 +26,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class KkinipopMission extends BaseTimeEntity {
 
+    private static final String DEFAULT_BORDER_COLOR = "#F59E0B";
+    private static final int DEFAULT_DAILY_POST_LIMIT = 1;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -35,6 +39,12 @@ public class KkinipopMission extends BaseTimeEntity {
 
     @Column(nullable = false, length = 40)
     private String title;
+
+    @Column(name = "border_color", nullable = false, length = 7)
+    private String borderColor;
+
+    @Column(name = "daily_post_limit", nullable = false)
+    private int dailyPostLimit;
 
     @Column(name = "start_at", nullable = false)
     private LocalDateTime startAt;
@@ -49,11 +59,15 @@ public class KkinipopMission extends BaseTimeEntity {
     private KkinipopMission(
             KkinipopGroup group,
             String title,
+            String borderColor,
+            int dailyPostLimit,
             LocalDateTime startAt,
             LocalDateTime endAt
     ) {
         this.group = group;
         this.title = title;
+        this.borderColor = borderColor;
+        this.dailyPostLimit = dailyPostLimit;
         this.startAt = startAt;
         this.endAt = endAt;
     }
@@ -64,9 +78,22 @@ public class KkinipopMission extends BaseTimeEntity {
             LocalDateTime startAt,
             LocalDateTime endAt
     ) {
+        return create(group, title, DEFAULT_BORDER_COLOR, DEFAULT_DAILY_POST_LIMIT, startAt, endAt);
+    }
+
+    public static KkinipopMission create(
+            KkinipopGroup group,
+            String title,
+            String borderColor,
+            int dailyPostLimit,
+            LocalDateTime startAt,
+            LocalDateTime endAt
+    ) {
         return KkinipopMission.builder()
                 .group(group)
                 .title(title)
+                .borderColor(borderColor)
+                .dailyPostLimit(dailyPostLimit)
                 .startAt(startAt)
                 .endAt(endAt)
                 .build();
@@ -77,6 +104,8 @@ public class KkinipopMission extends BaseTimeEntity {
         return KkinipopMission.create(
                 group,
                 candidate.title(),
+                DEFAULT_BORDER_COLOR,
+                DEFAULT_DAILY_POST_LIMIT,
                 startAt,
                 startAt.plusMinutes(candidate.durationMinutes())
         );
@@ -103,5 +132,12 @@ public class KkinipopMission extends BaseTimeEntity {
 
     public void close(LocalDateTime closedAt) {
         this.closedAt = closedAt;
+    }
+
+    @PrePersist
+    void applyDefaults() {
+        if (dailyPostLimit == 0) {
+            dailyPostLimit = DEFAULT_DAILY_POST_LIMIT;
+        }
     }
 }
