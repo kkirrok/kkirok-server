@@ -7,6 +7,7 @@ spring:
       on-profile: prod
 
   jackson:
+    time-zone: Asia/Seoul
     property-naming-strategy: SNAKE_CASE
 
   datasource:
@@ -33,6 +34,7 @@ spring:
         format_sql: true
         jdbc:
           batch_size: 100
+          time_zone: Asia/Seoul
         order_inserts: true
         order_updates: true
 

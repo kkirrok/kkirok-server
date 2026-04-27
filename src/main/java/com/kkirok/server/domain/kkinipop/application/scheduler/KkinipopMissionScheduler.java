@@ -19,7 +19,7 @@ public class KkinipopMissionScheduler {
      * - 2026-04-25 미션 후보 20개 생성
      * - 각 팀에 5개씩 랜덤 배정
      */
-    @Scheduled(cron = "0 55 23 * * *")
+    @Scheduled(cron = "0 55 23 * * *", zone = "Asia/Seoul")
     public void generateNextDayMissions() {
         kkinipopMissionGenerateService.generateNextDayMissions();
     }
