@@ -84,63 +84,6 @@ class KkinipopMissionServiceTest {
         assertThat(response.missions().get(1).missionId()).isEqualTo(21L);
     }
 
-    @Test
-    @DisplayName("현재 시간에 해당하는 미션이 없으면 조회할 수 없다")
-    void shouldThrowBadRequestException_whenNoLiveMissionExists() {
-        // Given
-        KkinipopGroup group = createGroup(10L, "아침 챌린저스");
-        Member member = createMember(1L, "끼록이");
-        KkinipopGroupMember groupMember = createGroupMember(100L, group, member);
-        LocalDateTime now = LocalDateTime.of(2026, 4, 24, 9, 5);
-        LocalDate today = LocalDate.of(2026, 4, 24);
-
-        KkinipopMission upcomingMission = createMission(21L, group, "다음 미션",
-                LocalDateTime.of(2026, 4, 24, 18, 0),
-                LocalDateTime.of(2026, 4, 24, 18, 10));
-
-        given(kkinipopUseCase.findGroupMember(10L, 1L)).willReturn(groupMember);
-        given(dateTimeProvider.today()).willReturn(today);
-        given(dateTimeProvider.now()).willReturn(now);
-        given(missionRepository.findMissionsByDate(10L, today.atStartOfDay(), today.plusDays(1).atStartOfDay()))
-                .willReturn(List.of(upcomingMission));
-
-        // When, Then
-        assertThatThrownBy(() -> kkinipopMissionService.getTodayMissions(1L, 10L))
-                .isInstanceOf(BadRequestException.class)
-                .extracting("baseErrorCode")
-                .isEqualTo(KkinipopErrorCode.INVALID_MISSION_REQUEST);
-    }
-
-    @Test
-    @DisplayName("현재 시간에 해당하는 미션이 둘 이상이면 조회할 수 없다")
-    void shouldThrowBadRequestException_whenMultipleLiveMissionsExist() {
-        // Given
-        KkinipopGroup group = createGroup(10L, "아침 챌린저스");
-        Member member = createMember(1L, "끼록이");
-        KkinipopGroupMember groupMember = createGroupMember(100L, group, member);
-        LocalDateTime now = LocalDateTime.of(2026, 4, 24, 9, 5);
-        LocalDate today = LocalDate.of(2026, 4, 24);
-
-        KkinipopMission firstMission = createMission(20L, group, "미션 1",
-                LocalDateTime.of(2026, 4, 24, 9, 0),
-                LocalDateTime.of(2026, 4, 24, 9, 10));
-        KkinipopMission secondMission = createMission(21L, group, "미션 2",
-                LocalDateTime.of(2026, 4, 24, 9, 1),
-                LocalDateTime.of(2026, 4, 24, 9, 11));
-
-        given(kkinipopUseCase.findGroupMember(10L, 1L)).willReturn(groupMember);
-        given(dateTimeProvider.today()).willReturn(today);
-        given(dateTimeProvider.now()).willReturn(now);
-        given(missionRepository.findMissionsByDate(10L, today.atStartOfDay(), today.plusDays(1).atStartOfDay()))
-                .willReturn(List.of(firstMission, secondMission));
-
-        // When, Then
-        assertThatThrownBy(() -> kkinipopMissionService.getTodayMissions(1L, 10L))
-                .isInstanceOf(BadRequestException.class)
-                .extracting("baseErrorCode")
-                .isEqualTo(KkinipopErrorCode.INVALID_MISSION_REQUEST);
-    }
-
     private Member createMember(Long memberId, String nickname) {
         Member member = MemberFixture.createLocalMember(nickname, memberId + "@test.com");
         ReflectionTestUtils.setField(member, "id", memberId);

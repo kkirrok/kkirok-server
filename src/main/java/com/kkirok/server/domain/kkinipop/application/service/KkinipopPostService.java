@@ -67,7 +67,7 @@ public class KkinipopPostService {
     @Transactional(readOnly = true)
     public KkinipopMyKkirokStatusResponse getMyKkirokStatus(Long memberId, Long groupId) {
         kkinipopUseCase.findGroupMember(groupId, memberId);
-        long usedCount = postRepository.countMyKkirokSavedPosts(groupId, memberId, dateTimeProvider.today());
+        long usedCount = kkinipopUseCase.getMyKkirokCount(memberId, groupId);
         return KkinipopMyKkirokStatusResponse.of(usedCount, MAX_MY_KKIROK_SAVE_COUNT);
     }
 
@@ -87,11 +87,11 @@ public class KkinipopPostService {
         // 현재의 실시간 미션 조회
         KkinipopMission mission = missionRepository.findLiveMissions(groupId, currentTime).stream()
                 .findFirst()
-                .orElseThrow(() -> new BadRequestException(KkinipopErrorCode.INVALID_POST_REQUEST));
+                .orElseThrow(() -> new BadRequestException(KkinipopErrorCode.LIVE_MISSION_NOT_FOUND));
 
         // 그 미션이 끝난 상태면 예외 발생
         if (mission.isEnded(currentTime)) {
-            throw new BadRequestException(KkinipopErrorCode.INVALID_POST_REQUEST);
+            throw new BadRequestException(KkinipopErrorCode.LIVE_MISSION_ENDED);
         }
 
         validateMyKkirokLimit(groupId, memberId, recordDate, saveToPersonalLog);
@@ -108,7 +108,7 @@ public class KkinipopPostService {
                 KkinipopPost.create(groupMember, mission, imageKey, recordDate, saveToPersonalLog)
         );
 
-        if (saveToPersonalLog) {
+        if (saveToPersonalLog && kkinipopUseCase.getMyKkirokCount(memberId, groupId) < MAX_MY_KKIROK_SAVE_COUNT ) {
             // TODO: 나의끼록과 같이 저장 호출
         }
 

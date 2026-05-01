@@ -11,10 +11,12 @@ import com.kkirok.server.domain.kkinipop.domain.KkinipopGroupMember;
 import com.kkirok.server.domain.kkinipop.domain.KkinipopPost;
 import com.kkirok.server.domain.kkinipop.exception.KkinipopErrorCode;
 import com.kkirok.server.global.common.exception.NotFoundException;
+import com.kkirok.server.global.common.util.DateTimeProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -26,6 +28,7 @@ public class KkinipopService implements KkinipopUseCase {
     private final KkinipopPostRepository postRepository;
     private final KkinipopCustomEmojiRepository customEmojiRepository;
     private final KkinipopGroupRepository groupRepository;
+    private final DateTimeProvider dateTimeProvider;
 
     @Override
     public KkinipopGroupMember findGroupMember(Long groupId, Long memberId) {
@@ -49,6 +52,11 @@ public class KkinipopService implements KkinipopUseCase {
     @Override
     public List<KkinipopGroup> findAllGroup() {
         return groupRepository.findAll();
+    }
+
+    @Override
+    public long getMyKkirokCount(Long memberId, Long groupId) {
+        return postRepository.countMyKkirokSavedPosts(groupId, memberId, dateTimeProvider.today());
     }
 
 }

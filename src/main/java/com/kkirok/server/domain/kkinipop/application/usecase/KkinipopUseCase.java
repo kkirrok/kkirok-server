@@ -5,6 +5,7 @@ import com.kkirok.server.domain.kkinipop.domain.KkinipopGroup;
 import com.kkirok.server.domain.kkinipop.domain.KkinipopGroupMember;
 import com.kkirok.server.domain.kkinipop.domain.KkinipopPost;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface KkinipopUseCase {
@@ -13,4 +14,5 @@ public interface KkinipopUseCase {
     KkinipopPost findPostById(Long postId);
     KkinipopCustomEmoji findCustomEmojiById(Long customEmojiId);
     List<KkinipopGroup> findAllGroup();
+    long getMyKkirokCount(Long memberId, Long groupId);
 }

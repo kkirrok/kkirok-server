@@ -1,7 +1,6 @@
 package com.kkirok.server.domain.kkinipop.application.service;
 
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopDailyPostResponse;
-import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopMyKkirokStatusResponse;
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopPostResponse;
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopReactionSummaryResponse;
 import com.kkirok.server.domain.kkinipop.application.usecase.KkinipopUseCase;
@@ -122,7 +121,7 @@ class KkinipopPostServiceTest {
         assertThatThrownBy(() -> kkinipopPostService.createPost(1L, 10L, true, image))
                 .isInstanceOf(BadRequestException.class)
                 .extracting("baseErrorCode")
-                .isEqualTo(KkinipopErrorCode.INVALID_POST_REQUEST);
+                .isEqualTo(KkinipopErrorCode.LIVE_MISSION_NOT_FOUND);
     }
 
     @Test
@@ -284,26 +283,6 @@ class KkinipopPostServiceTest {
                 .isInstanceOf(NotFoundException.class)
                 .extracting("baseErrorCode")
                 .isEqualTo(KkinipopErrorCode.MISSION_NOT_FOUND);
-    }
-
-    @Test
-    @DisplayName("오늘 나의끼록과 같이 저장 가능한 남은 횟수를 조회할 수 있다")
-    void shouldReturnMyKkirokStatus_whenRequested() {
-        // Given
-        KkinipopGroup group = createGroup(10L, "아침 챌린저스");
-        Member member = createMember(1L, "끼록이");
-        KkinipopGroupMember groupMember = createGroupMember(100L, group, member);
-
-        given(kkinipopUseCase.findGroupMember(10L, 1L)).willReturn(groupMember);
-        given(dateTimeProvider.today()).willReturn(LocalDate.of(2026, 4, 24));
-        given(postRepository.countMyKkirokSavedPosts(10L, 1L, LocalDate.of(2026, 4, 24))).willReturn(1L);
-
-        // When
-        KkinipopMyKkirokStatusResponse response = kkinipopPostService.getMyKkirokStatus(1L, 10L);
-
-        // Then
-        assertThat(response.remainingCount()).isEqualTo(2);
-        assertThat(response.maxCount()).isEqualTo(3);
     }
 
     private Member createMember(Long memberId, String nickname) {

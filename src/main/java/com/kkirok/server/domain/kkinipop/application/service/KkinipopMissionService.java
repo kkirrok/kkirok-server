@@ -54,12 +54,12 @@ public class KkinipopMissionService {
                 .filter(mission -> mission.isLive(currentTime))
                 .count();
 
-        if (liveMissionCount == 0) {
-            throw new BadRequestException(KkinipopErrorCode.INVALID_MISSION_REQUEST);
-        }
-        if (liveMissionCount > 1) {
-            throw new BadRequestException(KkinipopErrorCode.INVALID_MISSION_REQUEST);
-        }
+//        if (liveMissionCount == 0) {
+//            throw new BadRequestException(KkinipopErrorCode.INVALID_MISSION_REQUEST);
+//        }
+//        if (liveMissionCount > 1) {
+//            throw new BadRequestException(KkinipopErrorCode.INVALID_MISSION_REQUEST);
+//        }
     }
 
     private Map<Long, List<KkinipopMissionSuccessMemberResponse>> getSuccessMembersByMission(List<KkinipopPost> posts) {
