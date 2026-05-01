@@ -1,5 +1,6 @@
 package com.kkirok.server.domain.kkinipop.application.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -20,7 +21,9 @@ public record KkinipopMissionGenerateResponse(
      */
     public record MissionCandidate(
             String title,
+            @JsonProperty("startTime")
             LocalTime startTime,
+            @JsonProperty("durationMinutes")
             int durationMinutes
     ) {
     }

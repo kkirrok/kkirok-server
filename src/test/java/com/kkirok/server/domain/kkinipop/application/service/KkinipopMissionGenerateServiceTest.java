@@ -11,6 +11,9 @@ import com.kkirok.server.domain.kkinipop.exception.KkinipopErrorCode;
 import com.kkirok.server.global.common.exception.InternalServerException;
 import com.kkirok.server.global.common.util.DateTimeProvider;
 import com.kkirok.server.global.external.openai.OpenAiService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -120,6 +123,32 @@ class KkinipopMissionGenerateServiceTest {
                 .isInstanceOf(InternalServerException.class)
                 .extracting("baseErrorCode")
                 .isEqualTo(KkinipopErrorCode.MISSION_GENERATION_FAILED);
+    }
+
+    @Test
+    @DisplayName("SNAKE_CASE ObjectMapper 환경에서도 미션 응답의 startTime과 durationMinutes를 읽는다")
+    void shouldDeserializeMissionCandidatesWithSnakeCaseObjectMapper() throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper()
+                .registerModule(new JavaTimeModule())
+                .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+
+        String json = """
+                {
+                  "missions": [
+                    {
+                      "title": "아침 식사 한 컷",
+                      "startTime": "07:00",
+                      "durationMinutes": 10
+                    }
+                  ]
+                }
+                """;
+
+        KkinipopMissionGenerateResponse response = objectMapper.readValue(json, KkinipopMissionGenerateResponse.class);
+
+        assertThat(response.missions()).hasSize(1);
+        assertThat(response.missions().get(0).startTime()).isEqualTo(LocalTime.of(7, 0));
+        assertThat(response.missions().get(0).durationMinutes()).isEqualTo(10);
     }
 
     private KkinipopGroup createGroup(Long groupId, String groupName) {
