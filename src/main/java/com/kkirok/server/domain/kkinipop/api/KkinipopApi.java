@@ -264,6 +264,8 @@ public interface KkinipopApi {
     )
     @ApiResponse(responseCode = "201", useReturnTypeSchema = true)
     @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "LIVE_MISSION_NOT_FOUND"),
+            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "LIVE_MISSION_ENDED"),
             @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "INVALID_POST_REQUEST"),
             @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "PHOTO_REQUIRED"),
             @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GENERAL_POST_LIMIT_EXCEEDED"),
@@ -334,7 +336,6 @@ public interface KkinipopApi {
             summary = "커스텀 이모지 생성 [USER]",
             description = """
                     이미지 파일을 업로드해 커스텀 이모지를 생성합니다.
-                    클라이언트에서 아이콘 사이즈에 맞춰서 업로드하면 서버에서 사이즈를 검증하고, 맞지 않으면 서버에서 재조정 후 저장합니다.
 
                     - 사전 조건: 요청한 사용자가 해당 그룹에 속해 있어야 합니다.
                     - 제약: 그룹당 최대 3개까지 생성할 수 있습니다.

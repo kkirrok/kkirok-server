@@ -1,5 +1,6 @@
 server:
   port: ${PORT:8080}
+  forward-headers-strategy: framework
 
 spring:
   config:
@@ -138,6 +139,7 @@ cloudflare:
     bucket-name: ${DEV_R2_BUCKET_NAME}
     access-key: ${DEV_R2_ACCESS_KEY}
     secret-key: ${DEV_R2_SECRET_KEY}
+    public-base-url: ${DEV_R2_PUBLIC_BASE_URL}
 
 aws:
   ses:
