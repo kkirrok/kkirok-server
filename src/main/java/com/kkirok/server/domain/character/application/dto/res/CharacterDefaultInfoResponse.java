@@ -2,7 +2,7 @@ package com.kkirok.server.domain.character.application.dto.res;
 
 import com.kkirok.server.domain.character.domain.Character;
 import com.kkirok.server.domain.character.util.CharacterUtilLevel;
-import com.kkirok.server.domain.meal.domain.MealAiAnalysis;
+import com.kkirok.server.domain.meal.domain.MealNutrition;
 import com.kkirok.server.domain.meal.domain.MealRecord;
 import com.kkirok.server.domain.meal.util.NutrientAvgUtil;
 import com.kkirok.server.domain.meal.util.NutrientMaxUtil;
@@ -51,11 +51,11 @@ public record CharacterDefaultInfoResponse(
                 null, // TODO: 이미지 넣기
                 NutrientAvgUtil.getAvg(mealRecord, analysis -> analysis.getKcal().longValue()),
                 NutrientMaxUtil.getMax(mealRecord, analysis -> analysis.getKcal().longValue()),
-                NutrientAvgUtil.getAvg(mealRecord, MealAiAnalysis::getCarbohydrateG),
-                NutrientAvgUtil.getAvg(mealRecord, MealAiAnalysis::getProteinG),
-                NutrientAvgUtil.getAvg(mealRecord, MealAiAnalysis::getFatG),
-                NutrientAvgUtil.getAvg(mealRecord, MealAiAnalysis::getSugarG),
-                NutrientAvgUtil.getAvg(mealRecord, MealAiAnalysis::getSodiumMg)
+                NutrientAvgUtil.getAvg(mealRecord, analysis -> analysis.getCarbohydrateG().longValue()),
+                NutrientAvgUtil.getAvg(mealRecord, analysis -> analysis.getProteinG().longValue()),
+                NutrientAvgUtil.getAvg(mealRecord, analysis -> analysis.getFatG().longValue()),
+                NutrientAvgUtil.getAvg(mealRecord, analysis -> analysis.getSugarG().longValue()),
+                NutrientAvgUtil.getAvg(mealRecord, analysis -> analysis.getSodiumMg().longValue())
         );
     }
 
