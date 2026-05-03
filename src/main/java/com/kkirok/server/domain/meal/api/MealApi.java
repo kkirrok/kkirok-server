@@ -9,6 +9,7 @@ import com.kkirok.server.domain.meal.exception.MealErrorCode;
 import com.kkirok.server.domain.meal.exception.MealSuccessCode;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
 import com.kkirok.server.global.common.dto.SuccessResponse;
+import com.kkirok.server.global.external.publicdata.dto.FoodNutritionSearchResult;
 import com.kkirok.server.global.swagger.annotation.ApiErrorCodeExample;
 import com.kkirok.server.global.swagger.annotation.ApiErrorCodeExamples;
 import com.kkirok.server.global.swagger.annotation.ApiSuccessCodeExample;
@@ -201,4 +202,9 @@ public interface MealApi {
             @Parameter(description = "삭제할 식단 ID", required = true, example = "1")
             @PathVariable("mealId") Long mealId
     );
+
+    @Operation(summary = "음식 검색으로 식단 기록", description = "음식명으로 검색 후 영양정보 자동 입력")
+    @GetMapping("/foods/search")
+    ResponseEntity<SuccessResponse<List<FoodNutritionSearchResult>>> searchFood(
+            @Parameter(description = "검색할 음식명", example = "삼각김밥") @RequestParam String keyword);
 }

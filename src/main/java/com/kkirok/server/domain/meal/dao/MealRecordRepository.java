@@ -15,6 +15,7 @@ public interface MealRecordRepository extends JpaRepository<MealRecord, Long> {
         SELECT DISTINCT mr
         FROM MealRecord mr
         LEFT JOIN FETCH mr.mealAiAnalyses
+        LEFT JOIN FETCH mr.mealNutrition
         WHERE mr.member.id = :memberId
           AND mr.createdAt >= :startOfDay
           AND mr.createdAt < :endOfDay
@@ -30,6 +31,7 @@ public interface MealRecordRepository extends JpaRepository<MealRecord, Long> {
     @Query("""
         SELECT mr FROM MealRecord mr
         LEFT JOIN FETCH mr.mealAiAnalyses
+        LEFT JOIN FETCH mr.mealNutrition
         WHERE mr.id = :mealId
     """)
     Optional<MealRecord> findByIdWithAnalyses(@Param("mealId") Long mealId);

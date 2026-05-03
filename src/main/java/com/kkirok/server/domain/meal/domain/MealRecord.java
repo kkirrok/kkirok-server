@@ -61,6 +61,9 @@ public class MealRecord extends BaseTimeEntity {
     @OneToMany(mappedBy = "mealRecord", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MealAiAnalysis> mealAiAnalyses = new ArrayList<>();
 
+    @OneToOne(mappedBy = "mealRecord", cascade = CascadeType.ALL, orphanRemoval = true)
+    private MealNutrition mealNutrition;
+
     @Builder
     private MealRecord(Member member, LocalDateTime recordedAt, LocalDate mealDate,
                        MealTimeSlot mealTimeSlot, String name, MealCategory category,
@@ -101,6 +104,7 @@ public class MealRecord extends BaseTimeEntity {
                 .recordedAt(now)
                 .mealDate(now.toLocalDate())
                 .mealTimeSlot(MealTimeSlot.BREAKFAST) // AI 분석 후 업데이트 가능
+
                 .name("")                             // AI 분석 후 업데이트
                 .category(MealCategory.MEAL)
                 .aiAnalyzed(true)
@@ -120,5 +124,9 @@ public class MealRecord extends BaseTimeEntity {
     public void applyAiResult(String detectedName, MealTimeSlot timeSlot) {
         this.name = detectedName;
         this.mealTimeSlot = timeSlot;
+    }
+
+    public void assignMealNutrition(MealNutrition mealNutrition) {
+        this.mealNutrition = mealNutrition;
     }
 }

@@ -5,11 +5,14 @@ import com.kkirok.server.domain.meal.application.dto.request.MealUpdateRequest;
 import com.kkirok.server.domain.meal.application.dto.response.MealResponse;
 import com.kkirok.server.domain.meal.application.dto.response.RecommendationResponse;
 import com.kkirok.server.domain.meal.application.dto.response.TodayStatusResponse;
+import com.kkirok.server.domain.meal.application.service.FoodNutritionSearchService;
 import com.kkirok.server.domain.meal.application.usecase.MealRecordUseCase;
 import com.kkirok.server.domain.meal.exception.MealSuccessCode;
+import com.kkirok.server.domain.meal.application.service.FoodSearchService;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
 import com.kkirok.server.global.auth.annotation.RoleUserAuth;
 import com.kkirok.server.global.common.dto.SuccessResponse;
+import com.kkirok.server.global.external.publicdata.dto.FoodNutritionSearchResult;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -27,6 +30,7 @@ import java.util.stream.Collectors;
 public class MealController implements MealApi {
 
     private final MealRecordUseCase mealRecordUseCase;
+    private final FoodNutritionSearchService foodNutritionSearchService;
 
     @Override
     @GetMapping
@@ -108,5 +112,12 @@ public class MealController implements MealApi {
     ) {
         mealRecordUseCase.deleteMeal(memberId, mealId);
         return ResponseEntity.ok(SuccessResponse.from(MealSuccessCode.MEAL_DELETE_SUCCESS));
+    }
+
+    @GetMapping("/foods/search")
+    public ResponseEntity<SuccessResponse<List<FoodNutritionSearchResult>>> searchFood(
+            @RequestParam String keyword) {
+        List<FoodNutritionSearchResult> results = foodNutritionSearchService.search(keyword);
+        return ResponseEntity.ok(SuccessResponse.of(MealSuccessCode.FOOD_SEARCH_SUCCESS, results));
     }
 }

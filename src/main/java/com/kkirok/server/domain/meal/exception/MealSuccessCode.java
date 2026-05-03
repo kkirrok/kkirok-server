@@ -15,7 +15,8 @@ public enum MealSuccessCode implements BaseSuccessCode {
     RECOMMENDATION_GET_SUCCESS(200, "추천 조회 성공"),
     MEAL_RECORD_SUCCESS(200, "식단 기록 성공"),
     MEAL_UPDATE_SUCCESS(200, "식단 수정 성공"),
-    MEAL_DELETE_SUCCESS(200, "식단 삭제 성공");
+    MEAL_DELETE_SUCCESS(200, "식단 삭제 성공"),
+    FOOD_SEARCH_SUCCESS(200, "음식 검색 성공");
 
     private final int status;
     private final String message;

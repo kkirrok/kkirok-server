@@ -4,7 +4,9 @@ import com.kkirok.server.domain.meal.application.dto.request.MealCreateRequest;
 import com.kkirok.server.domain.meal.application.dto.request.MealUpdateRequest;
 import com.kkirok.server.domain.meal.application.dto.response.MealResponse;
 import com.kkirok.server.domain.meal.application.usecase.MealRecordUseCase;
+import com.kkirok.server.domain.meal.dao.MealNutritionRepository;
 import com.kkirok.server.domain.meal.dao.MealRecordRepository;
+import com.kkirok.server.domain.meal.domain.MealNutrition;
 import com.kkirok.server.domain.meal.domain.MealRecord;
 import com.kkirok.server.domain.meal.domain.ScanType;
 import com.kkirok.server.domain.meal.exception.MealErrorCode;
@@ -29,7 +31,7 @@ import java.util.List;
 public class MealRecordService implements MealRecordUseCase {
 
     private final MealRecordRepository mealRecordRepository;
-    private final MemberRepository memberRepository;
+    private final MealNutritionRepository mealNutritionRepository;
     private final MemberUseCase memberUseCase;
 
     @Override
@@ -53,7 +55,21 @@ public class MealRecordService implements MealRecordUseCase {
         Member member = memberUseCase.findMemberByMemberId(memberId);
         MealRecord meal = MealRecord.createManual(member, request);
         mealRecordRepository.save(meal);
-        return MealResponse.fromManual(meal, request);
+
+        // ← 이 부분 추가
+        MealNutrition nutrition = MealNutrition.create(
+                meal,
+                request.kcal(),
+                request.proteinG() != null ? request.proteinG().doubleValue() : null,
+                request.carbohydrateG() != null ? request.carbohydrateG().doubleValue() : null,
+                request.sugarG() != null ? request.sugarG().doubleValue() : null,
+                request.fatG() != null ? request.fatG().doubleValue() : null,
+                request.sodiumMg() != null ? request.sodiumMg().doubleValue() : null
+        );
+        mealNutritionRepository.save(nutrition);
+        meal.assignMealNutrition(nutrition);
+
+        return MealResponse.from(meal);
     }
 
     /** 카메라 촬영으로 식단 기록 (AI 분석) */
@@ -98,7 +114,20 @@ public class MealRecordService implements MealRecordUseCase {
     public MealResponse updateMeal(Long memberId, Long mealId, MealUpdateRequest request) {
         MealRecord meal = findMealWithOwnerCheck(memberId, mealId);
         meal.update(request);
-        return MealResponse.fromUpdate(meal, request);
+
+        // ← MealNutrition도 수정
+        if (meal.getMealNutrition() != null) {
+            meal.getMealNutrition().update(
+                    request.kcal(),
+                    request.proteinG() != null ? request.proteinG().doubleValue() : null,
+                    request.carbohydrateG() != null ? request.carbohydrateG().doubleValue() : null,
+                    request.sugarG() != null ? request.sugarG().doubleValue() : null,
+                    request.fatG() != null ? request.fatG().doubleValue() : null,
+                    request.sodiumMg() != null ? request.sodiumMg().doubleValue() : null
+            );
+        }
+        return MealResponse.from(meal);
+        // return MealResponse.fromUpdate(meal, request);
     }
 
     @Override
