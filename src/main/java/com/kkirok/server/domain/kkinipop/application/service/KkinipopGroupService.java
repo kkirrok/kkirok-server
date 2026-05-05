@@ -1,5 +1,6 @@
 package com.kkirok.server.domain.kkinipop.application.service;
 
+import com.kkirok.server.domain.kkinipop.application.dto.event.KkinipopGroupJoinedEvent;
 import com.kkirok.server.domain.kkinipop.application.dto.request.KkinipopGroupCreateRequest;
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopGroupResponse;
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopMemberSummaryResponse;
@@ -19,6 +20,7 @@ import java.security.SecureRandom;
 import java.util.Comparator;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +34,7 @@ public class KkinipopGroupService {
 
     private final KkinipopUseCase kkinipopUseCase;
     private final MemberUseCase memberUseCase;
+    private final ApplicationEventPublisher eventPublisher;
     private final KkinipopGroupRepository groupRepository;
     private final KkinipopGroupMemberRepository groupMemberRepository;
     private final DateTimeProvider dateTimeProvider;
@@ -76,6 +79,7 @@ public class KkinipopGroupService {
         }
 
         KkinipopGroupMember groupMember = groupMemberRepository.save(KkinipopGroupMember.createMember(group, member));
+        eventPublisher.publishEvent(new KkinipopGroupJoinedEvent(group.getId(), memberId));
         return KkinipopGroupResponse.from(groupMember, groupMemberRepository.findActiveGroupMembers(group.getId()).size());
     }
 

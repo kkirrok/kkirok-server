@@ -49,4 +49,14 @@ public interface KkinipopMissionRepository extends JpaRepository<KkinipopMission
             order by mission.startAt desc
             """)
     List<KkinipopMission> findLiveMissions(@Param("groupId") Long groupId, @Param("now") LocalDateTime now);
+
+    @Query("""
+            select mission
+            from KkinipopMission mission
+            where mission.startAt >= :from
+              and mission.startAt < :to
+              and mission.closedAt is null
+            order by mission.startAt asc
+            """)
+    List<KkinipopMission> findStartingBetween(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 }
