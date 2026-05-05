@@ -1,8 +1,8 @@
 package com.kkirok.server.domain.notification.application.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
 import com.kkirok.server.domain.member.domain.Member;
 import com.kkirok.server.domain.notification.application.dto.request.DeviceRegisterRequest;
@@ -15,6 +15,7 @@ import com.kkirok.server.domain.notification.dao.NotificationRepository;
 import com.kkirok.server.domain.notification.domain.Device;
 import com.kkirok.server.domain.notification.domain.Notification;
 import com.kkirok.server.domain.notification.exception.NotificationErrorCode;
+import com.kkirok.server.global.common.dto.PagingRequest;
 import com.kkirok.server.global.common.exception.NotFoundException;
 import com.kkirok.server.global.common.util.DateTimeProvider;
 import java.time.LocalDateTime;
@@ -23,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,11 +62,14 @@ public class NotificationService {
     }
 
     public NotificationPageResponse getNotifications(Long memberId, int page, int size) {
+        PagingRequest pagingRequest = PagingRequest.of(page, size);
 
         Page<Notification> notifications = notificationRepository.findAllByMember_IdOrderByCreatedAtDesc(
                 memberId,
-                PageRequest.of(page, size)
+                pagingRequest.toPageable()
         );
+
+        pagingRequest.validatePage(notifications.getTotalElements(), notifications.getTotalPages());
 
         List<NotificationResponse> content = notifications.stream()
                 .map(this::toResponse)

@@ -23,7 +23,7 @@ public interface NotificationApi {
 
     @Operation(
             summary = "디바이스 토큰 등록 [USER]",
-            description = "로그인한 회원의 FCM 디바이스 토큰을 등록합니다. 같은 토큰이 이미 있으면 새로 만들지 않고 lastUsedAt과 platform을 갱신합니다."
+            description = "로그인한 회원의 FCM 디바이스 토큰을 등록합니다. 같은 토큰이 이미 있으면 새로 만들지 않고 lastUsedAt과 platform을 갱신합니다. 자세한 알림 기능 연동 방법은 노션 문서를 참고합니다."
     )
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
@@ -52,15 +52,15 @@ public interface NotificationApi {
 
     @Operation(
             summary = "알림함 조회 [USER]",
-            description = "현재 로그인한 회원의 인앱 알림함을 최신순으로 조회합니다. 각 항목은 제목, 본문, 추가 데이터, 읽음 여부, 발송/실패 시각을 포함합니다."
+            description = "현재 로그인한 회원의 인앱 알림함을 최신순으로 조회합니다. 각 항목은 제목, 본문, 추가 데이터, 읽음 여부, 발송/실패 시각을 포함합니다. page는 0 이상, size는 1 이상 50 이하로 요청할 수 있습니다."
     )
     @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED")
     @ApiSuccessCodeExample(codeType = NotificationSuccessCode.class, code = "NOTIFICATION_LIST_GET_SUCCESS")
     ResponseEntity<SuccessResponse<NotificationPageResponse>> getNotifications(
             @CurrentMember Long memberId,
-            @Parameter(description = "페이지 번호", example = "0")
+            @Parameter(description = "페이지 번호 (0 이상)", example = "0")
             int page,
-            @Parameter(description = "페이지 크기", example = "20")
+            @Parameter(description = "페이지 크기 (1 이상 50 이하)", example = "20")
             int size
     );
 
