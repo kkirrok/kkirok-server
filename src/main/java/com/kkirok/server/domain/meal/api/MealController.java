@@ -8,7 +8,6 @@ import com.kkirok.server.domain.meal.application.dto.response.TodayStatusRespons
 import com.kkirok.server.domain.meal.application.service.FoodNutritionSearchService;
 import com.kkirok.server.domain.meal.application.usecase.MealRecordUseCase;
 import com.kkirok.server.domain.meal.exception.MealSuccessCode;
-import com.kkirok.server.domain.meal.application.service.FoodSearchService;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
 import com.kkirok.server.global.auth.annotation.RoleUserAuth;
 import com.kkirok.server.global.common.dto.SuccessResponse;

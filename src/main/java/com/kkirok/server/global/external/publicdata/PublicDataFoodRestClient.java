@@ -8,6 +8,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.client.RestClient;
 
+import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,25 +20,37 @@ public class PublicDataFoodRestClient implements PublicDataFoodClient {
 
     // 가공식품 API 경로
     private static final String PROCESSED_PATH =
-            "/1471000/FoodNtrCpntDbInfo01/getFoodNtrCpntDbInq01";
+            "/openapi/tn_pubr_public_nutri_process_info_api";
     // 일반식품 API 경로
     private static final String STANDARD_PATH =
-            "/1470000/FoodNtrIrdntInfoService01/getFoodNtrItdntList01";
+            "/1471000/FoodNtrCpntDbInfo02/getFoodNtrCpntDbInq02";
 
-    private final RestClient restClient;
+    private final RestClient processedRestClient;   // 가공식품용
+    private final RestClient standardRestClient;    // 일반식품용
     private final PublicDataFoodProperties properties;
 
     @Override
     public List<FoodNutritionSearchResult> searchProcessedFood(String keyword) {
-        JsonNode body = restClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path(PROCESSED_PATH)
-                        .queryParam("serviceKey", properties.getServiceKey())
-                        .queryParam("FOOD_NM_KR", keyword)
-                        .queryParam("type", "json")
-                        .queryParam("numOfRows", 10)
-                        .queryParam("pageNo", 1)
-                        .build())
+        String serviceKey = URLEncoder.encode(
+                properties.getServiceKey().trim(),
+                StandardCharsets.UTF_8
+        );
+
+        String encodedKeyword = URLEncoder.encode(
+                keyword,
+                StandardCharsets.UTF_8
+        );
+
+        String uri = "https://api.data.go.kr"
+                + PROCESSED_PATH
+                + "?serviceKey=" + serviceKey
+                + "&foodNm=" + encodedKeyword
+                + "&type=json"
+                + "&numOfRows=10"
+                + "&pageNo=1";
+
+        JsonNode body = processedRestClient.get()
+                .uri(URI.create(uri))
                 .retrieve()
                 .body(JsonNode.class);
 
@@ -44,15 +59,26 @@ public class PublicDataFoodRestClient implements PublicDataFoodClient {
 
     @Override
     public List<FoodNutritionSearchResult> searchStandardFood(String keyword) {
-        JsonNode body = restClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path(STANDARD_PATH)
-                        .queryParam("serviceKey", properties.getServiceKey())
-                        .queryParam("foodNm", keyword)
-                        .queryParam("type", "json")
-                        .queryParam("numOfRows", 10)
-                        .queryParam("pageNo", 1)
-                        .build())
+        String serviceKey = URLEncoder.encode(
+                properties.getServiceKey().trim(),
+                StandardCharsets.UTF_8
+        );
+
+        String encodedKeyword = URLEncoder.encode(
+                keyword,
+                StandardCharsets.UTF_8
+        );
+
+        String uri = "https://apis.data.go.kr"
+                + STANDARD_PATH
+                + "?serviceKey=" + serviceKey
+                + "&foodNm=" + encodedKeyword
+                + "&type=json"
+                + "&numOfRows=10"
+                + "&pageNo=1";
+
+        JsonNode body = standardRestClient.get()
+                .uri(URI.create(uri))
                 .retrieve()
                 .body(JsonNode.class);
 
@@ -63,22 +89,23 @@ public class PublicDataFoodRestClient implements PublicDataFoodClient {
         List<FoodNutritionSearchResult> results = new ArrayList<>();
         if (body == null) return results;
 
-        JsonNode items = body.path("body").path("items");
+        JsonNode items = body.path("response").path("body").path("items");
         if (!items.isArray()) return results;
 
         for (JsonNode item : items) {
             results.add(FoodNutritionSearchResult.builder()
-                    .foodName(getText(item, "FOOD_NM_KR"))
-                    .manufacturer(getText(item, "BSSH_NM"))
-                    .kcal(getInt(item, "AMT_NUM1"))
-                    .carbohydrateG(getDouble(item, "AMT_NUM7"))
-                    .proteinG(getDouble(item, "AMT_NUM3"))
-                    .fatG(getDouble(item, "AMT_NUM4"))
-                    .sugarG(getDouble(item, "AMT_NUM8"))
-                    .sodiumMg(getDouble(item, "AMT_NUM6"))
+                    .foodName(getText(item, "foodNm"))
+                    .manufacturer(getText(item, "mfrNm"))
+                    .kcal(getInt(item, "enerc"))
+                    .carbohydrateG(getDouble(item, "chocdf"))
+                    .proteinG(getDouble(item, "prot"))
+                    .fatG(getDouble(item, "fatce"))
+                    .sugarG(getDouble(item, "sugar"))
+                    .sodiumMg(getDouble(item, "nat"))
                     .sourceType(FoodSourceType.PROCESSED)
                     .build());
         }
+
         return results;
     }
 
@@ -91,17 +118,18 @@ public class PublicDataFoodRestClient implements PublicDataFoodClient {
 
         for (JsonNode item : items) {
             results.add(FoodNutritionSearchResult.builder()
-                    .foodName(getText(item, "foodNm"))
+                    .foodName(getText(item, "FOOD_NM_KR"))
                     .manufacturer(null)
-                    .kcal(getInt(item, "enerc"))
-                    .carbohydrateG(getDouble(item, "chocdf"))
-                    .proteinG(getDouble(item, "prot"))
-                    .fatG(getDouble(item, "fatce"))
-                    .sugarG(getDouble(item, "sugar"))
-                    .sodiumMg(getDouble(item, "nat"))
+                    .kcal(getInt(item, "AMT_NUM1"))
+                    .carbohydrateG(getDouble(item, "AMT_NUM6"))
+                    .proteinG(getDouble(item, "AMT_NUM3"))
+                    .fatG(getDouble(item, "AMT_NUM4"))
+                    .sugarG(getDouble(item, "AMT_NUM7"))
+                    .sodiumMg(getDouble(item, "AMT_NUM13"))
                     .sourceType(FoodSourceType.STANDARD)
                     .build());
         }
+
         return results;
     }
 
