@@ -24,6 +24,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
@@ -89,9 +90,9 @@ class NotificationDispatcherTest {
         ArgumentCaptor<Map<Long, Long>> targetCaptor = ArgumentCaptor.forClass(Map.class);
         then(notificationDeliveryService).should().deliver(
                 targetCaptor.capture(),
-                "제목",
-                "본문",
-                Map.of("type", "GROUP_JOIN", "groupId", "1")
+                eq("제목"),
+                eq("본문"),
+                eq(Map.of("type", "GROUP_JOIN", "groupId", "1"))
         );
         assertThat(targetCaptor.getValue()).containsEntry(10L, 1L).containsEntry(11L, 2L);
     }

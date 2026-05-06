@@ -76,8 +76,8 @@ class MissionStartNotificationWorkerTest {
         then(notificationDispatcher).should().dispatchToMembers(
                 List.of(first, second),
                 NotificationType.MISSION_START,
+                "끼니팝",
                 "아침 미션",
-                "아침 미션 미션이 시작됐어요.",
                 java.util.Map.of(
                         "type", "MISSION_START",
                         "groupId", "10",

@@ -157,8 +157,6 @@ class MealReminderServiceTest {
 
         given(dateTimeProvider.now()).willReturn(now);
         given(overduePolicy.type()).willReturn(NotificationType.MEAL_REMINDER_OVERDUE);
-        given(overduePolicy.title()).willReturn("overdue-title");
-        given(overduePolicy.body()).willReturn("overdue-body");
         given(overduePolicy.findTargets(now)).willReturn(List.of(new MealReminderTarget(1L, "100")));
         given(memberRepository.findAllById(any())).willReturn(List.of(member1));
         given(notificationDispatchLogService.claim(NotificationType.MEAL_REMINDER_OVERDUE, "100")).willReturn(false);

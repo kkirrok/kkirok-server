@@ -66,8 +66,8 @@ class GroupJoinedNotificationListenerTest {
         then(notificationDispatcher).should().dispatchToMembers(
                 List.of(first, second),
                 NotificationType.GROUP_JOIN,
-                "아침 챌린저스에 새 멤버가 가입했어요",
-                "가입자 님이 아침 챌린저스 그룹에 참여했어요.",
+                "아침 챌린저스",
+                "가입자님이 '아침 챌린저스'에 참여하셨습니다.",
                 java.util.Map.of(
                         "type", "GROUP_JOIN",
                         "groupId", "10",
