@@ -49,7 +49,6 @@ class MealReminderServiceTest {
     @Test
     @DisplayName("활동시간대가 아니면 아무 작업도 하지 않는다")
     void shouldReturnWhenOutsideActiveHours() {
-        // Given
         MealReminderService mealReminderService = new MealReminderService(
                 List.of(overduePolicy, noMealTodayPolicy),
                 memberRepository,
@@ -59,10 +58,8 @@ class MealReminderServiceTest {
         );
         given(dateTimeProvider.now()).willReturn(LocalDateTime.of(2026, 5, 6, 8, 59));
 
-        // When
         mealReminderService.runReminderCycle();
 
-        // Then
         then(overduePolicy).shouldHaveNoInteractions();
         then(noMealTodayPolicy).shouldHaveNoInteractions();
         then(memberRepository).shouldHaveNoInteractions();
@@ -73,7 +70,6 @@ class MealReminderServiceTest {
     @Test
     @DisplayName("같은 사이클에서 중복 멤버는 첫 정책만 발송한다")
     void shouldDeduplicateMembersAcrossPolicies() {
-        // Given
         MealReminderService mealReminderService = new MealReminderService(
                 List.of(overduePolicy, noMealTodayPolicy),
                 memberRepository,
@@ -118,25 +114,26 @@ class MealReminderServiceTest {
         given(notificationDispatchLogService.claim(NotificationType.MEAL_REMINDER_OVERDUE, "101")).willReturn(true);
         given(notificationDispatchLogService.claim(NotificationType.MEAL_REMINDER_NO_TODAY, "DAY-20260506:3")).willReturn(true);
 
-        // When
         mealReminderService.runReminderCycle();
 
-        // Then
-        then(notificationDispatcher).should(times(3)).dispatchToMembers(any(), any(), any(), any());
+        then(notificationDispatcher).should(times(3)).dispatchToMembers(any(), any(), any(), any(), any());
         then(notificationDispatcher).should().dispatchToMembers(
                 List.of(member1),
+                NotificationType.MEAL_REMINDER_OVERDUE,
                 "overdue-title",
                 "overdue-body",
                 Map.of("type", "MEAL_REMINDER_OVERDUE", "lastMealId", "100")
         );
         then(notificationDispatcher).should().dispatchToMembers(
                 List.of(member2),
+                NotificationType.MEAL_REMINDER_OVERDUE,
                 "overdue-title",
                 "overdue-body",
                 Map.of("type", "MEAL_REMINDER_OVERDUE", "lastMealId", "101")
         );
         then(notificationDispatcher).should().dispatchToMembers(
                 List.of(member3),
+                NotificationType.MEAL_REMINDER_NO_TODAY,
                 "today-title",
                 "today-body",
                 Map.of("type", "MEAL_REMINDER_NO_TODAY", "date", "20260506")
@@ -148,7 +145,6 @@ class MealReminderServiceTest {
     @Test
     @DisplayName("claim 충돌이면 해당 멤버는 발송하지 않는다")
     void shouldSkipWhenClaimFails() {
-        // Given
         MealReminderService mealReminderService = new MealReminderService(
                 List.of(overduePolicy),
                 memberRepository,
@@ -167,11 +163,9 @@ class MealReminderServiceTest {
         given(memberRepository.findAllById(any())).willReturn(List.of(member1));
         given(notificationDispatchLogService.claim(NotificationType.MEAL_REMINDER_OVERDUE, "100")).willReturn(false);
 
-        // When
         mealReminderService.runReminderCycle();
 
-        // Then
-        then(notificationDispatcher).should(never()).dispatchToMembers(any(), any(), any(), any());
+        then(notificationDispatcher).should(never()).dispatchToMembers(any(), any(), any(), any(), any());
     }
 
     private Member createMember(Long memberId, String nickname) {

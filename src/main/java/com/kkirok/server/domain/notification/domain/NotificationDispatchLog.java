@@ -9,7 +9,6 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -32,7 +31,6 @@ public class NotificationDispatchLog {
     @Column(name = "dispatched_at", nullable = false)
     private LocalDateTime dispatchedAt;
 
-    @Builder
     private NotificationDispatchLog(String dispatchKey, LocalDateTime dispatchedAt) {
         this.dispatchKey = dispatchKey;
         this.dispatchedAt = dispatchedAt;
@@ -43,10 +41,7 @@ public class NotificationDispatchLog {
     }
 
     public static NotificationDispatchLog of(NotificationType type, String suffix) {
-        return NotificationDispatchLog.builder()
-                .dispatchKey(createDispatchKey(type, suffix))
-                .dispatchedAt(LocalDateTime.now())
-                .build();
+        return new NotificationDispatchLog(createDispatchKey(type, suffix), LocalDateTime.now());
     }
 
     public static String createDispatchKey(NotificationType type, String suffix) {

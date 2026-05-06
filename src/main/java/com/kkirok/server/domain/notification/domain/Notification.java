@@ -15,7 +15,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
@@ -61,7 +60,6 @@ public class Notification extends BaseTimeEntity {
     @Column(name = "failure_reason", length = 255)
     private String failureReason;
 
-    @Builder
     private Notification(Member member, NotificationType type, String title, String body, String dataJson) {
         this.member = member;
         this.type = type;
@@ -71,13 +69,7 @@ public class Notification extends BaseTimeEntity {
     }
 
     public static Notification create(Member member, NotificationType type, String title, String body, String dataJson) {
-        return Notification.builder()
-                .member(member)
-                .type(type)
-                .title(title)
-                .body(body)
-                .dataJson(dataJson)
-                .build();
+        return new Notification(member, type, title, body, dataJson);
     }
 
     public void markRead(LocalDateTime now) {

@@ -15,7 +15,6 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
@@ -49,7 +48,6 @@ public class Device {
     @Column(name = "last_used_at")
     private LocalDateTime lastUsedAt;
 
-    @Builder
     private Device(Member member, String token, DevicePlatform platform, LocalDateTime lastUsedAt) {
         this.member = member;
         this.token = token;
@@ -58,12 +56,7 @@ public class Device {
     }
 
     public static Device create(Member member, String token, DevicePlatform platform, LocalDateTime now) {
-        return Device.builder()
-                .member(member)
-                .token(token)
-                .platform(platform)
-                .lastUsedAt(now)
-                .build();
+        return new Device(member, token, platform, now);
     }
 
     public void touch(Member member, DevicePlatform platform, LocalDateTime now) {

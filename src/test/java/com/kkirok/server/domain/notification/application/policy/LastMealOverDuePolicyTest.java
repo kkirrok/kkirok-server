@@ -13,7 +13,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
 class LastMealOverDuePolicyTest {
@@ -25,24 +24,20 @@ class LastMealOverDuePolicyTest {
     private LastMealOverDuePolicy lastMealOverDuePolicy;
 
     @Test
-    @DisplayName("3시간 이상 지난 마지막 식사 대상 멤버를 조회한다")
-    void shouldFindOverdueTargets() {
-        // Given
+    @DisplayName("기준 시각보다 3시간 이상 지난 마지막 식사 멤버를 target으로 변환한다")
+    void shouldMapOverdueRowsToTargets() {
         LocalDateTime now = LocalDateTime.of(2026, 5, 6, 12, 0);
-        LocalDateTime threshold = now.minusMinutes(180);
-        given(mealRecordRepository.findOverdueTargets(threshold)).willReturn(List.of(
-                new MealReminderRow(10L, 100L),
-                new MealReminderRow(11L, 101L)
-        ));
+        given(mealRecordRepository.findOverdueTargets(LocalDateTime.of(2026, 5, 6, 9, 0)))
+                .willReturn(List.of(
+                        new MealReminderRow(10L, 100L),
+                        new MealReminderRow(11L, 101L)
+                ));
 
-        // When
         List<MealReminderTarget> targets = lastMealOverDuePolicy.findTargets(now);
 
-        // Then
         assertThat(targets).containsExactly(
                 new MealReminderTarget(10L, "100"),
                 new MealReminderTarget(11L, "101")
         );
-        then(mealRecordRepository).should().findOverdueTargets(threshold);
     }
 }
