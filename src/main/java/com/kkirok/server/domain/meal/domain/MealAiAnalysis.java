@@ -39,33 +39,6 @@ public class MealAiAnalysis extends BaseTimeEntity {
     @Column(name = "nutrition_summary", columnDefinition = "TEXT", nullable = false)
     private String nutritionSummary;
 
-    @Column(nullable = false)
-    private Integer kcal;
-
-    @Column(name = "carbohydrate_g", precision = 8, scale = 2, nullable = false)
-    @Builder.Default
-    private Long carbohydrateG = 0L;
-
-    @Column(name = "protein_g", precision = 8, scale = 2, nullable = false)
-    @Builder.Default
-    private Long proteinG = 0L;
-
-    @Column(name = "fat_g", precision = 8, scale = 2, nullable = false)
-    @Builder.Default
-    private Long fatG = 0L;
-
-    @Column(name = "sugar_g", precision = 8, scale = 2, nullable = false)
-    @Builder.Default
-    private Long sugarG = 0L;
-
-    @Column(name = "sodium_mg", precision = 8, scale = 2, nullable = false)
-    @Builder.Default
-    private Long sodiumMg = 0L;
-
-    @Column(name = "fiber_g", precision = 8, scale = 2, nullable = false)
-    @Builder.Default
-    private Long fiberG = 0L;
-
     @Column(name = "analyzed_at", nullable = false)
     @Builder.Default
     private LocalDateTime analyzedAt = LocalDateTime.now();

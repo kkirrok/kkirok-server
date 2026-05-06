@@ -116,6 +116,7 @@ cors:
 app:
   server:
     url: ${DEV_SERVER_URL}
+    #url: http://localhost:8080
 
 springdoc:
   api-docs:
@@ -170,3 +171,6 @@ fastapi:
 webhook:
   discord:
     internal_server_url: ${WEBHOOK_INTERNAL_SERVER_URL}
+
+publicdata:
+  service-key: ${PUBLIC_DATA_SERVICE_KEY}

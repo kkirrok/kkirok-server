@@ -14,6 +14,7 @@ import com.kkirok.server.domain.character.exception.CharacterErrorCode;
 import com.kkirok.server.domain.character.exception.CharacterNotFoundException;
 import com.kkirok.server.domain.meal.application.usecase.MealRecordUseCase;
 import com.kkirok.server.domain.meal.domain.MealAiAnalysis;
+import com.kkirok.server.domain.meal.domain.MealNutrition;
 import com.kkirok.server.domain.meal.domain.MealRecord;
 import com.kkirok.server.support.fixture.MemberFixture;
 import org.junit.jupiter.api.DisplayName;
@@ -170,19 +171,28 @@ class CharacterInfoServiceTest {
             long sodiumMg
     ) {
         MealRecord mealRecord = MealRecord.builder().build();
+
+        MealNutrition mealNutrition = MealNutrition.create(
+                mealRecord,
+                kcal,
+                (double) proteinG,
+                (double) carbohydrateG,
+                (double) sugarG,
+                (double) fatG,
+                (double) sodiumMg
+        );
+
+        mealRecord.assignMealNutrition(mealNutrition);
+
         MealAiAnalysis mealAiAnalysis = MealAiAnalysis.builder()
                 .mealRecord(mealRecord)
                 .detectedFoodName("food")
                 .foodCategory("category")
                 .nutritionSummary("summary")
-                .kcal(kcal)
-                .carbohydrateG(carbohydrateG)
-                .proteinG(proteinG)
-                .fatG(fatG)
-                .sugarG(sugarG)
-                .sodiumMg(sodiumMg)
                 .build();
+
         ReflectionTestUtils.setField(mealRecord, "mealAiAnalyses", List.of(mealAiAnalysis));
+
         return mealRecord;
     }
 

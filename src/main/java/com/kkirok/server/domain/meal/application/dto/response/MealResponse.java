@@ -2,11 +2,7 @@ package com.kkirok.server.domain.meal.application.dto.response;
 
 import com.kkirok.server.domain.meal.application.dto.request.MealCreateRequest;
 import com.kkirok.server.domain.meal.application.dto.request.MealUpdateRequest;
-import com.kkirok.server.domain.meal.domain.MealAiAnalysis;
-import com.kkirok.server.domain.meal.domain.MealCategory;
-import com.kkirok.server.domain.meal.domain.MealRecord;
-import com.kkirok.server.domain.meal.domain.MealTimeSlot;
-import com.kkirok.server.domain.meal.domain.ScanType;
+import com.kkirok.server.domain.meal.domain.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record MealResponse(
@@ -36,25 +32,24 @@ public record MealResponse(
         String memo
 ) {
     public static MealResponse from(MealRecord meal) {
-        MealAiAnalysis ai = meal.getMealAiAnalyses().isEmpty()
-                ? null
-                : meal.getMealAiAnalyses().get(0);
+        MealNutrition nutrition = meal.getMealNutrition();
 
         return new MealResponse(
                 meal.getId(),
                 meal.getMealTimeSlot(),
                 meal.getCategory(),
                 meal.getScanType(),
-                ai != null ? ai.getDetectedFoodName() : meal.getName(),
-                ai != null ? ai.getKcal()                     : null,
-                ai != null ? ai.getCarbohydrateG().intValue() : null,
-                ai != null ? ai.getProteinG().intValue()      : null,
-                ai != null ? ai.getFatG().intValue()          : null,
-                ai != null ? ai.getSugarG().intValue()        : null,
-                ai != null ? ai.getSodiumMg().intValue()      : null,
+                meal.getName(),
+                nutrition != null ? nutrition.getKcal()                      : null,
+                nutrition != null ? nutrition.getCarbohydrateG().intValue()  : null,
+                nutrition != null ? nutrition.getProteinG().intValue()        : null,
+                nutrition != null ? nutrition.getFatG().intValue()            : null,
+                nutrition != null ? nutrition.getSugarG().intValue()          : null,
+                nutrition != null ? nutrition.getSodiumMg().intValue()        : null,
                 meal.getMemo()
         );
     }
+// fromManual, fromUpdate 삭제해도 됨 → from() 하나로 통일
 
     public static MealResponse fromManual(MealRecord meal, MealCreateRequest req) {
         return new MealResponse(
