@@ -39,13 +39,17 @@ public class NotificationDispatchLog {
     }
 
     public static NotificationDispatchLog of(NotificationType type, Long sourceId) {
+        return of(type, String.valueOf(sourceId));
+    }
+
+    public static NotificationDispatchLog of(NotificationType type, String suffix) {
         return NotificationDispatchLog.builder()
-                .dispatchKey(createDispatchKey(type, sourceId))
+                .dispatchKey(createDispatchKey(type, suffix))
                 .dispatchedAt(LocalDateTime.now())
                 .build();
     }
 
-    public static String createDispatchKey(NotificationType type, Long sourceId) {
-        return type.name() + ":" + sourceId;
+    public static String createDispatchKey(NotificationType type, String suffix) {
+        return type.name() + ":" + suffix;
     }
 }

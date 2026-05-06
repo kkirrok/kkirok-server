@@ -19,11 +19,16 @@ public class NotificationDispatchLogService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW) // 내부 실패가 상위에 영향이 가지 않도록 함
     public boolean claim(NotificationType type, Long sourceId) {
+        return claim(type, String.valueOf(sourceId));
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW) // 내부 실패가 상위에 영향이 가지 않도록 함
+    public boolean claim(NotificationType type, String suffix) {
         try {
-            dispatchLogRepository.saveAndFlush(NotificationDispatchLog.of(type, sourceId));
+            dispatchLogRepository.saveAndFlush(NotificationDispatchLog.of(type, suffix));
             return true;
         } catch (DataIntegrityViolationException e) {
-            log.debug("Skipping duplicated notification dispatch for {}:{}", type, sourceId);
+            log.debug("Skipping duplicated notification dispatch for {}:{}", type, suffix);
             return false;
         }
     }
