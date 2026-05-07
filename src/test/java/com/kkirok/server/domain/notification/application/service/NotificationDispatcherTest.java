@@ -1,0 +1,105 @@
+package com.kkirok.server.domain.notification.application.service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kkirok.server.domain.member.domain.Member;
+import com.kkirok.server.domain.notification.dao.NotificationRepository;
+import com.kkirok.server.domain.notification.domain.Notification;
+import com.kkirok.server.domain.notification.domain.NotificationType;
+import com.kkirok.server.support.fixture.MemberFixture;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
+
+@ExtendWith(MockitoExtension.class)
+class NotificationDispatcherTest {
+
+    @Mock
+    private NotificationRepository notificationRepository;
+
+    @Mock
+    private NotificationDeliveryService notificationDeliveryService;
+
+    private NotificationDispatcher notificationDispatcher;
+
+    @BeforeEach
+    void setUp() {
+        notificationDispatcher = new NotificationDispatcher(notificationRepository, notificationDeliveryService, new ObjectMapper());
+    }
+
+    @AfterEach
+    void tearDown() {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
+    }
+
+    @Test
+    @DisplayName("알림을 dispatch하면 알림 row를 저장하고 커밋 후 발송을 위임한다")
+    void shouldSaveNotificationsAndDeferDeliveryUntilAfterCommit() {
+        // Given
+        Member first = createMember(1L, "첫번째");
+        Member second = createMember(2L, "두번째");
+        AtomicLong sequence = new AtomicLong(10L);
+
+        given(notificationRepository.save(any(Notification.class))).willAnswer(invocation -> {
+            Notification notification = invocation.getArgument(0);
+            ReflectionTestUtils.setField(notification, "id", sequence.getAndIncrement());
+            return notification;
+        });
+
+        TransactionSynchronizationManager.initSynchronization();
+
+        // When
+        notificationDispatcher.dispatchToMembers(
+                List.of(first, second),
+                NotificationType.GROUP_JOIN,
+                "제목",
+                "본문",
+                Map.of("type", "GROUP_JOIN", "groupId", "1")
+        );
+
+        // Then
+        ArgumentCaptor<Notification> notificationCaptor = ArgumentCaptor.forClass(Notification.class);
+        then(notificationRepository).should(times(2)).save(notificationCaptor.capture());
+        assertThat(notificationCaptor.getAllValues()).hasSize(2);
+
+        List<TransactionSynchronization> synchronizations = TransactionSynchronizationManager.getSynchronizations();
+        assertThat(synchronizations).hasSize(1);
+
+        synchronizations.get(0).afterCommit();
+
+        ArgumentCaptor<Map<Long, Long>> targetCaptor = ArgumentCaptor.forClass(Map.class);
+        then(notificationDeliveryService).should().deliver(
+                targetCaptor.capture(),
+                eq("제목"),
+                eq("본문"),
+                eq(Map.of("type", "GROUP_JOIN", "groupId", "1"))
+        );
+        assertThat(targetCaptor.getValue()).containsEntry(10L, 1L).containsEntry(11L, 2L);
+    }
+
+    private Member createMember(Long memberId, String nickname) {
+        Member member = MemberFixture.createLocalMember(nickname, nickname + "@test.com");
+        ReflectionTestUtils.setField(member, "id", memberId);
+        return member;
+    }
+}

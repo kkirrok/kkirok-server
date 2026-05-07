@@ -85,6 +85,9 @@ dependencies {
 	// Swagger
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
 
+	// Firebase
+	implementation 'com.google.firebase:firebase-admin:9.8.0'
+
 	// AOP
 	implementation 'org.springframework.boot:spring-boot-starter-aop'
 
