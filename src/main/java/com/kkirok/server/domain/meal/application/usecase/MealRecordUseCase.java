@@ -45,7 +45,7 @@ public interface MealRecordUseCase {
 
     MealResponse create(Long memberId, MealCreateRequest request);
 
-    MealResponse createMealByCamera(Long memberId, String imageUrl);
+    MealResponse createMealByCamera(Long memberId, MultipartFile file);
 
     MealResponse createMealByAlbum(Long memberId, MultipartFile file);
 

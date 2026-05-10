@@ -96,4 +96,14 @@ public class OpenAiService {
 		metadata.put("promptVersion", prompt.version());
 		return metadata;
 	}
+
+	public <R> R createVisionResponse(PromptType promptType, String imageUrl, String userText, Class<R> responseType) {
+		PromptTemplate prompt = promptService.getPrompt(promptType);
+		OpenAiResponse response = openAiClient.createResponse(
+				OpenAiResponseRequest.promptWithImageUrl(
+						prompt.content(), imageUrl, userText, promptMetadata(promptType, prompt)
+				)
+		);
+		return parseResponse(response, responseType);
+	}
 }
