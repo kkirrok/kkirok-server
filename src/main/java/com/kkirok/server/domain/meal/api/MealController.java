@@ -108,7 +108,7 @@ public class MealController implements MealApi {
     public ResponseEntity<SuccessResponse<RecommendationResponse>> getRecommendation(
             @CurrentMember Long memberId
     ) {
-        RecommendationResponse response = recommendationService.recommend(memberId);  // TODO 완성
+        RecommendationResponse response = recommendationService.recommend(memberId);
         return ResponseEntity.ok(SuccessResponse.of(MealSuccessCode.RECOMMENDATION_GET_SUCCESS, response));
     }
 
