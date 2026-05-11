@@ -1,6 +1,7 @@
 package com.kkirok.server.domain.meal.api;
 
 import com.kkirok.server.domain.meal.application.dto.request.MealCreateRequest;
+import com.kkirok.server.domain.meal.application.dto.request.MealImageUploadRequest;
 import com.kkirok.server.domain.meal.application.dto.request.MealUpdateRequest;
 import com.kkirok.server.domain.meal.application.dto.response.MealResponse;
 import com.kkirok.server.domain.meal.application.dto.response.RecommendationResponse;
@@ -41,7 +42,9 @@ public class MealController implements MealApi {
                 .map(MealResponse::from)
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(SuccessResponse.of(MealSuccessCode.MEAL_GET_SUCCESS, responses));
+        return ResponseEntity.ok(
+                SuccessResponse.of(MealSuccessCode.MEAL_GET_SUCCESS, responses)
+        );
     }
 
     @Override
@@ -54,33 +57,48 @@ public class MealController implements MealApi {
     }
 
     @Override
-    @PostMapping("/record/camera")
+    @PostMapping(
+            value = "/record/camera",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
     public ResponseEntity<SuccessResponse<MealResponse>> recordMealByCamera(
             @CurrentMember Long memberId,
-            @RequestParam("imageUrl") String imageUrl
+            @Valid @ModelAttribute MealImageUploadRequest request
     ) {
-        MealResponse response = mealRecordUseCase.createMealByCamera(memberId, imageUrl);
-        return ResponseEntity.ok(SuccessResponse.of(MealSuccessCode.MEAL_RECORD_SUCCESS, response));
+        MealResponse response = mealRecordUseCase.createMealByCamera(memberId, request.file());
+
+        return ResponseEntity.ok(
+                SuccessResponse.of(MealSuccessCode.MEAL_RECORD_SUCCESS, response)
+        );
     }
 
     @Override
-    @PostMapping(value = "/record/album", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(
+            value = "/record/album",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
     public ResponseEntity<SuccessResponse<MealResponse>> recordMealByAlbum(
             @CurrentMember Long memberId,
-            @RequestPart("file") MultipartFile file
+            @Valid @ModelAttribute MealImageUploadRequest request
     ) {
-        MealResponse response = mealRecordUseCase.createMealByAlbum(memberId, file);
-        return ResponseEntity.ok(SuccessResponse.of(MealSuccessCode.MEAL_RECORD_SUCCESS, response));
+        MealResponse response = mealRecordUseCase.createMealByAlbum(memberId, request.file());
+
+        return ResponseEntity.ok(
+                SuccessResponse.of(MealSuccessCode.MEAL_RECORD_SUCCESS, response)
+        );
     }
 
-    @PostMapping("/record/manual")
     @Override
+    @PostMapping("/record/manual")
     public ResponseEntity<SuccessResponse<MealResponse>> recordMealManually(
             @CurrentMember Long memberId,
             @Valid @RequestBody MealCreateRequest request
     ) {
         MealResponse response = mealRecordUseCase.create(memberId, request);
-        return ResponseEntity.ok(SuccessResponse.of(MealSuccessCode.MEAL_RECORD_SUCCESS, response));
+
+        return ResponseEntity.ok(
+                SuccessResponse.of(MealSuccessCode.MEAL_RECORD_SUCCESS, response)
+        );
     }
 
     @Override
@@ -100,7 +118,10 @@ public class MealController implements MealApi {
             @Valid @RequestBody MealUpdateRequest request
     ) {
         MealResponse response = mealRecordUseCase.updateMeal(memberId, mealId, request);
-        return ResponseEntity.ok(SuccessResponse.of(MealSuccessCode.MEAL_UPDATE_SUCCESS, response));
+
+        return ResponseEntity.ok(
+                SuccessResponse.of(MealSuccessCode.MEAL_UPDATE_SUCCESS, response)
+        );
     }
 
     @Override
@@ -110,13 +131,21 @@ public class MealController implements MealApi {
             @PathVariable("mealId") Long mealId
     ) {
         mealRecordUseCase.deleteMeal(memberId, mealId);
-        return ResponseEntity.ok(SuccessResponse.from(MealSuccessCode.MEAL_DELETE_SUCCESS));
+
+        return ResponseEntity.ok(
+                SuccessResponse.from(MealSuccessCode.MEAL_DELETE_SUCCESS)
+        );
     }
 
+    @Override
     @GetMapping("/foods/search")
     public ResponseEntity<SuccessResponse<List<FoodNutritionSearchResult>>> searchFood(
-            @RequestParam String keyword) {
+            @RequestParam String keyword
+    ) {
         List<FoodNutritionSearchResult> results = foodNutritionSearchService.search(keyword);
-        return ResponseEntity.ok(SuccessResponse.of(MealSuccessCode.FOOD_SEARCH_SUCCESS, results));
+
+        return ResponseEntity.ok(
+                SuccessResponse.of(MealSuccessCode.FOOD_SEARCH_SUCCESS, results)
+        );
     }
 }
