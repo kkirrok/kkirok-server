@@ -1,7 +1,6 @@
 package com.kkirok.server.domain.meal.dao;
 
 import com.kkirok.server.domain.meal.domain.MealRecord;
-import com.kkirok.server.domain.member.domain.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,21 +11,20 @@ import java.util.List;
 import java.util.Optional;
 
 public interface MealRecordRepository extends JpaRepository<MealRecord, Long> {
-    // 오늘 식단 조회
+
+    // 특정 날짜 식단 조회
     @Query("""
         SELECT DISTINCT mr
         FROM MealRecord mr
         LEFT JOIN FETCH mr.mealAiAnalyses
         LEFT JOIN FETCH mr.mealNutrition
         WHERE mr.member.id = :memberId
-          AND mr.createdAt >= :startOfDay
-          AND mr.createdAt < :endOfDay
-        ORDER BY mr.createdAt DESC
-""")
+          AND mr.mealDate = :mealDate
+        ORDER BY mr.recordedAt DESC
+    """)
     List<MealRecord> getSpecifiedDateMealRecords(
             @Param("memberId") Long memberId,
-            @Param("startOfDay") LocalDateTime startOfDay,
-            @Param("endOfDay") LocalDateTime endOfDay
+            @Param("mealDate") LocalDate mealDate
     );
 
     // 식단 단건 조회

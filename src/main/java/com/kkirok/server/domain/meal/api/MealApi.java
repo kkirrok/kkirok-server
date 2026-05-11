@@ -6,6 +6,7 @@ import com.kkirok.server.domain.meal.application.dto.request.MealUpdateRequest;
 import com.kkirok.server.domain.meal.application.dto.response.MealResponse;
 import com.kkirok.server.domain.meal.application.dto.response.RecommendationResponse;
 import com.kkirok.server.domain.meal.application.dto.response.TodayStatusResponse;
+import com.kkirok.server.domain.report.application.dto.response.WeeklyReportResponse;
 import com.kkirok.server.domain.meal.exception.MealErrorCode;
 import com.kkirok.server.domain.meal.exception.MealSuccessCode;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
@@ -18,9 +19,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Tag(name = "Meal API", description = "식사 기록 관련 API")

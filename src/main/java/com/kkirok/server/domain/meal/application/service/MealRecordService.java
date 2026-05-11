@@ -49,15 +49,7 @@ public class MealRecordService implements MealRecordUseCase {
     @Override
     public List<MealRecord> getTodayRecords(Long memberId) {
         LocalDate today = LocalDate.now();
-        return getRangeRecords(memberId, today, today.plusDays(1));
-    }
-
-    private List<MealRecord> getRangeRecords(Long memberId, LocalDate start, LocalDate end) {
-        return mealRecordRepository.getSpecifiedDateMealRecords(
-                memberId,
-                start.atStartOfDay(),
-                end.atStartOfDay()
-        );
+        return mealRecordRepository.getSpecifiedDateMealRecords(memberId, today);
     }
 
     /** 직접 입력으로 식단 기록 */
