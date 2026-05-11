@@ -5,6 +5,7 @@ import com.kkirok.server.domain.meal.application.dto.request.MealImageUploadRequ
 import com.kkirok.server.domain.meal.application.dto.request.MealUpdateRequest;
 import com.kkirok.server.domain.meal.application.dto.response.MealResponse;
 import com.kkirok.server.domain.meal.application.dto.response.RecommendationResponse;
+import com.kkirok.server.domain.meal.application.dto.response.TodayNutritionSummaryResponse;
 import com.kkirok.server.domain.meal.application.dto.response.TodayStatusResponse;
 import com.kkirok.server.domain.meal.exception.MealErrorCode;
 import com.kkirok.server.domain.meal.exception.MealSuccessCode;
@@ -38,7 +39,6 @@ public interface MealApi {
     @ApiErrorCodeExamples({})
     @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "MEAL_GET_SUCCESS")
     ResponseEntity<SuccessResponse<List<MealResponse>>> getMeals(
-            @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
             @CurrentMember Long memberId
     );
 
@@ -54,16 +54,23 @@ public interface MealApi {
     @ApiErrorCodeExamples({})
     @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "MEAL_RECOMMENDATION_GET_SUCCESS")
     ResponseEntity<SuccessResponse<RecommendationResponse>> getRecommendation(
-            @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
             @CurrentMember Long memberId
     );
 
-    @Operation(summary = "오늘의 캐릭터 상태 조회 [USER]")
-    @ApiErrorCodeExamples({})
-    @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "TODAY_STATUS_GET_SUCCESS")
-    ResponseEntity<SuccessResponse<TodayStatusResponse>> getTodayStatus(
+    @Operation(
+            summary = "오늘의 영양성분 총합 조회 [USER]",
+            description = """
+                오늘 하루 동안 기록된 식단을 기준으로 영양성분 총합을 조회합니다.
+
+                - 인증된 사용자 기준으로 조회합니다.
+                - meal_date가 오늘 날짜인 식단들을 기준으로 계산합니다.
+                - 칼로리, 탄수화물, 단백질, 지방, 당, 나트륨 총합을 반환합니다.
+                """
+    )
+    @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "TODAY_NUTRITION_SUMMARY_GET_SUCCESS")
+    ResponseEntity<SuccessResponse<TodayNutritionSummaryResponse>> getTodayNutritionSummary(
             @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
-            @CurrentMember Long memberId
+            Long memberId
     );
 
     @Operation(
@@ -78,7 +85,6 @@ public interface MealApi {
     @ApiErrorCodeExamples({})
     @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "MEAL_RECORD_SUCCESS")
     ResponseEntity<SuccessResponse<MealResponse>> recordMealManually(
-            @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
             @CurrentMember Long memberId,
 
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -104,7 +110,6 @@ public interface MealApi {
     })
     @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "MEAL_RECORD_SUCCESS")
     ResponseEntity<SuccessResponse<MealResponse>> recordMealByCamera(
-            @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
             @CurrentMember Long memberId,
 
             @Valid @ModelAttribute MealImageUploadRequest request
@@ -126,7 +131,6 @@ public interface MealApi {
     })
     @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "MEAL_RECORD_SUCCESS")
     ResponseEntity<SuccessResponse<MealResponse>> recordMealByAlbum(
-            @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
             @CurrentMember Long memberId,
 
             @Valid @ModelAttribute MealImageUploadRequest request
@@ -148,7 +152,6 @@ public interface MealApi {
     })
     @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "MEAL_UPDATE_SUCCESS")
     ResponseEntity<SuccessResponse<MealResponse>> updateMeal(
-            @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
             @CurrentMember Long memberId,
 
             @Parameter(description = "수정할 식단 ID", required = true, example = "1")
@@ -176,7 +179,6 @@ public interface MealApi {
     })
     @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "MEAL_DELETE_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> deleteMeal(
-            @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
             @CurrentMember Long memberId,
 
             @Parameter(description = "삭제할 식단 ID", required = true, example = "1")

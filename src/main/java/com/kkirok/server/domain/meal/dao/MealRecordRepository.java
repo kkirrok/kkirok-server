@@ -14,19 +14,17 @@ import java.util.Optional;
 public interface MealRecordRepository extends JpaRepository<MealRecord, Long> {
     // 오늘 식단 조회
     @Query("""
-        SELECT DISTINCT mr
-        FROM MealRecord mr
-        LEFT JOIN FETCH mr.mealAiAnalyses
-        LEFT JOIN FETCH mr.mealNutrition
-        WHERE mr.member.id = :memberId
-          AND mr.createdAt >= :startOfDay
-          AND mr.createdAt < :endOfDay
-        ORDER BY mr.createdAt DESC
+    SELECT DISTINCT mr
+    FROM MealRecord mr
+    LEFT JOIN FETCH mr.mealAiAnalyses
+    LEFT JOIN FETCH mr.mealNutrition
+    WHERE mr.member.id = :memberId
+      AND mr.mealDate = :mealDate
+    ORDER BY mr.recordedAt DESC
 """)
     List<MealRecord> getSpecifiedDateMealRecords(
             @Param("memberId") Long memberId,
-            @Param("startOfDay") LocalDateTime startOfDay,
-            @Param("endOfDay") LocalDateTime endOfDay
+            @Param("mealDate") LocalDate mealDate
     );
 
     // 식단 단건 조회

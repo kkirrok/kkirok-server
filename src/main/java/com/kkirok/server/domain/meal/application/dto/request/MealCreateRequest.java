@@ -7,7 +7,12 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PositiveOrZero;
 
+import java.time.LocalDateTime;
+
 public record MealCreateRequest (
+        @Schema(description = "식사 기록 날짜 및 시간", example = "2026-05-11T12:30:00")
+        LocalDateTime recordedAt,
+
         @NotNull
         @Schema(description = "식사 시간대", example = "BREAKFAST")
         MealTimeSlot mealTimeSlot,
