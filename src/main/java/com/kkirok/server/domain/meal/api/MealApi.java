@@ -27,7 +27,7 @@ import java.util.List;
 public interface MealApi {
 
     @Operation(
-            summary = "오늘 식사 기록 조회 [USER]를 해봅시다~~",
+            summary = "오늘 식사 기록 조회 [USER]",
             description = """
                 현재 로그인한 사용자의 오늘 식사 기록 목록을 조회합니다.
 
@@ -43,12 +43,12 @@ public interface MealApi {
     );
 
     @Operation(
-            summary = "식사 추천 조회 [USER]",
+            summary = "추천 운동, 식단 조회 [USER]",
             description = """
-                    현재 로그인한 사용자에게 식사 추천 정보를 제공합니다.
+                    현재 로그인한 사용자에게 식단 기반 추천 정보를 제공합니다.
 
                     - 인증된 사용자 기준으로 조회합니다.
-                    - 응답: 추천 식단 정보
+                    - 응답: 추천 운동 및 식단 정보
                     """
     )
     @ApiErrorCodeExamples({})

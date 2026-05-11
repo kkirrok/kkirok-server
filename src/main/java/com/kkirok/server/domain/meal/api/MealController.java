@@ -7,6 +7,7 @@ import com.kkirok.server.domain.meal.application.dto.response.MealResponse;
 import com.kkirok.server.domain.meal.application.dto.response.RecommendationResponse;
 import com.kkirok.server.domain.meal.application.dto.response.TodayStatusResponse;
 import com.kkirok.server.domain.meal.application.service.FoodNutritionSearchService;
+import com.kkirok.server.domain.meal.application.service.RecommendationService;
 import com.kkirok.server.domain.meal.application.usecase.MealRecordUseCase;
 import com.kkirok.server.domain.meal.exception.MealSuccessCode;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
@@ -31,6 +32,7 @@ public class MealController implements MealApi {
 
     private final MealRecordUseCase mealRecordUseCase;
     private final FoodNutritionSearchService foodNutritionSearchService;
+    private final RecommendationService recommendationService;
 
     @Override
     @GetMapping
@@ -106,8 +108,8 @@ public class MealController implements MealApi {
     public ResponseEntity<SuccessResponse<RecommendationResponse>> getRecommendation(
             @CurrentMember Long memberId
     ) {
-        // TODO: 추천 로직 연동
-        return null;
+        RecommendationResponse response = recommendationService.recommend(memberId);
+        return ResponseEntity.ok(SuccessResponse.of(MealSuccessCode.RECOMMENDATION_GET_SUCCESS, response));
     }
 
     @Override
