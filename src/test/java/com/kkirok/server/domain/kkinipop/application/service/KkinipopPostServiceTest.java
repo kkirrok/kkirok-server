@@ -1,6 +1,7 @@
 package com.kkirok.server.domain.kkinipop.application.service;
 
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopDailyPostResponse;
+import com.kkirok.server.domain.kkinipop.application.dto.event.KkinipopReactionAddedEvent;
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopPostResponse;
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopReactionSummaryResponse;
 import com.kkirok.server.domain.kkinipop.application.usecase.KkinipopUseCase;
@@ -29,9 +30,11 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -61,6 +64,9 @@ class KkinipopPostServiceTest {
 
     @Mock
     private DateTimeProvider dateTimeProvider;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private KkinipopPostService kkinipopPostService;
@@ -184,6 +190,7 @@ class KkinipopPostServiceTest {
         given(kkinipopUseCase.findGroupMember(10L, 1L)).willReturn(groupMember);
         given(kkinipopUseCase.findPostById(30L)).willReturn(post);
         given(kkinipopUseCase.findCustomEmojiById(5L)).willReturn(customEmoji);
+        given(reactionRepository.existsByPostAndMemberAndEmojiCode(30L, 1L, "CUSTOM_5")).willReturn(false);
         given(reactionRepository.save(any(KkinipopReaction.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         // When
@@ -194,6 +201,82 @@ class KkinipopPostServiceTest {
         assertThat(response.label()).isEqualTo("chew");
         assertThat(response.count()).isEqualTo(1L);
         assertThat(response.emojiType()).isEqualTo("CUSTOM_EMOJI");
+    }
+
+    @Test
+    @DisplayName("시스템 이모지 첫 반응이면 알림 이벤트를 발행한다")
+    void shouldPublishReactionEvent_whenSystemEmojiIsFirstReaction() {
+        // Given
+        KkinipopGroup group = createGroup(10L, "아침 챌린저스");
+        Member writer = createMember(1L, "작성자");
+        Member reactor = createMember(2L, "반응자");
+        KkinipopGroupMember groupMember = createGroupMember(100L, group, reactor);
+        KkinipopPost post = createPost(30L, group, writer, null, LocalDate.of(2026, 4, 24), "uuid_post");
+
+        given(kkinipopUseCase.findGroupMember(10L, 2L)).willReturn(groupMember);
+        given(kkinipopUseCase.findPostById(30L)).willReturn(post);
+        given(reactionRepository.existsByPostAndMemberAndEmojiCode(30L, 2L, "SYSTEM_HEART")).willReturn(false);
+        given(reactionRepository.save(any(KkinipopReaction.class))).willAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        kkinipopPostService.reactToPost(2L, 10L, 30L, "SYSTEM_HEART");
+
+        // Then
+        ArgumentCaptor<KkinipopReactionAddedEvent> eventCaptor =
+                ArgumentCaptor.forClass(KkinipopReactionAddedEvent.class);
+        then(eventPublisher).should().publishEvent(eventCaptor.capture());
+
+        KkinipopReactionAddedEvent event = eventCaptor.getValue();
+        assertThat(event.postId()).isEqualTo(30L);
+        assertThat(event.groupId()).isEqualTo(10L);
+        assertThat(event.postAuthorMemberId()).isEqualTo(1L);
+        assertThat(event.reactorMemberId()).isEqualTo(2L);
+        assertThat(event.emojiCode()).isEqualTo("SYSTEM_HEART");
+        assertThat(event.customEmoji()).isFalse();
+        assertThat(event.customEmojiImageKey()).isNull();
+    }
+
+    @Test
+    @DisplayName("동일한 게시글, 반응자, 이모지 조합이 이미 있으면 알림을 발행하지 않는다")
+    void shouldNotPublishReactionEvent_whenReactionAlreadyExists() {
+        // Given
+        KkinipopGroup group = createGroup(10L, "아침 챌린저스");
+        Member writer = createMember(1L, "작성자");
+        Member reactor = createMember(2L, "반응자");
+        KkinipopGroupMember groupMember = createGroupMember(100L, group, reactor);
+        KkinipopPost post = createPost(30L, group, writer, null, LocalDate.of(2026, 4, 24), "uuid_post");
+
+        given(kkinipopUseCase.findGroupMember(10L, 2L)).willReturn(groupMember);
+        given(kkinipopUseCase.findPostById(30L)).willReturn(post);
+        given(reactionRepository.existsByPostAndMemberAndEmojiCode(30L, 2L, "SYSTEM_HEART")).willReturn(true);
+        given(reactionRepository.save(any(KkinipopReaction.class))).willAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        kkinipopPostService.reactToPost(2L, 10L, 30L, "SYSTEM_HEART");
+
+        // Then
+        then(eventPublisher).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("본인 게시글에 본인이 반응하면 알림을 발행하지 않는다")
+    void shouldNotPublishReactionEvent_whenReactingToOwnPost() {
+        // Given
+        KkinipopGroup group = createGroup(10L, "아침 챌린저스");
+        Member member = createMember(1L, "작성자");
+        KkinipopGroupMember groupMember = createGroupMember(100L, group, member);
+        KkinipopPost post = createPost(30L, group, member, null, LocalDate.of(2026, 4, 24), "uuid_post");
+
+        given(kkinipopUseCase.findGroupMember(10L, 1L)).willReturn(groupMember);
+        given(kkinipopUseCase.findPostById(30L)).willReturn(post);
+        given(reactionRepository.existsByPostAndMemberAndEmojiCode(30L, 1L, "SYSTEM_HEART")).willReturn(false);
+        given(reactionRepository.save(any(KkinipopReaction.class))).willAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        kkinipopPostService.reactToPost(1L, 10L, 30L, "SYSTEM_HEART");
+
+        // Then
+        then(eventPublisher).shouldHaveNoInteractions();
     }
 
     @Test
