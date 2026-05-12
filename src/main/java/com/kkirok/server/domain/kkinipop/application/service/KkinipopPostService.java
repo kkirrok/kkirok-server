@@ -1,6 +1,7 @@
 package com.kkirok.server.domain.kkinipop.application.service;
 
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopDailyPostResponse;
+import com.kkirok.server.domain.kkinipop.application.dto.event.KkinipopReactionAddedEvent;
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopMyKkirokStatusResponse;
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopPostResponse;
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopReactionSummaryResponse;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -47,6 +49,7 @@ public class KkinipopPostService {
     private final KkinipopReactionRepository reactionRepository;
     private final R2UploadService r2UploadService;
     private final DateTimeProvider dateTimeProvider;
+    private final ApplicationEventPublisher eventPublisher;
 
     // 오늘 기준 최근 일주일 게시글 조회
     @Transactional(readOnly = true)
@@ -166,9 +169,27 @@ public class KkinipopPostService {
             throw new ForbiddenException(KkinipopErrorCode.GROUP_ACCESS_FORBIDDEN);
         }
 
+        boolean firstReaction = !reactionRepository.existsByPostAndMemberAndEmojiCode(
+                post.getId(),
+                groupMember.getMember().getId(),
+                emojiCode
+        );
+
         KkinipopReaction reaction = reactionRepository.save(
                 KkinipopReaction.createCustom(post, groupMember.getMember(), customEmoji)
         );
+
+        if (firstReaction && !groupMember.getMember().getId().equals(post.getMember().getId())) {
+            eventPublisher.publishEvent(new KkinipopReactionAddedEvent(
+                    post.getId(),
+                    groupId,
+                    post.getMember().getId(),
+                    groupMember.getMember().getId(),
+                    emojiCode,
+                    true,
+                    customEmoji.getImageKey()
+            ));
+        }
 
         return KkinipopReactionSummaryResponse.from(reaction, 1L);
     }
@@ -181,9 +202,26 @@ public class KkinipopPostService {
     ) {
         try {
             KkinipopReactionEmoji emoji = KkinipopReactionEmoji.fromCode(emojiCode);
+            boolean firstReaction = !reactionRepository.existsByPostAndMemberAndEmojiCode(
+                    post.getId(),
+                    groupMember.getMember().getId(),
+                    emojiCode
+            );
             KkinipopReaction reaction = reactionRepository.save(
                     KkinipopReaction.createDefault(post, groupMember.getMember(), emoji)
             );
+
+            if (firstReaction && !groupMember.getMember().getId().equals(post.getMember().getId())) {
+                eventPublisher.publishEvent(new KkinipopReactionAddedEvent(
+                        post.getId(),
+                        post.getGroup().getId(),
+                        post.getMember().getId(),
+                        groupMember.getMember().getId(),
+                        emojiCode,
+                        false,
+                        null
+                ));
+            }
 
             return KkinipopReactionSummaryResponse.from(reaction, 1L);
         } catch (IllegalArgumentException exception) {

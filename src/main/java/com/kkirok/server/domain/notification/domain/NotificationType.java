@@ -4,5 +4,6 @@ public enum NotificationType {
     MEAL_REMINDER_OVERDUE,
     MEAL_REMINDER_NO_TODAY,
     MISSION_START,
-    GROUP_JOIN
+    GROUP_JOIN,
+    KKINIPOP_REACTION
 }

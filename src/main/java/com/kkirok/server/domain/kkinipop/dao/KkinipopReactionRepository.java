@@ -17,4 +17,17 @@ public interface KkinipopReactionRepository extends JpaRepository<KkinipopReacti
             """)
     List<KkinipopReaction> findPostReactions(@Param("postIds") Collection<Long> postIds);
 
+    @Query("""
+            select count(r) > 0
+            from KkinipopReaction r
+            where r.post.id = :postId
+              and r.member.id = :memberId
+              and r.emojiCode = :emojiCode
+            """)
+    boolean existsByPostAndMemberAndEmojiCode(
+            @Param("postId") Long postId,
+            @Param("memberId") Long memberId,
+            @Param("emojiCode") String emojiCode
+    );
+
 }
