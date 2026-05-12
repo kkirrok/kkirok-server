@@ -49,19 +49,12 @@ public class NotificationDispatcher {
             notificationMemberIds.put(notification.getId(), target.getId());
         }
 
-        // 만약 현재 트랜잭션이 살아있고 스프링이 커밋 시점을 추적할 수 있을 경우 커밋 후 발송, 그리고 return
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    notificationDeliveryService.deliver(notificationMemberIds, title, body, safeData);
-                }
-            });
-            return;
-        }
-
-        // 현재 동기화 가능한 트랜잭션이 없다면 바로 발송
-        notificationDeliveryService.deliver(notificationMemberIds, title, body, safeData);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                notificationDeliveryService.deliver(notificationMemberIds, title, body, safeData);
+            }
+        });
     }
 
     private String serialize(Map<String, String> data) {

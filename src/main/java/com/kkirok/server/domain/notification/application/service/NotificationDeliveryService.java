@@ -86,8 +86,9 @@ public class NotificationDeliveryService {
 
     private void deleteInvalidTokens(Collection<String> invalidTokens) {
         // 앱에서 더 이상 유효하지 않은 토큰만 제거한다.
-        for (String token : invalidTokens) {
-            deviceRepository.findByToken(token).ifPresent(deviceRepository::delete);
+        if (invalidTokens == null || invalidTokens.isEmpty()) {
+            return;
         }
+        deviceRepository.deleteByTokenIn(invalidTokens);
     }
 }
