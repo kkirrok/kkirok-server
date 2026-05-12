@@ -5,6 +5,7 @@ import com.kkirok.server.domain.meal.application.dto.request.MealImageUploadRequ
 import com.kkirok.server.domain.meal.application.dto.request.MealUpdateRequest;
 import com.kkirok.server.domain.meal.application.dto.response.MealResponse;
 import com.kkirok.server.domain.meal.application.dto.response.RecommendationResponse;
+import com.kkirok.server.domain.meal.application.dto.response.TodayNutritionSummaryResponse;
 import com.kkirok.server.domain.meal.application.dto.response.TodayStatusResponse;
 import com.kkirok.server.domain.report.application.dto.response.WeeklyReportResponse;
 import com.kkirok.server.domain.meal.application.service.FoodNutritionSearchService;
@@ -52,13 +53,16 @@ public class MealController implements MealApi {
         );
     }
 
-    @Override
-    @GetMapping("/today-status")
-    public ResponseEntity<SuccessResponse<TodayStatusResponse>> getTodayStatus(
+    @GetMapping("/nutrition/summary/today")
+    public ResponseEntity<SuccessResponse<TodayNutritionSummaryResponse>> getTodayNutritionSummary(
             @CurrentMember Long memberId
     ) {
-        // TODO: 캐릭터 상태 연동
-        return null;
+        TodayNutritionSummaryResponse response =
+                mealRecordUseCase.getTodayNutritionSummary(memberId);
+
+        return ResponseEntity.ok(
+                SuccessResponse.of(MealSuccessCode.TODAY_NUTRITION_SUMMARY_GET_SUCCESS, response)
+        );
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.kkirok.server.domain.meal.application.service;
 import com.kkirok.server.domain.meal.application.dto.request.MealCreateRequest;
 import com.kkirok.server.domain.meal.application.dto.request.MealUpdateRequest;
 import com.kkirok.server.domain.meal.application.dto.response.MealResponse;
+import com.kkirok.server.domain.meal.application.dto.response.TodayNutritionSummaryResponse;
 import com.kkirok.server.domain.meal.application.usecase.MealRecordUseCase;
 import com.kkirok.server.domain.meal.dao.MealAiAnalysisRepository;
 import com.kkirok.server.domain.meal.dao.MealImageRepository;
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 @Slf4j
@@ -48,8 +50,12 @@ public class MealRecordService implements MealRecordUseCase {
 
     @Override
     public List<MealRecord> getTodayRecords(Long memberId) {
-        LocalDate today = LocalDate.now();
-        return mealRecordRepository.getSpecifiedDateMealRecords(memberId, today);
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
+
+        return mealRecordRepository.getSpecifiedDateMealRecords(
+                memberId,
+                today
+        );
     }
 
     /** 직접 입력으로 식단 기록 */
@@ -57,6 +63,7 @@ public class MealRecordService implements MealRecordUseCase {
     @Transactional
     public MealResponse create(Long memberId, MealCreateRequest request) {
         Member member = memberUseCase.findMemberByMemberId(memberId);
+
         MealRecord meal = MealRecord.createManual(member, request);
         mealRecordRepository.save(meal);
 
@@ -69,6 +76,7 @@ public class MealRecordService implements MealRecordUseCase {
                 request.fatG() != null ? request.fatG().doubleValue() : null,
                 request.sodiumMg() != null ? request.sodiumMg().doubleValue() : null
         );
+
         mealNutritionRepository.save(nutrition);
         meal.assignMealNutrition(nutrition);
 
@@ -129,6 +137,7 @@ public class MealRecordService implements MealRecordUseCase {
                     request.sodiumMg() != null ? request.sodiumMg().doubleValue() : null
             );
         }
+
         return MealResponse.from(meal);
     }
 
@@ -147,6 +156,7 @@ public class MealRecordService implements MealRecordUseCase {
         if (!meal.getMember().getId().equals(memberId)) {
             throw new ForbiddenException(MealErrorCode.MEAL_FORBIDDEN);
         }
+
         return meal;
     }
 
@@ -211,6 +221,7 @@ public class MealRecordService implements MealRecordUseCase {
                 .nutritionSummary(result.nutritionSummaryOrDefault())
                 .rawResultJson(result.rawResultJsonOrDefault())
                 .build();
+
         mealAiAnalysisRepository.save(aiAnalysis);
 
         // MealNutrition 저장
@@ -223,6 +234,7 @@ public class MealRecordService implements MealRecordUseCase {
                 result.fatOrDefault(),
                 result.sodiumOrDefault()
         );
+
         mealNutritionRepository.save(nutrition);
 
         // MealRecord 업데이트
@@ -230,5 +242,61 @@ public class MealRecordService implements MealRecordUseCase {
         meal.assignMealNutrition(nutrition);
 
         return MealResponse.from(meal);
+    }
+
+    @Override
+    public TodayNutritionSummaryResponse getTodayNutritionSummary(Long memberId) {
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
+
+        List<MealRecord> records = mealRecordRepository.getSpecifiedDateMealRecords(
+                memberId,
+                today
+        );
+
+        int totalKcal = 0;
+        long totalCarbohydrateG = 0L;
+        long totalProteinG = 0L;
+        long totalFatG = 0L;
+        long totalSugarG = 0L;
+        long totalSodiumMg = 0L;
+
+        for (MealRecord record : records) {
+            if (record.getMealNutrition() == null) {
+                continue;
+            }
+
+            totalKcal += record.getMealNutrition().getKcal() == null
+                    ? 0
+                    : record.getMealNutrition().getKcal();
+
+            totalCarbohydrateG += record.getMealNutrition().getCarbohydrateG() == null
+                    ? 0L
+                    : record.getMealNutrition().getCarbohydrateG().longValue();
+
+            totalProteinG += record.getMealNutrition().getProteinG() == null
+                    ? 0L
+                    : record.getMealNutrition().getProteinG().longValue();
+
+            totalFatG += record.getMealNutrition().getFatG() == null
+                    ? 0L
+                    : record.getMealNutrition().getFatG().longValue();
+
+            totalSugarG += record.getMealNutrition().getSugarG() == null
+                    ? 0L
+                    : record.getMealNutrition().getSugarG().longValue();
+
+            totalSodiumMg += record.getMealNutrition().getSodiumMg() == null
+                    ? 0L
+                    : record.getMealNutrition().getSodiumMg().longValue();
+        }
+
+        return new TodayNutritionSummaryResponse(
+                totalKcal,
+                totalCarbohydrateG,
+                totalProteinG,
+                totalFatG,
+                totalSugarG,
+                totalSodiumMg
+        );
     }
 }

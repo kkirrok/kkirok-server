@@ -14,14 +14,14 @@ public interface MealRecordRepository extends JpaRepository<MealRecord, Long> {
 
     // 특정 날짜 식단 조회
     @Query("""
-        SELECT DISTINCT mr
-        FROM MealRecord mr
-        LEFT JOIN FETCH mr.mealAiAnalyses
-        LEFT JOIN FETCH mr.mealNutrition
-        WHERE mr.member.id = :memberId
-          AND mr.mealDate = :mealDate
-        ORDER BY mr.recordedAt DESC
-    """)
+    SELECT DISTINCT mr
+    FROM MealRecord mr
+    LEFT JOIN FETCH mr.mealAiAnalyses
+    LEFT JOIN FETCH mr.mealNutrition
+    WHERE mr.member.id = :memberId
+      AND mr.mealDate = :mealDate
+    ORDER BY mr.recordedAt DESC
+""")
     List<MealRecord> getSpecifiedDateMealRecords(
             @Param("memberId") Long memberId,
             @Param("mealDate") LocalDate mealDate
