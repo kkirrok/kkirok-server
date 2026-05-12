@@ -2,7 +2,7 @@ package com.kkirok.server.domain.notification.api;
 
 import com.kkirok.server.domain.notification.application.dto.request.DeviceRegisterRequest;
 import com.kkirok.server.domain.notification.application.dto.request.DeviceUnregisterRequest;
-import com.kkirok.server.domain.notification.application.dto.response.NotificationPageResponse;
+import com.kkirok.server.domain.notification.application.dto.response.NotificationListResponse;
 import com.kkirok.server.domain.notification.application.dto.response.UnreadCountResponse;
 import com.kkirok.server.domain.notification.exception.NotificationErrorCode;
 import com.kkirok.server.domain.notification.exception.NotificationSuccessCode;
@@ -52,11 +52,15 @@ public interface NotificationApi {
 
     @Operation(
             summary = "알림함 조회 [USER]",
-            description = "현재 로그인한 회원의 인앱 알림함을 최신순으로 조회합니다. 각 항목은 제목, 본문, 추가 데이터, 읽음 여부, 발송/실패 시각을 포함합니다. page는 0 이상, size는 1 이상 50 이하로 요청할 수 있습니다."
+            description = "현재 로그인한 회원의 인앱 알림함을 최신순으로 조회합니다. "
+                    + "응답의 각 항목은 알림 타입, 제목, 본문, 타입별 추가 데이터(data), 읽음 여부, 생성/발송/실패 시각을 포함합니다. "
+                    + "data는 화면 이동, 아이콘 매핑, 관련 리소스 식별에 쓰이는 타입별 payload이며, 예를 들어 GROUP_JOIN은 groupId/joinedMemberId, "
+                    + "MISSION_START는 groupId/missionId, KKINIPOP_REACTION은 postId/groupId/reactorMemberId/emojiCode/isCustom/customEmojiImageKey를 담습니다. "
+                    + "page는 0 이상, size는 1 이상 50 이하로 요청할 수 있습니다."
     )
     @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED")
     @ApiSuccessCodeExample(codeType = NotificationSuccessCode.class, code = "NOTIFICATION_LIST_GET_SUCCESS")
-    ResponseEntity<SuccessResponse<NotificationPageResponse>> getNotifications(
+    ResponseEntity<SuccessResponse<NotificationListResponse>> getNotifications(
             @CurrentMember Long memberId,
             @Parameter(description = "페이지 번호 (0 이상)", example = "0")
             int page,
