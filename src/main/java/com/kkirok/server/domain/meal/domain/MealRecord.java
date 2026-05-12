@@ -119,8 +119,8 @@ public class MealRecord extends BaseTimeEntity {
                 .member(member)
                 .recordedAt(recordedAt)
                 .mealDate(recordedAt.toLocalDate())
-                .mealTimeSlot(MealTimeSlot.BREAKFAST) // AI 분석 후 업데이트 가능
-                .name("")                             // AI 분석 후 업데이트
+                .mealTimeSlot(MealTimeSlot.BREAKFAST) // TODO: AI 분석 후 업데이트 가능
+                .name("")                             // TODO: AI 분석 후 업데이트
                 .category(MealCategory.MEAL)
                 .aiAnalyzed(true)
                 .scanType(scanType)

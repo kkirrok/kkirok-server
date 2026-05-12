@@ -122,8 +122,8 @@ cors:
 
 app:
   server:
-    #url: ${DEV_SERVER_URL}
-    url: http://localhost:8080
+    url: ${DEV_SERVER_URL}
+    #url: http://localhost:8080
 
 springdoc:
   api-docs:
