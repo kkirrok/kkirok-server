@@ -7,8 +7,10 @@ import com.kkirok.server.domain.meal.application.dto.response.MealResponse;
 import com.kkirok.server.domain.meal.application.dto.response.RecommendationResponse;
 import com.kkirok.server.domain.meal.application.dto.response.TodayNutritionSummaryResponse;
 import com.kkirok.server.domain.meal.application.dto.response.TodayStatusResponse;
+import com.kkirok.server.domain.report.application.dto.response.WeeklyReportResponse;
 import com.kkirok.server.domain.meal.application.service.FoodNutritionSearchService;
 import com.kkirok.server.domain.meal.application.service.RecommendationService;
+import com.kkirok.server.domain.report.service.WeeklyReportService;
 import com.kkirok.server.domain.meal.application.usecase.MealRecordUseCase;
 import com.kkirok.server.domain.meal.exception.MealSuccessCode;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
@@ -17,11 +19,12 @@ import com.kkirok.server.global.common.dto.SuccessResponse;
 import com.kkirok.server.global.external.publicdata.dto.FoodNutritionSearchResult;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
