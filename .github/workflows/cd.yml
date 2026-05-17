@@ -100,25 +100,59 @@ jobs:
           DEV_INSTANCE_ID: ${{ secrets.DEV_EC2_INSTANCE_ID }}
           IMAGE_TAG: ${{ needs.build-and-push-dev.outputs.image_tag }}
         run: |
+          DEPLOY_SCRIPT=$(cat <<'SCRIPT'
+          set -e
+
+          command -v aws >/dev/null 2>&1 || sudo snap install aws-cli --classic
+
+          aws ecr get-login-password --region "__AWS_REGION__" | docker login --username AWS --password-stdin "__ECR_REGISTRY__"
+
+          IMAGE="__ECR_REGISTRY__/__ECR_REPOSITORY__:__IMAGE_TAG__"
+          SERVICE_NAME="__SPRING_SERVICE_NAME__"
+          COMPOSE_FILE="__COMPOSE_FILE_PATH__"
+          REPOSITORY="__ECR_REGISTRY__/__ECR_REPOSITORY__"
+
+          CURRENT_IMAGE_ID=$(docker compose -f "$COMPOSE_FILE" ps -q "$SERVICE_NAME" | xargs -r docker inspect -f '{{.Image}}' 2>/dev/null || true)
+
+          docker images "$REPOSITORY" --format '{{.Repository}}:{{.Tag}}' | while read IMAGE_NAME; do
+            IMAGE_ID=$(docker image inspect -f '{{.Id}}' "$IMAGE_NAME" 2>/dev/null || true)
+            if [ -n "$IMAGE_ID" ] && [ "$IMAGE_ID" != "$CURRENT_IMAGE_ID" ]; then
+              docker rmi "$IMAGE_NAME" || true
+            fi
+          done
+
+          docker image prune -f
+
+          docker compose -f "$COMPOSE_FILE" pull "$SERVICE_NAME"
+          docker compose -f "$COMPOSE_FILE" up -d --no-deps "$SERVICE_NAME"
+
+          NEW_IMAGE_ID=$(docker inspect -f '{{.Image}}' "$SERVICE_NAME" 2>/dev/null || true)
+
+          docker images "$REPOSITORY" --format '{{.Repository}}:{{.Tag}}' | while read IMAGE_NAME; do
+            IMAGE_ID=$(docker image inspect -f '{{.Id}}' "$IMAGE_NAME" 2>/dev/null || true)
+            if [ -n "$IMAGE_ID" ] && [ "$IMAGE_ID" != "$NEW_IMAGE_ID" ]; then
+              docker rmi "$IMAGE_NAME" || true
+            fi
+          done
+
+          docker image prune -f
+          SCRIPT
+          )
+
+          DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__AWS_REGION__/$AWS_REGION}"
+          DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__ECR_REGISTRY__/$ECR_REGISTRY}"
+          DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__ECR_REPOSITORY__/$ECR_REPOSITORY_SPRINGBOOT_DEV}"
+          DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__IMAGE_TAG__/$IMAGE_TAG}"
+          DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__SPRING_SERVICE_NAME__/$SPRING_SERVICE_NAME}"
+          DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__COMPOSE_FILE_PATH__/$COMPOSE_FILE_PATH}"
+
+          PARAMETERS=$(jq -n --arg command "$DEPLOY_SCRIPT" '{commands: [$command]}')
+
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$DEV_INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
             --comment "Deploy dev spring container" \
-            --parameters "commands=[
-              \"set -e\",
-              \"command -v aws >/dev/null 2>&1 || sudo snap install aws-cli --classic\",
-              \"aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY\",
-              \"export IMAGE_TAG=$IMAGE_TAG\",
-              \"export SPRING_SERVICE_NAME=$SPRING_SERVICE_NAME\",
-              \"export ECR_REPOSITORY=$ECR_REPOSITORY_SPRINGBOOT_DEV\",
-              \"docker compose -f $COMPOSE_FILE_PATH stop $SPRING_SERVICE_NAME || true\",
-              \"docker compose -f $COMPOSE_FILE_PATH rm -f $SPRING_SERVICE_NAME || true\",
-              \"docker compose -f $COMPOSE_FILE_PATH pull $SPRING_SERVICE_NAME\",
-              \"docker compose -f $COMPOSE_FILE_PATH up -d $SPRING_SERVICE_NAME\",
-              \"CURRENT_IMAGE_ID=$(docker inspect -f '{{.Image}}' $SPRING_SERVICE_NAME 2>/dev/null || true)\",
-              \"docker images $ECR_REGISTRY/$ECR_REPOSITORY --format '{{.Repository}}:{{.Tag}} {{.ID}}' | while read IMAGE IMAGE_ID; do if [ \\\"$IMAGE_ID\\\" != \\\"$CURRENT_IMAGE_ID\\\" ]; then docker rmi -f \\\"$IMAGE\\\" || true; fi; done\",
-              \"docker image prune -f\"
-            ]" \
+            --parameters "$PARAMETERS" \
             --query "Command.CommandId" \
             --output text)
 
@@ -130,6 +164,7 @@ jobs:
               --instance-id "$DEV_INSTANCE_ID" \
               --query "Status" \
               --output text)
+
             if [ "$STATUS" = "Pending" ] || [ "$STATUS" = "InProgress" ] || [ "$STATUS" = "Delayed" ]; then
               sleep 3
             else
@@ -233,25 +268,59 @@ jobs:
           PROD_INSTANCE_ID: ${{ secrets.PROD_PRIVATE_EC2_INSTANCE_ID }}
           IMAGE_TAG: ${{ needs.build-and-push-prod.outputs.image_tag }}
         run: |
+          DEPLOY_SCRIPT=$(cat <<'SCRIPT'
+          set -e
+
+          command -v aws >/dev/null 2>&1 || sudo snap install aws-cli --classic
+
+          aws ecr get-login-password --region "__AWS_REGION__" | docker login --username AWS --password-stdin "__ECR_REGISTRY__"
+
+          IMAGE="__ECR_REGISTRY__/__ECR_REPOSITORY__:__IMAGE_TAG__"
+          SERVICE_NAME="__SPRING_SERVICE_NAME__"
+          COMPOSE_FILE="__COMPOSE_FILE_PATH__"
+          REPOSITORY="__ECR_REGISTRY__/__ECR_REPOSITORY__"
+
+          CURRENT_IMAGE_ID=$(docker compose -f "$COMPOSE_FILE" ps -q "$SERVICE_NAME" | xargs -r docker inspect -f '{{.Image}}' 2>/dev/null || true)
+
+          docker images "$REPOSITORY" --format '{{.Repository}}:{{.Tag}}' | while read IMAGE_NAME; do
+            IMAGE_ID=$(docker image inspect -f '{{.Id}}' "$IMAGE_NAME" 2>/dev/null || true)
+            if [ -n "$IMAGE_ID" ] && [ "$IMAGE_ID" != "$CURRENT_IMAGE_ID" ]; then
+              docker rmi "$IMAGE_NAME" || true
+            fi
+          done
+
+          docker image prune -f
+
+          docker compose -f "$COMPOSE_FILE" pull "$SERVICE_NAME"
+          docker compose -f "$COMPOSE_FILE" up -d --no-deps "$SERVICE_NAME"
+
+          NEW_IMAGE_ID=$(docker inspect -f '{{.Image}}' "$SERVICE_NAME" 2>/dev/null || true)
+
+          docker images "$REPOSITORY" --format '{{.Repository}}:{{.Tag}}' | while read IMAGE_NAME; do
+            IMAGE_ID=$(docker image inspect -f '{{.Id}}' "$IMAGE_NAME" 2>/dev/null || true)
+            if [ -n "$IMAGE_ID" ] && [ "$IMAGE_ID" != "$NEW_IMAGE_ID" ]; then
+              docker rmi "$IMAGE_NAME" || true
+            fi
+          done
+
+          docker image prune -f
+          SCRIPT
+          )
+
+          DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__AWS_REGION__/$AWS_REGION}"
+          DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__ECR_REGISTRY__/$ECR_REGISTRY}"
+          DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__ECR_REPOSITORY__/$ECR_REPOSITORY_SPRINGBOOT_PROD}"
+          DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__IMAGE_TAG__/$IMAGE_TAG}"
+          DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__SPRING_SERVICE_NAME__/$SPRING_SERVICE_NAME}"
+          DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__COMPOSE_FILE_PATH__/$COMPOSE_FILE_PATH}"
+
+          PARAMETERS=$(jq -n --arg command "$DEPLOY_SCRIPT" '{commands: [$command]}')
+
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$PROD_INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
             --comment "Deploy prod spring container" \
-            --parameters "commands=[
-              \"set -e\",
-              \"command -v aws >/dev/null 2>&1 || sudo snap install aws-cli --classic\",
-              \"aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY\",
-              \"export IMAGE_TAG=$IMAGE_TAG\",
-              \"export SPRING_SERVICE_NAME=$SPRING_SERVICE_NAME\",
-              \"export ECR_REPOSITORY=$ECR_REPOSITORY_SPRINGBOOT_PROD\",
-              \"docker compose -f $COMPOSE_FILE_PATH stop $SPRING_SERVICE_NAME || true\",
-              \"docker compose -f $COMPOSE_FILE_PATH rm -f $SPRING_SERVICE_NAME || true\",
-              \"docker compose -f $COMPOSE_FILE_PATH pull $SPRING_SERVICE_NAME\",
-              \"docker compose -f $COMPOSE_FILE_PATH up -d $SPRING_SERVICE_NAME\",
-              \"CURRENT_IMAGE_ID=$(docker inspect -f '{{.Image}}' $SPRING_SERVICE_NAME 2>/dev/null || true)\",
-              \"docker images $ECR_REGISTRY/$ECR_REPOSITORY --format '{{.Repository}}:{{.Tag}} {{.ID}}' | while read IMAGE IMAGE_ID; do if [ \\\"$IMAGE_ID\\\" != \\\"$CURRENT_IMAGE_ID\\\" ]; then docker rmi -f \\\"$IMAGE\\\" || true; fi; done\",
-              \"docker image prune -f\"
-            ]" \
+            --parameters "$PARAMETERS" \
             --query "Command.CommandId" \
             --output text)
 
@@ -263,6 +332,7 @@ jobs:
               --instance-id "$PROD_INSTANCE_ID" \
               --query "Status" \
               --output text)
+
             if [ "$STATUS" = "Pending" ] || [ "$STATUS" = "InProgress" ] || [ "$STATUS" = "Delayed" ]; then
               sleep 3
             else
