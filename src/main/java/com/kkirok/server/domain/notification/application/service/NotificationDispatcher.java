@@ -39,29 +39,24 @@ public class NotificationDispatcher {
 
         // TODO: 유저의 알림 허용 정책 적용
         Map<Long, Long> notificationMemberIds = new LinkedHashMap<>();
+        Map<Long, Notification> notificationsById = new LinkedHashMap<>();
         Map<String, String> safeData = data == null ? Map.of() : new LinkedHashMap<>(data);
         String dataJson = serialize(safeData);
 
         for (Member target : targets) {
             Notification notification = notificationRepository.save(
-                    Notification.create(target, type, title, body, dataJson) // 나중에 batch insert 등으로 저장 쿼리 개선해야 할듯
+                    Notification.create(target, type, title, body, null, dataJson) // 나중에 batch insert 등으로 저장 쿼리 개선해야 할듯
             );
             notificationMemberIds.put(notification.getId(), target.getId());
+            notificationsById.put(notification.getId(), notification);
         }
 
-        // 만약 현재 트랜잭션이 살아있고 스프링이 커밋 시점을 추적할 수 있을 경우 커밋 후 발송, 그리고 return
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    notificationDeliveryService.deliver(notificationMemberIds, title, body, safeData);
-                }
-            });
-            return;
-        }
-
-        // 현재 동기화 가능한 트랜잭션이 없다면 바로 발송
-        notificationDeliveryService.deliver(notificationMemberIds, title, body, safeData);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                notificationDeliveryService.deliver(notificationMemberIds, List.copyOf(notificationsById.values()));
+            }
+        });
     }
 
     private String serialize(Map<String, String> data) {

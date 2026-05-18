@@ -2,7 +2,7 @@ package com.kkirok.server.domain.notification.api;
 
 import com.kkirok.server.domain.notification.application.dto.request.DeviceRegisterRequest;
 import com.kkirok.server.domain.notification.application.dto.request.DeviceUnregisterRequest;
-import com.kkirok.server.domain.notification.application.dto.response.NotificationPageResponse;
+import com.kkirok.server.domain.notification.application.dto.response.NotificationListResponse;
 import com.kkirok.server.domain.notification.application.dto.response.UnreadCountResponse;
 import com.kkirok.server.domain.notification.application.service.NotificationService;
 import com.kkirok.server.domain.notification.exception.NotificationSuccessCode;
@@ -52,7 +52,7 @@ public class NotificationController implements NotificationApi {
 
     @Override
     @GetMapping
-    public ResponseEntity<SuccessResponse<NotificationPageResponse>> getNotifications(
+    public ResponseEntity<SuccessResponse<NotificationListResponse>> getNotifications(
             @CurrentMember Long memberId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size

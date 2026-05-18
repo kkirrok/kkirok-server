@@ -36,7 +36,7 @@ public class Notification extends BaseTimeEntity {
     private Member member;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 30)
     private NotificationType type;
 
     @Column(nullable = false, length = 80)
@@ -60,16 +60,24 @@ public class Notification extends BaseTimeEntity {
     @Column(name = "failure_reason", length = 255)
     private String failureReason;
 
-    private Notification(Member member, NotificationType type, String title, String body, String dataJson) {
+    @Column(name = "image", length = 255)
+    private String image;
+
+    private Notification(Member member, NotificationType type, String title, String body, String imageKey, String dataJson) {
         this.member = member;
         this.type = type;
         this.title = title;
         this.body = body;
         this.dataJson = dataJson;
+        this.image = imageKey;
     }
 
-    public static Notification create(Member member, NotificationType type, String title, String body, String dataJson) {
-        return new Notification(member, type, title, body, dataJson);
+    public static Notification create(Member member, NotificationType type, String title, String body, String imageKey, String dataJson) {
+        return new Notification(member, type, title, body, imageKey, dataJson);
+    }
+
+    public boolean getIsRead() {
+        return this.getReadAt() != null;
     }
 
     public void markRead(LocalDateTime now) {

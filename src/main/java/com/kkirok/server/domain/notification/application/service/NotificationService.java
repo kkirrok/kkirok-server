@@ -7,7 +7,7 @@ import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
 import com.kkirok.server.domain.member.domain.Member;
 import com.kkirok.server.domain.notification.application.dto.request.DeviceRegisterRequest;
 import com.kkirok.server.domain.notification.application.dto.request.DeviceUnregisterRequest;
-import com.kkirok.server.domain.notification.application.dto.response.NotificationPageResponse;
+import com.kkirok.server.domain.notification.application.dto.response.NotificationListResponse;
 import com.kkirok.server.domain.notification.application.dto.response.NotificationResponse;
 import com.kkirok.server.domain.notification.application.dto.response.UnreadCountResponse;
 import com.kkirok.server.domain.notification.dao.DeviceRepository;
@@ -61,7 +61,7 @@ public class NotificationService {
         deviceRepository.delete(device);
     }
 
-    public NotificationPageResponse getNotifications(Long memberId, int page, int size) {
+    public NotificationListResponse getNotifications(Long memberId, int page, int size) {
         PagingRequest pagingRequest = PagingRequest.of(page, size);
 
         Page<Notification> notifications = notificationRepository.findAllByMember_IdOrderByCreatedAtDesc(
@@ -75,7 +75,7 @@ public class NotificationService {
                 .map(this::toResponse)
                 .toList();
 
-        return NotificationPageResponse.from(notifications, content);
+        return NotificationListResponse.from(notifications, content);
     }
 
     public UnreadCountResponse getUnreadCount(Long memberId) {
@@ -94,8 +94,6 @@ public class NotificationService {
     public void readAll(Long memberId) {
         notificationRepository.markAllRead(memberId, dateTimeProvider.now());
     }
-
-
 
     private NotificationResponse toResponse(Notification notification) {
         return NotificationResponse.from(notification, parseData(notification.getDataJson()));

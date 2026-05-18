@@ -5,6 +5,7 @@ import java.util.Map;
 public record PushPayload(
         String title,
         String body,
+        String imageUrl,
         Map<String, String> data
 ) {
 }

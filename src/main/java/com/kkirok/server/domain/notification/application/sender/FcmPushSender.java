@@ -40,6 +40,7 @@ public class FcmPushSender implements PushSender {
                             com.google.firebase.messaging.Notification.builder()
                                     .setTitle(payload.title())
                                     .setBody(payload.body())
+                                    .setImage(payload.imageUrl())
                                     .build()
                     )
                     .putAllData(payload.data())

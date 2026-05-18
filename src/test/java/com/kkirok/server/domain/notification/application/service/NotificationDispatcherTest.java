@@ -6,6 +6,7 @@ import com.kkirok.server.domain.notification.dao.NotificationRepository;
 import com.kkirok.server.domain.notification.domain.Notification;
 import com.kkirok.server.domain.notification.domain.NotificationType;
 import com.kkirok.server.support.fixture.MemberFixture;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -81,6 +82,11 @@ class NotificationDispatcherTest {
         ArgumentCaptor<Notification> notificationCaptor = ArgumentCaptor.forClass(Notification.class);
         then(notificationRepository).should(times(2)).save(notificationCaptor.capture());
         assertThat(notificationCaptor.getAllValues()).hasSize(2);
+        assertThat(notificationCaptor.getAllValues()).allSatisfy(notification -> {
+            assertThat(notification.getTitle()).isEqualTo("제목");
+            assertThat(notification.getBody()).isEqualTo("본문");
+            assertThat(notification.getType()).isEqualTo(NotificationType.GROUP_JOIN);
+        });
 
         List<TransactionSynchronization> synchronizations = TransactionSynchronizationManager.getSynchronizations();
         assertThat(synchronizations).hasSize(1);
@@ -88,13 +94,11 @@ class NotificationDispatcherTest {
         synchronizations.get(0).afterCommit();
 
         ArgumentCaptor<Map<Long, Long>> targetCaptor = ArgumentCaptor.forClass(Map.class);
-        then(notificationDeliveryService).should().deliver(
-                targetCaptor.capture(),
-                eq("제목"),
-                eq("본문"),
-                eq(Map.of("type", "GROUP_JOIN", "groupId", "1"))
-        );
+        ArgumentCaptor<Collection<Notification>> notificationCaptorForDelivery =
+                ArgumentCaptor.forClass(Collection.class);
+        then(notificationDeliveryService).should().deliver(targetCaptor.capture(), notificationCaptorForDelivery.capture());
         assertThat(targetCaptor.getValue()).containsEntry(10L, 1L).containsEntry(11L, 2L);
+        assertThat(notificationCaptorForDelivery.getValue()).hasSize(2);
     }
 
     private Member createMember(Long memberId, String nickname) {
