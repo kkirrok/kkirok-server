@@ -2,8 +2,10 @@ package com.kkirok.server.domain.meal.api;
 
 import com.kkirok.server.domain.meal.application.dto.response.CalendarMonthResponse;
 import com.kkirok.server.domain.meal.application.dto.response.DailyMealResponse;
+import com.kkirok.server.domain.meal.exception.CalendarErrorCode;
 import com.kkirok.server.domain.meal.exception.CalendarSuccessCode;
 import com.kkirok.server.global.common.dto.SuccessResponse;
+import com.kkirok.server.global.swagger.annotation.ApiErrorCodeExample;
 import com.kkirok.server.global.swagger.annotation.ApiErrorCodeExamples;
 import com.kkirok.server.global.swagger.annotation.ApiSuccessCodeExample;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,7 +28,11 @@ public interface CalendarApi {
                     - 식단이 기록된 날 → ENERGETIC / 기록 없는 날 → NORMAL
                     """
     )
-    @ApiErrorCodeExamples({})
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(codeType = CalendarErrorCode.class, code = "INVALID_YEAR"),
+            @ApiErrorCodeExample(codeType = CalendarErrorCode.class, code = "INVALID_MONTH"),
+            @ApiErrorCodeExample(codeType = CalendarErrorCode.class, code = "INVALID_START_DAY_OF_WEEK")
+    })
     @ApiSuccessCodeExample(codeType = CalendarSuccessCode.class, code = "CALENDAR_SUCCESS_CODE")
     ResponseEntity<SuccessResponse<CalendarMonthResponse>> calendarInfo(
             @Parameter(hidden = true)
@@ -49,7 +55,9 @@ public interface CalendarApi {
                     - 식단이 없는 날짜도 빈 리스트로 정상 응답
                     """
     )
-    @ApiErrorCodeExamples({})
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(codeType = CalendarErrorCode.class, code = "INVALID_DATE")
+    })
     @ApiSuccessCodeExample(codeType = CalendarSuccessCode.class, code = "CALENDAR_DAILY_SUCCESS_CODE")
     ResponseEntity<SuccessResponse<DailyMealResponse>> dailyMealInfo(
             @Parameter(hidden = true)
