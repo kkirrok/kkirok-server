@@ -34,6 +34,7 @@ package com.kkirok.server.domain.meal.application.usecase;
 import com.kkirok.server.domain.meal.application.dto.request.MealCreateRequest;
 import com.kkirok.server.domain.meal.application.dto.request.MealUpdateRequest;
 import com.kkirok.server.domain.meal.application.dto.response.MealResponse;
+import com.kkirok.server.domain.meal.application.dto.response.TodayNutritionSummaryResponse;
 import com.kkirok.server.domain.meal.domain.MealRecord;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -45,7 +46,7 @@ public interface MealRecordUseCase {
 
     MealResponse create(Long memberId, MealCreateRequest request);
 
-    MealResponse createMealByCamera(Long memberId, String imageUrl);
+    MealResponse createMealByCamera(Long memberId, MultipartFile file);
 
     MealResponse createMealByAlbum(Long memberId, MultipartFile file);
 
@@ -54,4 +55,6 @@ public interface MealRecordUseCase {
     void deleteMeal(Long memberId, Long mealId);
 
     MealRecord findMealWithOwnerCheck(Long memberId, Long mealId);
+
+    TodayNutritionSummaryResponse getTodayNutritionSummary(Long memberId);
 }

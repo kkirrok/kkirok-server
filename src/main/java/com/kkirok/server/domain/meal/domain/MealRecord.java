@@ -7,6 +7,7 @@ import com.kkirok.server.domain.member.domain.Member;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
@@ -19,6 +20,8 @@ import lombok.NoArgsConstructor;
 @Table(name = "meal_record")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MealRecord extends BaseTimeEntity {
+
+    private static final ZoneId KOREA_ZONE = ZoneId.of("Asia/Seoul");
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -65,9 +68,18 @@ public class MealRecord extends BaseTimeEntity {
     private MealNutrition mealNutrition;
 
     @Builder
-    private MealRecord(Member member, LocalDateTime recordedAt, LocalDate mealDate,
-                       MealTimeSlot mealTimeSlot, String name, MealCategory category,
-                       boolean aiAnalyzed, ScanType scanType, Integer healthScore, String memo) {
+    private MealRecord(
+            Member member,
+            LocalDateTime recordedAt,
+            LocalDate mealDate,
+            MealTimeSlot mealTimeSlot,
+            String name,
+            MealCategory category,
+            boolean aiAnalyzed,
+            ScanType scanType,
+            Integer healthScore,
+            String memo
+    ) {
         this.member = member;
         this.recordedAt = recordedAt;
         this.mealDate = mealDate;
@@ -82,11 +94,14 @@ public class MealRecord extends BaseTimeEntity {
 
     /** 직접 입력으로 식단 기록 생성 */
     public static MealRecord createManual(Member member, MealCreateRequest request) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime recordedAt = request.recordedAt() != null
+                ? request.recordedAt()
+                : LocalDateTime.now(KOREA_ZONE);
+
         return MealRecord.builder()
                 .member(member)
-                .recordedAt(now)
-                .mealDate(now.toLocalDate())
+                .recordedAt(recordedAt)
+                .mealDate(recordedAt.toLocalDate())
                 .mealTimeSlot(request.mealTimeSlot())
                 .name(request.foodName())
                 .category(request.category())
@@ -98,14 +113,14 @@ public class MealRecord extends BaseTimeEntity {
 
     /** 카메라/앨범 AI 분석으로 식단 기록 생성 */
     public static MealRecord createByAi(Member member, ScanType scanType) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime recordedAt = LocalDateTime.now(KOREA_ZONE);
+
         return MealRecord.builder()
                 .member(member)
-                .recordedAt(now)
-                .mealDate(now.toLocalDate())
-                .mealTimeSlot(MealTimeSlot.BREAKFAST) // AI 분석 후 업데이트 가능
-
-                .name("")                             // AI 분석 후 업데이트
+                .recordedAt(recordedAt)
+                .mealDate(recordedAt.toLocalDate())
+                .mealTimeSlot(MealTimeSlot.BREAKFAST) // TODO: AI 분석 후 업데이트 가능
+                .name("")                             // TODO: AI 분석 후 업데이트
                 .category(MealCategory.MEAL)
                 .aiAnalyzed(true)
                 .scanType(scanType)

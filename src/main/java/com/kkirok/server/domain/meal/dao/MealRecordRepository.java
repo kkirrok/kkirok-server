@@ -1,7 +1,6 @@
 package com.kkirok.server.domain.meal.dao;
 
 import com.kkirok.server.domain.meal.domain.MealRecord;
-import com.kkirok.server.domain.member.domain.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,21 +11,20 @@ import java.util.List;
 import java.util.Optional;
 
 public interface MealRecordRepository extends JpaRepository<MealRecord, Long> {
-    // 오늘 식단 조회
+
+    // 특정 날짜 식단 조회
     @Query("""
-        SELECT DISTINCT mr
-        FROM MealRecord mr
-        LEFT JOIN FETCH mr.mealAiAnalyses
-        LEFT JOIN FETCH mr.mealNutrition
-        WHERE mr.member.id = :memberId
-          AND mr.createdAt >= :startOfDay
-          AND mr.createdAt < :endOfDay
-        ORDER BY mr.createdAt DESC
+    SELECT DISTINCT mr
+    FROM MealRecord mr
+    LEFT JOIN FETCH mr.mealAiAnalyses
+    LEFT JOIN FETCH mr.mealNutrition
+    WHERE mr.member.id = :memberId
+      AND mr.mealDate = :mealDate
+    ORDER BY mr.recordedAt ASC
 """)
     List<MealRecord> getSpecifiedDateMealRecords(
             @Param("memberId") Long memberId,
-            @Param("startOfDay") LocalDateTime startOfDay,
-            @Param("endOfDay") LocalDateTime endOfDay
+            @Param("mealDate") LocalDate mealDate
     );
 
     // 식단 단건 조회
@@ -37,6 +35,20 @@ public interface MealRecordRepository extends JpaRepository<MealRecord, Long> {
         WHERE mr.id = :mealId
     """)
     Optional<MealRecord> findByIdWithAnalyses(@Param("mealId") Long mealId);
+
+    // 특정 월에 식단이 기록된 날짜 목록 조회 (캘린더 dot 표시용)
+    @Query("""
+        SELECT DISTINCT mr.mealDate
+        FROM MealRecord mr
+        WHERE mr.member.id = :memberId
+          AND mr.mealDate BETWEEN :startDate AND :endDate
+        ORDER BY mr.mealDate ASC
+    """)
+    List<LocalDate> findDatesWithMeals(
+            @Param("memberId") Long memberId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
 
     @Query("""
         select new com.kkirok.server.domain.meal.dao.MealReminderRow(m.id, mr.id)

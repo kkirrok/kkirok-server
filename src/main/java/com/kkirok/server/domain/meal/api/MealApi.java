@@ -1,10 +1,13 @@
 package com.kkirok.server.domain.meal.api;
 
 import com.kkirok.server.domain.meal.application.dto.request.MealCreateRequest;
+import com.kkirok.server.domain.meal.application.dto.request.MealImageUploadRequest;
 import com.kkirok.server.domain.meal.application.dto.request.MealUpdateRequest;
 import com.kkirok.server.domain.meal.application.dto.response.MealResponse;
 import com.kkirok.server.domain.meal.application.dto.response.RecommendationResponse;
+import com.kkirok.server.domain.meal.application.dto.response.TodayNutritionSummaryResponse;
 import com.kkirok.server.domain.meal.application.dto.response.TodayStatusResponse;
+import com.kkirok.server.domain.report.application.dto.response.WeeklyReportResponse;
 import com.kkirok.server.domain.meal.exception.MealErrorCode;
 import com.kkirok.server.domain.meal.exception.MealSuccessCode;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
@@ -15,22 +18,20 @@ import com.kkirok.server.global.swagger.annotation.ApiErrorCodeExamples;
 import com.kkirok.server.global.swagger.annotation.ApiSuccessCodeExample;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.http.MediaType;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Tag(name = "Meal API", description = "식사 기록 관련 API")
 public interface MealApi {
 
     @Operation(
-            summary = "오늘 식사 기록 조회 [USER]를 해봅시다~~",
+            summary = "오늘 식사 기록 조회 [USER]",
             description = """
                 현재 로그인한 사용자의 오늘 식사 기록 목록을 조회합니다.
 
@@ -38,37 +39,41 @@ public interface MealApi {
                 - 응답: 오늘 식사 기록 목록
                 """
     )
-    @ApiErrorCodeExamples({
-    })
+    @ApiErrorCodeExamples({})
     @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "MEAL_GET_SUCCESS")
     ResponseEntity<SuccessResponse<List<MealResponse>>> getMeals(
-            @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
             @CurrentMember Long memberId
     );
-
 
     @Operation(
-            summary = "식사 추천 조회 [USER]",
+            summary = "추천 운동, 식단 조회 [USER]",
             description = """
-                    현재 로그인한 사용자에게 식사 추천 정보를 제공합니다.
+                    현재 로그인한 사용자에게 식단 기반 추천 정보를 제공합니다.
 
                     - 인증된 사용자 기준으로 조회합니다.
-                    - 응답: 추천 식단 정보
+                    - 응답: 추천 운동 및 식단 정보
                     """
     )
-    @ApiErrorCodeExamples({
-    })
+    @ApiErrorCodeExamples({})
     @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "MEAL_RECOMMENDATION_GET_SUCCESS")
     ResponseEntity<SuccessResponse<RecommendationResponse>> getRecommendation(
-            @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
             @CurrentMember Long memberId
     );
 
-    @Operation(summary = "오늘의 캐릭터 상태 조회 [USER]")
-    @ApiErrorCodeExamples({})
-    @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "TODAY_STATUS_GET_SUCCESS")
-    ResponseEntity<SuccessResponse<TodayStatusResponse>> getTodayStatus(
-            @CurrentMember Long memberId
+    @Operation(
+            summary = "오늘의 영양성분 총합 조회 [USER]",
+            description = """
+                오늘 하루 동안 기록된 식단을 기준으로 영양성분 총합을 조회합니다.
+
+                - 인증된 사용자 기준으로 조회합니다.
+                - meal_date가 오늘 날짜인 식단들을 기준으로 계산합니다.
+                - 칼로리, 탄수화물, 단백질, 지방, 당, 나트륨 총합을 반환합니다.
+                """
+    )
+    @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "TODAY_NUTRITION_SUMMARY_GET_SUCCESS")
+    ResponseEntity<SuccessResponse<TodayNutritionSummaryResponse>> getTodayNutritionSummary(
+            @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
+            Long memberId
     );
 
     @Operation(
@@ -93,65 +98,45 @@ public interface MealApi {
     );
 
     @Operation(
-            summary = "카메라 이미지로 식사 기록 [USER]",
+            summary = "카메라 이미지 파일로 식사 기록 [USER]",
             description = """
-                    업로드된 카메라 이미지 URL을 기반으로 식사를 기록합니다.
+                    카메라로 촬영한 이미지 파일을 업로드하여 식사를 기록합니다.
 
                     - 인증된 사용자 기준으로 기록합니다.
-                    - 쿼리 파라미터: `imageUrl`
+                    - multipart/form-data 형식의 이미지 파일을 업로드합니다.
+                    - Swagger에서 직접 파일 선택 후 테스트할 수 있습니다.
                     - 응답: 기록된 식사 정보
                     """
     )
     @ApiErrorCodeExamples({
-            @ApiErrorCodeExample(codeType = MealErrorCode.class, code = "IMAGE_URL_REQUIRED")
+            @ApiErrorCodeExample(codeType = MealErrorCode.class, code = "IMAGE_FILE_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "MEAL_RECORD_SUCCESS")
     ResponseEntity<SuccessResponse<MealResponse>> recordMealByCamera(
             @CurrentMember Long memberId,
 
-            @Parameter(
-                    description = "업로드된 카메라 이미지 URL",
-                    required = true,
-                    example = "https://cdn.example.com/meals/camera-image.jpg"
-            )
-            @RequestParam("imageUrl") String imageUrl
+            @Valid @ModelAttribute MealImageUploadRequest request
     );
 
     @Operation(
             summary = "앨범 이미지 파일로 식사 기록 [USER]",
             description = """
-                앨범에서 선택한 이미지 파일을 업로드하여 식사를 기록합니다.
+                    앨범에서 선택한 이미지 파일을 업로드하여 식사를 기록합니다.
 
-                - 인증된 사용자 기준으로 기록합니다.
-                - multipart/form-data 형식의 이미지 파일을 업로드합니다.
-                - Swagger에서 직접 파일 선택 후 테스트할 수 있습니다.
-                - 응답: 기록된 식사 정보
-                """,
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    required = true,
-                    content = @Content(
-                            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-                            schema = @Schema(
-                                    type = "object",
-                                    requiredProperties = {"file"}
-                            )
-                    )
-            )
+                    - 인증된 사용자 기준으로 기록합니다.
+                    - multipart/form-data 형식의 이미지 파일을 업로드합니다.
+                    - Swagger에서 직접 파일 선택 후 테스트할 수 있습니다.
+                    - 응답: 기록된 식사 정보
+                    """
     )
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(codeType = MealErrorCode.class, code = "IMAGE_FILE_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "MEAL_RECORD_SUCCESS")
     ResponseEntity<SuccessResponse<MealResponse>> recordMealByAlbum(
-            @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
             @CurrentMember Long memberId,
 
-            @Parameter(
-                    description = "업로드할 앨범 이미지 파일",
-                    required = true,
-                    schema = @Schema(type = "string", format = "binary")
-            )
-            @RequestPart("file") MultipartFile file
+            @Valid @ModelAttribute MealImageUploadRequest request
     );
 
     @Operation(
@@ -203,8 +188,10 @@ public interface MealApi {
             @PathVariable("mealId") Long mealId
     );
 
-    @Operation(summary = "음식 검색으로 식단 기록", description = "음식명으로 검색 후 영양정보 자동 입력")
+    @Operation(summary = "음식명 검색", description = "음식명으로 영양정보 검색")
     @GetMapping("/foods/search")
     ResponseEntity<SuccessResponse<List<FoodNutritionSearchResult>>> searchFood(
-            @Parameter(description = "검색할 음식명", example = "삼각김밥") @RequestParam String keyword);
+            @Parameter(description = "검색할 음식명", example = "삼각김밥")
+            @RequestParam String keyword
+    );
 }
