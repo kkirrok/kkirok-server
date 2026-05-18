@@ -23,18 +23,12 @@ public record NotificationResponse(
                 example = "{\"type\":\"KKINIPOP_REACTION\",\"postId\":\"30\",\"groupId\":\"10\",\"reactorMemberId\":\"2\",\"emojiCode\":\"CUSTOM_5\",\"isCustom\":\"true\",\"customEmojiImageKey\":\"uuid_emoji\"}"
         )
         Map<String, String> data,
-        @Schema(description = "읽은 시각", nullable = true, example = "2026-05-05T09:00:00")
-        LocalDateTime readAt,
         @Schema(description = "발송 시각", nullable = true, example = "2026-05-05T08:55:00")
         LocalDateTime sentAt,
-        @Schema(description = "실패 시각", nullable = true, example = "2026-05-05T08:55:05")
-        LocalDateTime failedAt,
-        @Schema(description = "실패 사유", nullable = true, example = "NO_DEVICE")
-        String failureReason,
-        @Schema(description = "생성 시각", example = "2026-05-05T08:54:59")
-        LocalDateTime createdAt,
         @Schema(description = "읽음 여부", example = "false")
-        boolean isRead
+        boolean isRead,
+        @Schema(description = "알림 미리보기 이미지 키", example = "imagekey")
+        String image
 ) {
 
         public static NotificationResponse from(Notification notification, Map<String, String> parseData) {
@@ -44,12 +38,9 @@ public record NotificationResponse(
                         notification.getTitle(),
                         notification.getBody(),
                         parseData,
-                        notification.getReadAt(),
                         notification.getSentAt(),
-                        notification.getFailedAt(),
-                        notification.getFailureReason(),
-                        notification.getCreatedAt(),
-                        notification.getReadAt() != null
+                        notification.getIsRead(),
+                        notification.getImage()
                 );
         }
 
