@@ -107,7 +107,8 @@ jobs:
 
           aws ecr get-login-password --region "__AWS_REGION__" | docker login --username AWS --password-stdin "__ECR_REGISTRY__"
 
-          IMAGE="__ECR_REGISTRY__/__ECR_REPOSITORY__:__IMAGE_TAG__"
+          export APP_IMAGE="__ECR_REGISTRY__/__ECR_REPOSITORY__:__IMAGE_TAG__"
+          export SPRING_SERVICE_NAME="__SPRING_SERVICE_NAME__"
           SERVICE_NAME="__SPRING_SERVICE_NAME__"
           COMPOSE_FILE="__COMPOSE_FILE_PATH__"
           REPOSITORY="__ECR_REGISTRY__/__ECR_REPOSITORY__"
@@ -275,7 +276,8 @@ jobs:
 
           aws ecr get-login-password --region "__AWS_REGION__" | docker login --username AWS --password-stdin "__ECR_REGISTRY__"
 
-          IMAGE="__ECR_REGISTRY__/__ECR_REPOSITORY__:__IMAGE_TAG__"
+          export APP_IMAGE="__ECR_REGISTRY__/__ECR_REPOSITORY__:__IMAGE_TAG__"
+          export SPRING_SERVICE_NAME="__SPRING_SERVICE_NAME__"
           SERVICE_NAME="__SPRING_SERVICE_NAME__"
           COMPOSE_FILE="__COMPOSE_FILE_PATH__"
           REPOSITORY="__ECR_REGISTRY__/__ECR_REPOSITORY__"
