@@ -102,7 +102,7 @@ class OnboardingServiceTest {
         assertThatThrownBy(() -> onboardingService.updateProfile(1L, request, profileImage))
                 .isInstanceOf(BadRequestException.class)
                 .extracting("baseErrorCode")
-                .isEqualTo(MemberErrorCode.ONBOARDING_HABIT_MAX_COUNT);
+                .isEqualTo(MemberErrorCode.INVALID_HABIT_INFO);
     }
 
     @Test
