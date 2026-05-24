@@ -1,11 +1,13 @@
 package com.kkirok.server.global.common.handler;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.kkirok.server.global.common.dto.ErrorResponse;
 import com.kkirok.server.global.common.exception.*;
 import com.kkirok.server.global.external.exception.OpenAiException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestCookieException;
@@ -14,7 +16,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import java.util.Arrays;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
@@ -68,6 +72,31 @@ public class GlobalExceptionHandler {
 		String message = String.format("Missing required cookie: %s", e.getCookieName());
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 			.body(ErrorResponse.of("MISSING_REQUEST_COOKIE", HttpStatus.BAD_REQUEST.value(), message));
+	}
+
+	@ExceptionHandler(HttpMessageNotReadableException.class)
+	public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
+		if (e.getCause() instanceof InvalidFormatException cause && cause.getTargetType().isEnum()) {
+			String enumName = cause.getTargetType().getSimpleName();
+			String invalidValue = String.valueOf(cause.getValue());
+			String validValues = Arrays.stream(cause.getTargetType().getEnumConstants())
+				.map(Object::toString)
+				.collect(Collectors.joining(", "));
+
+			log.warn("Invalid enum value. enum={}, received={}, acceptable=[{}]",
+				enumName, invalidValue, validValues);
+
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+				.body(ErrorResponse.of(
+					"INVALID_ENUM_VALUE",
+					HttpStatus.BAD_REQUEST.value(),
+					String.format("'%s'은(는) %s에 허용되지 않는 값입니다. 허용 값: [%s]", invalidValue, enumName, validValues)
+				));
+		}
+
+		log.warn("HttpMessageNotReadableException: {}", e.getMessage());
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+			.body(ErrorResponse.of("HTTP_MESSAGE_NOT_READABLE", HttpStatus.BAD_REQUEST.value(), "요청 본문을 읽을 수 없습니다."));
 	}
 
 	/**

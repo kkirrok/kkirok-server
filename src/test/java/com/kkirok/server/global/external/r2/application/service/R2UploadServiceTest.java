@@ -28,6 +28,8 @@ import static org.mockito.BDDMockito.then;
 @ExtendWith(MockitoExtension.class)
 class R2UploadServiceTest {
 
+    private static final String UUID_PATTERN = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+
     @Mock
     private S3Client r2Client;
 
@@ -50,7 +52,7 @@ class R2UploadServiceTest {
         String key = r2UploadService.upload(file);
 
         // Then
-        assertThat(key).endsWith("-profile.png");
+        assertThat(key).matches(UUID_PATTERN + "\\.png");
 
         ArgumentCaptor<PutObjectRequest> requestCaptor = ArgumentCaptor.forClass(PutObjectRequest.class);
         then(r2Client).should().putObject(requestCaptor.capture(), any(RequestBody.class));
@@ -63,13 +65,32 @@ class R2UploadServiceTest {
     }
 
     @Test
-    @DisplayName("파일 이름이 없으면 기본 파일 이름으로 업로드 키를 생성한다")
-    void shouldCreateDefaultFileName_whenOriginalFilenameIsMissing() {
+    @DisplayName("한글 파일명은 확장자만 유지해 업로드 키를 생성한다")
+    void shouldCreateKeyWithExtensionOnly_whenFilenameContainsKorean() {
         // Given
         ReflectionTestUtils.setField(r2UploadService, "bucketName", "test-bucket");
         MockMultipartFile file = new MockMultipartFile(
                 "file",
-                "",
+                "현다.webp",
+                "image/webp",
+                "test-image".getBytes()
+        );
+
+        // When
+        String key = r2UploadService.upload(file);
+
+        // Then
+        assertThat(key).matches(UUID_PATTERN + "\\.webp");
+    }
+
+    @Test
+    @DisplayName("확장자가 없으면 UUID만으로 업로드 키를 생성한다")
+    void shouldCreateKeyWithoutExtension_whenOriginalFilenameHasNoExtension() {
+        // Given
+        ReflectionTestUtils.setField(r2UploadService, "bucketName", "test-bucket");
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "profile",
                 "image/png",
                 "test-image".getBytes()
         );
@@ -78,7 +99,26 @@ class R2UploadServiceTest {
         String key = r2UploadService.upload(file);
 
         // Then
-        assertThat(key).endsWith("-file");
+        assertThat(key).matches(UUID_PATTERN);
+    }
+
+    @Test
+    @DisplayName("확장자가 영숫자가 아니면 UUID만으로 업로드 키를 생성한다")
+    void shouldCreateKeyWithoutExtension_whenExtensionContainsNonAscii() {
+        // Given
+        ReflectionTestUtils.setField(r2UploadService, "bucketName", "test-bucket");
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "profile.한글확장자",
+                "image/png",
+                "test-image".getBytes()
+        );
+
+        // When
+        String key = r2UploadService.upload(file);
+
+        // Then
+        assertThat(key).matches(UUID_PATTERN);
     }
 
     @Test

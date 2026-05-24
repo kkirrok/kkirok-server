@@ -1,8 +1,10 @@
 package com.kkirok.server.global.auth.interceptor;
 
+import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
 import com.kkirok.server.domain.member.exception.MemberErrorCode;
 import com.kkirok.server.domain.user.domain.Role;
 import com.kkirok.server.global.auth.annotation.RoleAuth;
+import com.kkirok.server.global.auth.annotation.RoleUserAuth;
 import com.kkirok.server.global.common.exception.ForbiddenException;
 import com.kkirok.server.global.common.exception.UnauthorizedException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,6 +26,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AuthInterceptor implements HandlerInterceptor {
 
+    private final MemberUseCase memberUseCase;
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 
@@ -44,6 +48,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         // 검증
         validateAuthentication(authentication);
         validateRoles(roleAuth.role(), resolveCurrentRole(authentication));
+        validateActiveMember(handlerMethod, authentication);
         return true;
     }
 
@@ -53,6 +58,20 @@ public class AuthInterceptor implements HandlerInterceptor {
             return roleAuth;
         }
         return AnnotatedElementUtils.findMergedAnnotation(handlerMethod.getBeanType(), RoleAuth.class);
+    }
+
+    private void validateActiveMember(HandlerMethod handlerMethod, Authentication authentication) {
+        if (hasRoleUserAuth(handlerMethod)) {
+            Long memberId = Long.valueOf(authentication.getPrincipal().toString());
+            memberUseCase.findMemberByMemberId(memberId); // findMemberByMemberId에서 예외 발생시킴
+        }
+    }
+
+    private boolean hasRoleUserAuth(HandlerMethod handlerMethod) {
+        if (AnnotatedElementUtils.findMergedAnnotation(handlerMethod.getMethod(), RoleUserAuth.class) != null) {
+            return true;
+        }
+        return AnnotatedElementUtils.findMergedAnnotation(handlerMethod.getBeanType(), RoleUserAuth.class) != null;
     }
 
     // 인증정보 검증

@@ -34,9 +34,15 @@ public class OnboardingService {
     @Transactional
     public void updateProfile(Long memberId, ProfileSettingRequest request, MultipartFile profileImage) {
 
-        // 요청 dto내의 습관 5개 넘는지 검증
-        if (request.habits() != null && request.habits().size() > 5) {
-            throw new BadRequestException(MemberErrorCode.ONBOARDING_HABIT_MAX_COUNT);
+        // 요청 dto내 값 검증
+        // 식습관 ( 1개 이상 5개 이하 )
+        if (request.habits() == null || request.habits().size() > 5 || request.habits().isEmpty()) {
+            throw new BadRequestException(MemberErrorCode.INVALID_HABIT_INFO);
+        }
+
+        // 목표 ( 필수값 )
+        if (request.purpose() == null) {
+            throw new BadRequestException(MemberErrorCode.INVALID_PURPOSE_INFO);
         }
 
         // 멤버 조회

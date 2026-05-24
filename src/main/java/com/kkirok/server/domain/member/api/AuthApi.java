@@ -197,7 +197,6 @@ public interface AuthApi {
     })
     @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "SIGN_OUT_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> signOut(
-            @Parameter(description = "현재 로그인한 회원 ID", required = true)
             @CurrentMember final Long memberId
     );
 }

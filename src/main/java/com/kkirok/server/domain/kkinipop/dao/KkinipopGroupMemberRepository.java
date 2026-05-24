@@ -26,6 +26,7 @@ public interface KkinipopGroupMemberRepository extends JpaRepository<KkinipopGro
             join fetch gm.member m
             where gm.group.id = :groupId
               and gm.leftAt is null
+              and m.deletedAt is null
             order by gm.createdAt asc
             """)
     List<KkinipopGroupMember> findActiveGroupMembers(@Param("groupId") Long groupId);
@@ -37,6 +38,7 @@ public interface KkinipopGroupMemberRepository extends JpaRepository<KkinipopGro
             join fetch gm.member m
             where g.id = :groupId
               and m.id = :memberId
+              and m.deletedAt is null
               and gm.leftAt is null
             """)
     Optional<KkinipopGroupMember> findActiveMembership(@Param("groupId") Long groupId, @Param("memberId") Long memberId);
@@ -44,22 +46,12 @@ public interface KkinipopGroupMemberRepository extends JpaRepository<KkinipopGro
     @Query("""
             select count(gm) > 0
             from KkinipopGroupMember gm
+            join gm.member m
             where gm.group.id = :groupId
               and gm.member.id = :memberId
               and gm.leftAt is null
+              and m.deletedAt is null
             """)
     boolean existsActiveMembership(@Param("groupId") Long groupId, @Param("memberId") Long memberId);
-
-    @Query("""
-            select gm
-            from KkinipopGroupMember gm
-            join fetch gm.group g
-            join fetch gm.member m
-            where m.id = :memberId
-              and gm.role = com.kkirok.server.domain.kkinipop.domain.KkinipopGroupRole.LEADER
-              and gm.leftAt is null
-            order by gm.createdAt asc
-            """)
-    List<KkinipopGroupMember> findLeaderMemberships(@Param("memberId") Long memberId);
 
 }
