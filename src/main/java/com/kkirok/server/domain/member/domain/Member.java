@@ -69,6 +69,10 @@ public class Member extends BaseTimeEntity {
     @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Onboarding onboarding;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "meal_style", length = 20)
+    private MealStyle mealStyle;
+
     @Builder
     private Member(String nickname, String name, String email, String profileImage,
                    Users user, Long socialId, SocialType socialType
@@ -145,6 +149,10 @@ public class Member extends BaseTimeEntity {
         }
 
         this.onboarding.update(dto);
+    }
+
+    public void updateMealStyle(MealStyle mealStyle) {
+        this.mealStyle = mealStyle;
     }
 
     void assignOnboarding(final Onboarding onboarding) {

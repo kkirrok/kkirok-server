@@ -2,6 +2,7 @@ package com.kkirok.server.domain.member.application.service;
 
 import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
 import com.kkirok.server.domain.member.dao.MemberRepository;
+import com.kkirok.server.domain.member.domain.MealStyle;
 import com.kkirok.server.domain.member.domain.Member;
 import com.kkirok.server.domain.member.domain.SocialType;
 import com.kkirok.server.domain.member.exception.MemberErrorCode;
@@ -63,6 +64,15 @@ public class MemberService implements MemberUseCase {
     @Override
     public void updateMember(Member member) {
         memberRepository.save(member);
+    }
+
+    @Override
+    @Transactional
+    public void updateMealStyle(Long memberId, MealStyle mealStyle) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new NotFoundException(MemberErrorCode.MEMBER_NOT_FOUND));
+        checkMemberQuit(member);
+        member.updateMealStyle(mealStyle);
     }
 
     @Override

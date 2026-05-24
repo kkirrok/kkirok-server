@@ -1,5 +1,6 @@
 package com.kkirok.server.domain.member.application.usecase;
 
+import com.kkirok.server.domain.member.domain.MealStyle;
 import com.kkirok.server.domain.member.domain.Member;
 import com.kkirok.server.domain.member.domain.SocialType;
 
@@ -15,6 +16,8 @@ public interface MemberUseCase {
     long countMembers();
 
     void updateMember(Member member);
+
+    void updateMealStyle(Long memberId, MealStyle mealStyle);
 
     Member findWithOnboarding(Long memberId);
 
