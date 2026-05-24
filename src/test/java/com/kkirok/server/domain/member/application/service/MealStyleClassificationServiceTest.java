@@ -2,6 +2,8 @@ package com.kkirok.server.domain.member.application.service;
 
 import com.kkirok.server.domain.member.domain.MealStyle;
 import com.kkirok.server.domain.member.domain.OnboardingHabit;
+import com.kkirok.server.global.external.exception.ExternalErrorCode;
+import com.kkirok.server.global.external.exception.OpenAiException;
 import com.kkirok.server.global.external.openai.OpenAiService;
 import com.kkirok.server.global.external.openai.dto.response.OpenAiMealStyleResult;
 import com.kkirok.server.global.external.openai.prompt.PromptType;
@@ -73,6 +75,24 @@ class MealStyleClassificationServiceTest {
     }
 
     @Test
+    @DisplayName("OpenAI 호출이 실패하면 예외를 전파하지 않고 균형형을 반환한다")
+    void shouldReturnBalanced_whenOpenAiCallFails() {
+        // Given
+        List<OnboardingHabit> habits = List.of(OnboardingHabit.MEAT);
+        given(openAiService.createObjectResponse(
+                PromptType.MEAL_STYLE_CLASSIFICATION,
+                "고기",
+                OpenAiMealStyleResult.class
+        )).willThrow(new OpenAiException(ExternalErrorCode.OPENAI_CLIENT_ERROR, null));
+
+        // When
+        MealStyle result = mealStyleClassificationService.classify(habits);
+
+        // Then
+        assertThat(result).isEqualTo(MealStyle.BALANCED);
+    }
+
+    @Test
     @DisplayName("OpenAI 응답 label이 알 수 없는 값이면 균형형으로 fallback한다")
     void shouldReturnBalanced_whenLabelIsUnknown() {
         // Given
@@ -82,6 +102,24 @@ class MealStyleClassificationServiceTest {
                 "디저트",
                 OpenAiMealStyleResult.class
         )).willReturn(new OpenAiMealStyleResult("알 수 없음"));
+
+        // When
+        MealStyle result = mealStyleClassificationService.classify(habits);
+
+        // Then
+        assertThat(result).isEqualTo(MealStyle.BALANCED);
+    }
+
+    @Test
+    @DisplayName("OpenAI 응답 label이 null이면 균형형으로 fallback한다")
+    void shouldReturnBalanced_whenLabelIsNull() {
+        // Given
+        List<OnboardingHabit> habits = List.of(OnboardingHabit.DESSERT);
+        given(openAiService.createObjectResponse(
+                PromptType.MEAL_STYLE_CLASSIFICATION,
+                "디저트",
+                OpenAiMealStyleResult.class
+        )).willReturn(new OpenAiMealStyleResult(null));
 
         // When
         MealStyle result = mealStyleClassificationService.classify(habits);

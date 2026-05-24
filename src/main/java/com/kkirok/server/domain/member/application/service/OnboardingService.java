@@ -3,7 +3,9 @@ package com.kkirok.server.domain.member.application.service;
 import com.kkirok.server.domain.member.application.dto.request.ProfileSettingRequest;
 import com.kkirok.server.domain.member.application.dto.response.OnboardingProfileResponse;
 import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
+import com.kkirok.server.domain.member.domain.MealStyle;
 import com.kkirok.server.domain.member.domain.Member;
+import com.kkirok.server.domain.member.domain.OnboardingHabit;
 import com.kkirok.server.domain.member.exception.MemberErrorCode;
 import com.kkirok.server.domain.user.application.service.UserRoleService;
 import com.kkirok.server.global.common.exception.BadRequestException;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.regex.Pattern;
 
 @Service
@@ -44,10 +47,14 @@ public class OnboardingService {
 
         // Member와 Onboarding에 함께 적용
         member.updateOnboarding(request, imageKey);
-        member.updateMealStyle(mealStyleClassificationService.classify(request.habits()));
         userRoleService.promoteToUser(member.getUser());
         memberUseCase.updateMember(member);
 
+    }
+
+    public void assignMealStyle(Long memberId, List<OnboardingHabit> habits) {
+        MealStyle mealStyle = mealStyleClassificationService.classify(habits);
+        memberUseCase.updateMealStyle(memberId, mealStyle);
     }
 
     /*

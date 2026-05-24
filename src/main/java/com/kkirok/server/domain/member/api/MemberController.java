@@ -97,6 +97,7 @@ public class MemberController implements MemberApi {
             @RequestPart(name = "image", required = false) MultipartFile profileImage
     ) {
         onboardingService.updateProfile(memberId, request, profileImage);
+        onboardingService.assignMealStyle(memberId, request.habits());
         return ResponseEntity.ok().body(SuccessResponse.from(MemberSuccessCode.PROFILE_SETTING_SUCCESS));
     }
 

@@ -58,7 +58,6 @@ class OnboardingServiceTest {
 
         given(memberUseCase.findMemberByMemberId(memberId)).willReturn(member);
         given(r2UploadService.upload(profileImage)).willReturn("profile-key");
-        given(mealStyleClassificationService.classify(request.habits())).willReturn(MealStyle.PROTEIN_FOCUSED);
 
         // When
         onboardingService.updateProfile(memberId, request, profileImage);
@@ -75,11 +74,10 @@ class OnboardingServiceTest {
         assertThat(member.getOnboarding().getMember()).isSameAs(member);
         assertThat(member.getOnboarding().getPurpose()).isEqualTo(request.purpose());
         assertThat(member.getOnboarding().getHabits()).containsExactlyElementsOf(request.habits());
-        assertThat(member.getMealStyle()).isEqualTo(MealStyle.PROTEIN_FOCUSED);
+        assertThat(member.getMealStyle()).isNull();
 
         then(memberUseCase).should().findMemberByMemberId(memberId);
         then(r2UploadService).should().upload(profileImage);
-        then(mealStyleClassificationService).should().classify(request.habits());
         then(userRoleService).should().promoteToUser(member.getUser());
         then(memberUseCase).should().updateMember(member);
     }
@@ -126,7 +124,25 @@ class OnboardingServiceTest {
         assertThat(member.getOnboarding()).isNotNull();
         assertThat(member.getOnboarding().getPurpose()).isNull();
         assertThat(member.getOnboarding().getHabits()).isEmpty();
+        assertThat(member.getMealStyle()).isNull();
         then(memberUseCase).should().updateMember(member);
+    }
+
+    @Test
+    @DisplayName("assignMealStyle 호출 시 classify 결과를 MemberUseCase에 전달한다")
+    void shouldCallUpdateMealStyle_whenAssignMealStyleIsCalled() {
+        // Given
+        Long memberId = 1L;
+        List<OnboardingHabit> habits = List.of(OnboardingHabit.MEAT, OnboardingHabit.LATE_NIGHT_MEAL);
+
+        given(mealStyleClassificationService.classify(habits)).willReturn(MealStyle.LATE_NIGHT);
+
+        // When
+        onboardingService.assignMealStyle(memberId, habits);
+
+        // Then
+        then(mealStyleClassificationService).should().classify(habits);
+        then(memberUseCase).should().updateMealStyle(memberId, MealStyle.LATE_NIGHT);
     }
 
     @Test
