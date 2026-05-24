@@ -57,7 +57,6 @@ class SocialLoginServiceTest {
     @DisplayName("이미 연결된 소셜 인증 수단이 있으면 기존 회원으로 로그인한다")
     void shouldLoginExistingMember_whenAuthIdentityAlreadyExists() {
         // Given
-        String authorizationCode = "auth-code";
         MemberLoginRequest loginRequest = MemberLoginRequestFixture.createKakao();
         MemberInfoResponse memberInfoResponse = MemberInfoResponseFixture.createKakaoMember();
         Member member = MemberFixture.createSocialMember("kkirok", "kkirok@test.com",
@@ -69,7 +68,7 @@ class SocialLoginServiceTest {
         LoginSuccessResponse expected = LoginSuccessResponse.of("access-token", "refresh-token", "kkirok",
                 "ROLE_USER", false);
 
-        given(kakaoSocialService.login(authorizationCode, loginRequest)).willReturn(memberInfoResponse);
+        given(kakaoSocialService.login(loginRequest)).willReturn(memberInfoResponse);
         given(authIdentityRepository.findByProviderAndProviderUserId(AuthProvider.KAKAO, memberInfoResponse.providerUserId()))
                 .willReturn(Optional.of(authIdentity));
         given(memberUseCase.findMemberByMemberId(1L)).willReturn(member);
@@ -77,7 +76,7 @@ class SocialLoginServiceTest {
                 .willReturn(expected);
 
         // When
-        LoginSuccessResponse response = socialLoginService.handleSocialLogin(authorizationCode, loginRequest);
+        LoginSuccessResponse response = socialLoginService.handleSocialLogin(loginRequest);
 
         // Then
         assertThat(response).isEqualTo(expected);
@@ -88,7 +87,6 @@ class SocialLoginServiceTest {
     @DisplayName("기존 소셜 회원에 인증 수단이 없으면 인증 수단을 연결한 뒤 로그인한다")
     void shouldCreateAuthIdentityForExistingMember_whenSocialMemberExistsWithoutIdentity() {
         // Given
-        String authorizationCode = "auth-code";
         MemberLoginRequest loginRequest = MemberLoginRequestFixture.createNaver();
         MemberInfoResponse memberInfoResponse = MemberInfoResponseFixture.createNaverMember();
         Member member = MemberFixture.createSocialMember(2002L, memberInfoResponse.socialType());
@@ -97,7 +95,7 @@ class SocialLoginServiceTest {
         LoginSuccessResponse expected = LoginSuccessResponse.of("access-token", "refresh-token", "kkirok",
                 "ROLE_USER", false);
 
-        given(naverSocialService.login(authorizationCode, loginRequest)).willReturn(memberInfoResponse);
+        given(naverSocialService.login(loginRequest)).willReturn(memberInfoResponse);
         given(authIdentityRepository.findByProviderAndProviderUserId(AuthProvider.NAVER, memberInfoResponse.providerUserId()))
                 .willReturn(Optional.empty());
         given(memberUseCase.checkMemberExistsBySocialIdAndSocialType(2002L, memberInfoResponse.socialType()))
@@ -109,7 +107,7 @@ class SocialLoginServiceTest {
                 .willReturn(expected);
 
         // When
-        LoginSuccessResponse response = socialLoginService.handleSocialLogin(authorizationCode, loginRequest);
+        LoginSuccessResponse response = socialLoginService.handleSocialLogin(loginRequest);
 
         // Then
         assertThat(response).isEqualTo(expected);
@@ -125,7 +123,6 @@ class SocialLoginServiceTest {
     @DisplayName("일치하는 기존 회원이 없으면 새로운 소셜 회원으로 가입시킨 뒤 로그인한다")
     void shouldRegisterMember_whenNoExistingMemberMatchesSocialInfo() {
         // Given
-        String authorizationCode = "auth-code";
         MemberLoginRequest loginRequest = MemberLoginRequestFixture.createKakao();
         MemberInfoResponse memberInfoResponse = MemberInfoResponseFixture.createKakaoMember();
         Member member = MemberFixture.createSocialMember(1001L, memberInfoResponse.socialType());
@@ -134,7 +131,7 @@ class SocialLoginServiceTest {
         LoginSuccessResponse expected = LoginSuccessResponse.of("access-token", "refresh-token", "kkirok",
                 "ROLE_USER", false);
 
-        given(kakaoSocialService.login(authorizationCode, loginRequest)).willReturn(memberInfoResponse);
+        given(kakaoSocialService.login(loginRequest)).willReturn(memberInfoResponse);
         given(authIdentityRepository.findByProviderAndProviderUserId(AuthProvider.KAKAO, memberInfoResponse.providerUserId()))
                 .willReturn(Optional.empty());
         given(memberUseCase.checkMemberExistsBySocialIdAndSocialType(1001L, memberInfoResponse.socialType()))
@@ -145,7 +142,7 @@ class SocialLoginServiceTest {
                 .willReturn(expected);
 
         // When
-        LoginSuccessResponse response = socialLoginService.handleSocialLogin(authorizationCode, loginRequest);
+        LoginSuccessResponse response = socialLoginService.handleSocialLogin(loginRequest);
 
         // Then
         assertThat(response).isEqualTo(expected);

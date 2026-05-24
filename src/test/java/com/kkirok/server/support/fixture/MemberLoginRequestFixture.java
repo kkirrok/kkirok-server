@@ -9,14 +9,14 @@ public final class MemberLoginRequestFixture {
     }
 
     public static MemberLoginRequest createKakao() {
-        return new MemberLoginRequest(SocialType.KAKAO, null);
+        return new MemberLoginRequest(SocialType.KAKAO, "kakao-access-token");
     }
 
     public static MemberLoginRequest createNaver() {
-        return new MemberLoginRequest(SocialType.NAVER, "naver-test-state");
+        return new MemberLoginRequest(SocialType.NAVER, "naver-access-token");
     }
 
-    public static MemberLoginRequest create(SocialType socialType, String state) {
-        return new MemberLoginRequest(socialType, state);
+    public static MemberLoginRequest create(SocialType socialType, String accessToken) {
+        return new MemberLoginRequest(socialType, accessToken);
     }
 }
