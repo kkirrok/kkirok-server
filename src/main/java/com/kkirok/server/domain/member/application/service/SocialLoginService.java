@@ -123,6 +123,9 @@ public class SocialLoginService {
                     memberInfoResponse.socialType());
             log.info("Existing member role: {}", existingMember.getUser().getRole());
             authIdentityRepository.save(AuthIdentity.createSocial(existingMember, provider, providerUserId));
+            if (existingMember.isDeleted()) {
+                throw new BadRequestException(MemberErrorCode.DELETED_MEMBER);
+            }
             return existingMember.getId();
         }
 
