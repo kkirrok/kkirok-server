@@ -6,6 +6,7 @@ import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
 import com.kkirok.server.domain.member.domain.MealStyle;
 import com.kkirok.server.domain.member.domain.Member;
 import com.kkirok.server.domain.member.domain.OnboardingHabit;
+import com.kkirok.server.domain.member.domain.OnboardingPurpose;
 import com.kkirok.server.domain.member.exception.MemberErrorCode;
 import com.kkirok.server.domain.user.application.service.UserRoleService;
 import com.kkirok.server.global.common.exception.BadRequestException;
