@@ -3,6 +3,7 @@ package com.kkirok.server.domain.member.application.service;
 import com.kkirok.server.domain.member.application.dto.request.ProfileSettingRequest;
 import com.kkirok.server.domain.member.application.dto.response.OnboardingProfileResponse;
 import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
+import com.kkirok.server.domain.member.domain.MealStyle;
 import com.kkirok.server.domain.member.domain.Member;
 import com.kkirok.server.domain.member.domain.OnboardingHabit;
 import com.kkirok.server.domain.member.domain.OnboardingPurpose;
@@ -40,6 +41,9 @@ class OnboardingServiceTest {
     @Mock
     private UserRoleService userRoleService;
 
+    @Mock
+    private MealStyleClassificationService mealStyleClassificationService;
+
     @InjectMocks
     private OnboardingService onboardingService;
 
@@ -54,6 +58,7 @@ class OnboardingServiceTest {
 
         given(memberUseCase.findMemberByMemberId(memberId)).willReturn(member);
         given(r2UploadService.upload(profileImage)).willReturn("profile-key");
+        given(mealStyleClassificationService.classify(request.habits())).willReturn(MealStyle.PROTEIN_FOCUSED);
 
         // When
         onboardingService.updateProfile(memberId, request, profileImage);
@@ -70,9 +75,11 @@ class OnboardingServiceTest {
         assertThat(member.getOnboarding().getMember()).isSameAs(member);
         assertThat(member.getOnboarding().getPurpose()).isEqualTo(request.purpose());
         assertThat(member.getOnboarding().getHabits()).containsExactlyElementsOf(request.habits());
+        assertThat(member.getMealStyle()).isEqualTo(MealStyle.PROTEIN_FOCUSED);
 
         then(memberUseCase).should().findMemberByMemberId(memberId);
         then(r2UploadService).should().upload(profileImage);
+        then(mealStyleClassificationService).should().classify(request.habits());
         then(userRoleService).should().promoteToUser(member.getUser());
         then(memberUseCase).should().updateMember(member);
     }

@@ -22,6 +22,7 @@ public class OnboardingService {
     private final MemberUseCase memberUseCase;
     private final R2UploadService r2UploadService;
     private final UserRoleService userRoleService;
+    private final MealStyleClassificationService mealStyleClassificationService;
 
     /*
         유저의 닉네임, 프로필이미지, 생년월일, 이름, 휴대폰번호, 온보딩 정보를 추가합니다.
@@ -43,6 +44,7 @@ public class OnboardingService {
 
         // Member와 Onboarding에 함께 적용
         member.updateOnboarding(request, imageKey);
+        member.updateMealStyle(mealStyleClassificationService.classify(request.habits()));
         userRoleService.promoteToUser(member.getUser());
         memberUseCase.updateMember(member);
 
