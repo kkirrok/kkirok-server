@@ -26,7 +26,8 @@ public interface CharacterApi {
                     - 인증된 사용자 기준으로 조회합니다.
                     - 오늘 식사 기록을 함께 반영한 기본 상태 정보를 반환합니다.
                     - 응답: 캐릭터 기본 정보
-                    """
+                    """,
+            hidden = true
     )
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(codeType = CharacterErrorCode.class, code = "CHARACTER_NOT_FOUND")
@@ -44,7 +45,8 @@ public interface CharacterApi {
 
                     - 인증된 사용자 기준으로 조회합니다.
                     - 응답: 보유 아이템 / 미보유 아이템 목록
-                    """
+                    """,
+            hidden = true
     )
     @ApiErrorCodeExamples({
     })
@@ -63,7 +65,8 @@ public interface CharacterApi {
                     - 경로 변수: `itemId`
                     - 같은 타입의 아이템을 이미 착용 중이면 장착할 수 없습니다.
                     - 응답: 없음
-                    """
+                    """,
+            hidden = true
     )
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(codeType = CharacterErrorCode.class, code = "ITEM_INFO_REQUIRED"),
@@ -88,7 +91,8 @@ public interface CharacterApi {
                     - 경로 변수: `itemId`
                     - 이미 해제된 아이템은 다시 해제할 수 없습니다.
                     - 응답: 없음
-                    """
+                    """,
+            hidden = true
     )
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(codeType = CharacterErrorCode.class, code = "ITEM_INFO_REQUIRED"),
