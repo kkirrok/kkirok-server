@@ -27,7 +27,6 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(name = "User Auth API", description = "일반 사용자 인증 관련 API")
 public interface AuthApi {
@@ -37,11 +36,10 @@ public interface AuthApi {
     @Operation(
             summary = "소셜 로그인/회원가입 []",
             description = """
-                    소셜 authorizationCode로 로그인합니다.
+                    모바일 SDK에서 발급받은 소셜 accessToken으로 로그인합니다.
                     회원이 없으면 자동으로 회원가입 후 로그인 처리됩니다.
 
-                    - 요청 파라미터: `authorizationCode`
-                    - 요청 바디: `socialType`, `state(NAVER 필수)`
+                    - 요청 바디: `socialType`, `accessToken`
                     - 응답: accessToken + 사용자 정보
                     - refreshToken은 HttpOnly 쿠키로 내려갑니다.
                     """
@@ -52,9 +50,7 @@ public interface AuthApi {
     })
     @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "SOCIAL_LOGIN_SUCCESS")
     ResponseEntity<SuccessResponse<MemberLoginResponse>> signUp(
-            @Parameter(description = "소셜 인증 코드", required = true)
-            @RequestParam final String authorizationCode,
-            @RequestBody final MemberLoginRequest loginRequest,
+            @Valid @RequestBody final MemberLoginRequest loginRequest,
             HttpServletResponse httpServletResponse
     );
 

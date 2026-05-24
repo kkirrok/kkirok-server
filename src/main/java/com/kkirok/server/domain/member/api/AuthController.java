@@ -33,7 +33,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -53,11 +52,10 @@ public class AuthController implements AuthApi {
     @Override
     @PostMapping("/login/social")
     public ResponseEntity<SuccessResponse<MemberLoginResponse>> signUp(
-            @RequestParam final String authorizationCode,
-            @RequestBody final MemberLoginRequest loginRequest,
+            @Valid @RequestBody final MemberLoginRequest loginRequest,
             HttpServletResponse httpServletResponse
     ) {
-        LoginSuccessResponse loginSuccessResponse = socialLoginService.handleSocialLogin(authorizationCode, loginRequest);
+        LoginSuccessResponse loginSuccessResponse = socialLoginService.handleSocialLogin(loginRequest);
         writeRefreshTokenCookie(httpServletResponse, loginSuccessResponse.refreshToken());
         MemberLoginResponse response = toMemberLoginResponse(loginSuccessResponse);
         return ResponseEntity.ok().body(SuccessResponse.of(MemberSuccessCode.SOCIAL_LOGIN_SUCCESS, response));

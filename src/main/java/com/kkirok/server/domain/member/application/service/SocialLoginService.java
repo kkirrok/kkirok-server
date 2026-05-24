@@ -8,7 +8,6 @@ import com.kkirok.server.domain.member.domain.AuthProvider;
 import com.kkirok.server.domain.member.domain.Member;
 import com.kkirok.server.domain.member.domain.SocialType;
 import com.kkirok.server.domain.member.exception.MemberErrorCode;
-import com.kkirok.server.domain.user.domain.Users;
 import com.kkirok.server.global.auth.client.application.KakaoSocialService;
 import com.kkirok.server.global.auth.client.application.NaverSocialService;
 import com.kkirok.server.global.auth.client.application.SocialService;
@@ -34,39 +33,24 @@ public class SocialLoginService {
 
     /**
      * 소셜 로그인 또는 회원가입을 처리하는 메서드.
-     * 소셜 서비스에서 받은 authorizationCode와 로그인 요청 정보를 기반으로
-     * 사용자 정보를 조회하고, 로그인 또는 회원가입 후 성공 응답을 반환.
+     * 소셜 서비스에서 받은 로그인 요청 정보를 기반으로 사용자 정보를 조회하고,
+     * 로그인 또는 회원가입 후 성공 응답을 반환.
      *
-     * @param authorizationCode 소셜 인증 코드
      * @param loginRequest 로그인 요청 정보
      * @return 로그인 성공 응답(LoginSuccessResponse)
      */
     @Transactional
-    public LoginSuccessResponse handleSocialLogin(final String authorizationCode,
-                                                  final MemberLoginRequest loginRequest) {
-        MemberInfoResponse memberInfoResponse = findMemberInfoFromSocialService(authorizationCode, loginRequest);
-        return generateLoginResponseFromMemberInfo(memberInfoResponse);
-    }
-
-    /**
-     * 소셜 서비스에서 사용자 정보를 조회하는 메서드.
-     * 소셜 타입에 따라 적절한 소셜 서비스를 사용하여 로그인 정보를 가져옴.
-     *
-     * @param authorizationCode 소셜 인증 코드
-     * @param loginRequest 로그인 요청 정보
-     * @return 소셜 서비스에서 가져온 사용자 정보(MemberInfoResponse)
-     */
-    private MemberInfoResponse findMemberInfoFromSocialService(final String authorizationCode,
-                                                               final MemberLoginRequest loginRequest) {
+    public LoginSuccessResponse handleSocialLogin(final MemberLoginRequest loginRequest) {
         SocialService socialService = findSocialService(loginRequest.socialType());
-        return socialService.login(authorizationCode, loginRequest);
+        MemberInfoResponse loginResponse = socialService.login(loginRequest);
+        return generateLoginResponseFromMemberInfo(loginResponse);
     }
 
     /**
      * 소셜 타입에 맞는 SocialService를 반환하는 메서드.
-     * 소셜 로그인 타입이 KAKAO인지, GOOGLE인지 등에 따라 적절한 서비스를 반환.
+     * 소셜 로그인 타입이 KAKAO인지, NAVER인지 등에 따라 적절한 서비스를 반환.
      *
-     * @param socialType 소셜 타입(KAKAO, GOOGLE 등)
+     * @param socialType 소셜 타입(KAKAO, NAVER)
      * @return 적절한 SocialService 구현체
      */
     private SocialService findSocialService(SocialType socialType) {
