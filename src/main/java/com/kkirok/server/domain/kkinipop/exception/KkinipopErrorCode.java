@@ -21,6 +21,7 @@ public enum KkinipopErrorCode implements BaseErrorCode {
 
     GROUP_ACCESS_FORBIDDEN(403, "해당 그룹에 접근할 수 없습니다."),
     GROUP_MANAGEMENT_FORBIDDEN(403, "방장만 그룹을 관리할 수 있습니다."),
+    GROUP_BANNED(403, "추방된 그룹에는 다시 참여할 수 없습니다."),
     POST_DELETE_FORBIDDEN(403, "본인 게시글만 삭제할 수 있습니다."),
     CUSTOM_EMOJI_DELETE_FORBIDDEN(403, "커스텀 이모지를 삭제할 권한이 없습니다."),
 

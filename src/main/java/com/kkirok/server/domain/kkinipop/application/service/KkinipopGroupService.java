@@ -74,6 +74,10 @@ public class KkinipopGroupService {
         KkinipopGroup group = groupRepository.findByInviteCode(code)
                 .orElseThrow(() -> new NotFoundException(KkinipopErrorCode.GROUP_NOT_FOUND));
 
+        if (groupMemberRepository.existsBannedMembership(group.getId(), memberId)) {
+            throw new ForbiddenException(KkinipopErrorCode.GROUP_BANNED);
+        }
+
         if (groupMemberRepository.existsActiveMembership(group.getId(), memberId)) {
             throw new ConflictException(KkinipopErrorCode.GROUP_JOIN_CONFLICT);
         }
@@ -115,7 +119,7 @@ public class KkinipopGroupService {
             throw new ForbiddenException(KkinipopErrorCode.GROUP_MANAGEMENT_FORBIDDEN);
         }
 
-        targetGroupMember.leave(dateTimeProvider.now());
+        targetGroupMember.ban(dateTimeProvider.now());
     }
 
     // 그룹 응답 생성 - 그룹조회 stream에서 호출
