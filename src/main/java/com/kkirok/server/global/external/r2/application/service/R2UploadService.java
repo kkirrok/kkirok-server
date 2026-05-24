@@ -55,9 +55,16 @@ public class R2UploadService {
     }
 
     private String createKey(final String originalFilename) {
-        String fileName = (originalFilename == null || originalFilename.isBlank())
-                ? "file"
-                : originalFilename;
-        return UUID.randomUUID() + "-" + fileName;
+        String extension = extractExtension(originalFilename);
+        return UUID.randomUUID() + extension;
+    }
+
+    private String extractExtension(final String filename) {
+        if (filename == null || !filename.contains(".")) {
+            return "";
+        }
+
+        String extension = filename.substring(filename.lastIndexOf("."));
+        return extension.matches("\\.[a-zA-Z0-9]+") ? extension : "";
     }
 }

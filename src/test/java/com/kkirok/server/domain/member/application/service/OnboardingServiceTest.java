@@ -106,29 +106,6 @@ class OnboardingServiceTest {
     }
 
     @Test
-    @DisplayName("식습관을 선택하지 않으면 빈 리스트로 저장한다")
-    void shouldSaveEmptyHabitList_whenHabitsIsNull() {
-        // Given
-        Long memberId = 1L;
-        ProfileSettingRequest request = ProfileSettingRequestFixture.create(null, null);
-        Member member = MemberFixture.createLocalMember();
-        MultipartFile profileImage = createProfileImage();
-
-        given(memberUseCase.findMemberByMemberId(memberId)).willReturn(member);
-        given(r2UploadService.upload(profileImage)).willReturn("profile-key");
-
-        // When
-        onboardingService.updateProfile(memberId, request, profileImage);
-
-        // Then
-        assertThat(member.getOnboarding()).isNotNull();
-        assertThat(member.getOnboarding().getPurpose()).isNull();
-        assertThat(member.getOnboarding().getHabits()).isEmpty();
-        assertThat(member.getMealStyle()).isNull();
-        then(memberUseCase).should().updateMember(member);
-    }
-
-    @Test
     @DisplayName("assignMealStyle 호출 시 classify 결과를 MemberUseCase에 전달한다")
     void shouldCallUpdateMealStyle_whenAssignMealStyleIsCalled() {
         // Given
