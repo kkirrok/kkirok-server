@@ -44,9 +44,13 @@ public interface KkinipopPostRepository extends JpaRepository<KkinipopPost, Long
             from KkinipopPost post
             join fetch post.member member
             left join fetch post.mission mission
+            join KkinipopGroupMember gm
+              on gm.group.id = post.group.id
+             and gm.member.id = post.member.id
             where post.group.id = :groupId
               and post.recordDate = :recordDate
               and post.deletedAt is null
+              and gm.banned = false
             order by post.createdAt desc
             """)
     List<KkinipopPost> findDailyPosts(@Param("groupId") Long groupId, @Param("recordDate") LocalDate recordDate);
@@ -65,10 +69,14 @@ public interface KkinipopPostRepository extends JpaRepository<KkinipopPost, Long
             from KkinipopPost p
             join fetch p.member member
             left join fetch p.mission mission
+            join KkinipopGroupMember gm
+              on gm.group.id = p.group.id
+             and gm.member.id = p.member.id
             where p.group.id = :groupId
               and p.recordDate between :startDate and :endDate
               and (:missionId is null or mission.id = :missionId)
               and p.deletedAt is null
+              and gm.banned = false
             order by p.recordDate desc, p.createdAt desc
             """)
     List<KkinipopPost> findPostsInDateRange(

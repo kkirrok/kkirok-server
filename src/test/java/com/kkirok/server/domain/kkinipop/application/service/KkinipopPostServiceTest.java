@@ -353,6 +353,59 @@ class KkinipopPostServiceTest {
     }
 
     @Test
+    @DisplayName("게시글 조회 시 추방된 멤버의 게시글은 제외된다")
+    void shouldExcludeBannedMemberPosts_whenGetPosts() {
+        // Given
+        KkinipopGroup group = createGroup(10L, "아침 챌린저스");
+        Member member = createMember(1L, "끼록이");
+        KkinipopGroupMember groupMember = createGroupMember(100L, group, member);
+
+        given(kkinipopUseCase.findGroupMember(10L, 1L)).willReturn(groupMember);
+        given(dateTimeProvider.today()).willReturn(LocalDate.of(2026, 4, 24));
+        given(postRepository.findPostsInDateRange(10L, LocalDate.of(2026, 4, 20), LocalDate.of(2026, 4, 26), null))
+                .willReturn(List.of());
+
+        // When
+        List<KkinipopDailyPostResponse> responses = kkinipopPostService.getPosts(1L, 10L, null);
+
+        // Then
+        // Banned member filtering is enforced by the repository query; this unit test only simulates the query result.
+        assertThat(responses).hasSize(7);
+        assertThat(responses.get(2).date()).isEqualTo(LocalDate.of(2026, 4, 24));
+        assertThat(responses.get(2).posts()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("게시글 조회 시 추방된 멤버의 리액션은 제외된다")
+    void shouldExcludeBannedMemberReactions_whenGetPosts() {
+        // Given
+        KkinipopGroup group = createGroup(10L, "아침 챌린저스");
+        Member member = createMember(1L, "끼록이");
+        KkinipopGroupMember groupMember = createGroupMember(100L, group, member);
+        KkinipopMission mission = createMission(20L, group, "실시간 미션",
+                LocalDateTime.of(2026, 4, 24, 9, 0),
+                LocalDateTime.of(2026, 4, 24, 9, 10));
+        KkinipopPost post = createPost(30L, group, member, mission, LocalDate.of(2026, 4, 24), "uuid_post");
+
+        ReflectionTestUtils.setField(post, "createdAt", LocalDateTime.of(2026, 4, 24, 9, 5));
+
+        given(kkinipopUseCase.findGroupMember(10L, 1L)).willReturn(groupMember);
+        given(dateTimeProvider.today()).willReturn(LocalDate.of(2026, 4, 24));
+        given(postRepository.findPostsInDateRange(10L, LocalDate.of(2026, 4, 20), LocalDate.of(2026, 4, 26), null))
+                .willReturn(List.of(post));
+        given(reactionRepository.findPostReactions(List.of(30L))).willReturn(List.of());
+
+        // When
+        List<KkinipopDailyPostResponse> responses = kkinipopPostService.getPosts(1L, 10L, null);
+
+        // Then
+        // Banned reaction filtering is enforced by the repository query; this unit test only simulates the query result.
+        assertThat(responses.get(2).date()).isEqualTo(LocalDate.of(2026, 4, 24));
+        assertThat(responses.get(2).posts()).hasSize(1);
+        assertThat(responses.get(2).posts().get(0).reactions()).isEmpty();
+    }
+
+    @Test
     @DisplayName("미션 ID를 전달하면 해당 미션 게시글만 조회한다")
     void shouldReturnMissionPostsOnly_whenMissionIdIsProvided() {
         // Given

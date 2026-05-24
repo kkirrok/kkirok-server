@@ -13,7 +13,11 @@ public interface KkinipopReactionRepository extends JpaRepository<KkinipopReacti
     @Query("""
             select reaction
             from KkinipopReaction reaction
+            join KkinipopGroupMember gm
+              on gm.group.id = reaction.post.group.id
+             and gm.member.id = reaction.member.id
             where reaction.post.id in :postIds
+              and gm.banned = false
             """)
     List<KkinipopReaction> findPostReactions(@Param("postIds") Collection<Long> postIds);
 
@@ -33,8 +37,12 @@ public interface KkinipopReactionRepository extends JpaRepository<KkinipopReacti
     @Query("""
             select count(r)
             from KkinipopReaction r
+            join KkinipopGroupMember gm
+              on gm.group.id = r.post.group.id
+             and gm.member.id = r.member.id
             where r.post.id = :postId
               and r.emojiCode = :emojiCode
+              and gm.banned = false
             """)
     long countByPostAndEmojiCode(
             @Param("postId") Long postId,
