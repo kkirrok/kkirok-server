@@ -22,6 +22,7 @@ import com.kkirok.server.global.common.exception.ForbiddenException;
 import com.kkirok.server.global.common.exception.NotFoundException;
 import com.kkirok.server.global.common.util.DateTimeProvider;
 import com.kkirok.server.global.external.r2.application.service.R2UploadService;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -51,19 +53,20 @@ public class KkinipopPostService {
     private final DateTimeProvider dateTimeProvider;
     private final ApplicationEventPublisher eventPublisher;
 
-    // 오늘 기준 최근 일주일 게시글 조회
+    // 이번 주 월요일부터 일요일까지 게시글 조회
     @Transactional(readOnly = true)
     public List<KkinipopDailyPostResponse> getPosts(Long memberId, Long groupId, Long missionId) {
         kkinipopUseCase.findGroupMember(groupId, memberId);
 
-        LocalDate endDate = dateTimeProvider.today();
-        LocalDate startDate = endDate.minusDays(7);
-        validateTodayMission(groupId, missionId, endDate);
+        LocalDate today = dateTimeProvider.today();
+        LocalDate startDate = today.with(DayOfWeek.MONDAY);
+        LocalDate endDate = today.with(DayOfWeek.SUNDAY);
+        validateTodayMission(groupId, missionId, today);
 
         List<KkinipopPost> posts = postRepository.findPostsInDateRange(groupId, startDate, endDate, missionId);
         Map<Long, List<KkinipopReaction>> reactionsByPostId = getReactionsByPostId(posts);
 
-        return toDailyPostResponses(startDate, endDate, posts, reactionsByPostId);
+        return toDailyPostResponses(memberId, startDate, endDate, posts, reactionsByPostId);
     }
 
     // 오늘 나의끼록과 같이 저장 가능한 남은 횟수 조회
@@ -169,17 +172,23 @@ public class KkinipopPostService {
             throw new ForbiddenException(KkinipopErrorCode.GROUP_ACCESS_FORBIDDEN);
         }
 
-        boolean firstReaction = !reactionRepository.existsByPostAndMemberAndEmojiCode(
+        Optional<KkinipopReaction> existingReaction = reactionRepository.findByPostAndMemberAndEmojiCode(
                 post.getId(),
                 groupMember.getMember().getId(),
                 emojiCode
         );
+        if (existingReaction.isPresent()) {
+            reactionRepository.delete(existingReaction.get());
+            long count = reactionRepository.countByPostAndEmojiCode(post.getId(), emojiCode);
+            return new KkinipopReactionSummaryResponse(emojiCode, customEmoji.getLabel(), count, "CUSTOM_EMOJI", false);
+        }
 
         KkinipopReaction reaction = reactionRepository.save(
                 KkinipopReaction.createCustom(post, groupMember.getMember(), customEmoji)
         );
+        long count = reactionRepository.countByPostAndEmojiCode(post.getId(), emojiCode);
 
-        if (firstReaction && !groupMember.getMember().getId().equals(post.getMember().getId())) {
+        if (!groupMember.getMember().getId().equals(post.getMember().getId())) {
             eventPublisher.publishEvent(new KkinipopReactionAddedEvent(
                     post.getId(),
                     groupId,
@@ -191,7 +200,7 @@ public class KkinipopPostService {
             ));
         }
 
-        return KkinipopReactionSummaryResponse.from(reaction, 1L);
+        return KkinipopReactionSummaryResponse.from(reaction, count, true);
     }
 
     // 시스템 이미지로 반응 생성
@@ -202,16 +211,23 @@ public class KkinipopPostService {
     ) {
         try {
             KkinipopReactionEmoji emoji = KkinipopReactionEmoji.fromCode(emojiCode);
-            boolean firstReaction = !reactionRepository.existsByPostAndMemberAndEmojiCode(
+            Optional<KkinipopReaction> existingReaction = reactionRepository.findByPostAndMemberAndEmojiCode(
                     post.getId(),
                     groupMember.getMember().getId(),
                     emojiCode
             );
+            if (existingReaction.isPresent()) {
+                reactionRepository.delete(existingReaction.get());
+                long count = reactionRepository.countByPostAndEmojiCode(post.getId(), emojiCode);
+                return new KkinipopReactionSummaryResponse(emojiCode, emoji.getLabel(), count, "SYSTEM_EMOJI", false);
+            }
+
             KkinipopReaction reaction = reactionRepository.save(
                     KkinipopReaction.createDefault(post, groupMember.getMember(), emoji)
             );
+            long count = reactionRepository.countByPostAndEmojiCode(post.getId(), emojiCode);
 
-            if (firstReaction && !groupMember.getMember().getId().equals(post.getMember().getId())) {
+            if (!groupMember.getMember().getId().equals(post.getMember().getId())) {
                 eventPublisher.publishEvent(new KkinipopReactionAddedEvent(
                         post.getId(),
                         post.getGroup().getId(),
@@ -223,7 +239,7 @@ public class KkinipopPostService {
                 ));
             }
 
-            return KkinipopReactionSummaryResponse.from(reaction, 1L);
+            return KkinipopReactionSummaryResponse.from(reaction, count, true);
         } catch (IllegalArgumentException exception) {
             throw new BadRequestException(KkinipopErrorCode.INVALID_REACTION_REQUEST, exception);
         }
@@ -265,6 +281,7 @@ public class KkinipopPostService {
     }
 
     private List<KkinipopDailyPostResponse> toDailyPostResponses(
+            Long memberId,
             LocalDate startDate,
             LocalDate endDate,
             List<KkinipopPost> posts,
@@ -282,39 +299,42 @@ public class KkinipopPostService {
                 .map(date -> KkinipopDailyPostResponse.of(
                         date,
                         postsByDate.getOrDefault(date, List.of()).stream()
-                                .map(post -> toPostResponse(post, reactionsByPostId))
+                                .map(post -> toPostResponse(memberId, post, reactionsByPostId))
                                 .toList()
                 ))
                 .toList();
     }
 
     private KkinipopPostResponse toPostResponse(
+            Long memberId,
             KkinipopPost post,
             Map<Long, List<KkinipopReaction>> reactionsByPostId
     ) {
         List<KkinipopReactionSummaryResponse> reactionSummaries = toReactionSummaries(
+                memberId,
                 reactionsByPostId.getOrDefault(post.getId(), List.of())
         );
 
         return KkinipopPostResponse.from(post, reactionSummaries);
     }
 
-    private List<KkinipopReactionSummaryResponse> toReactionSummaries(List<KkinipopReaction> reactions) {
+    private List<KkinipopReactionSummaryResponse> toReactionSummaries(Long memberId, List<KkinipopReaction> reactions) {
         if (reactions.isEmpty()) {
             return List.of();
         }
 
         Map<String, KkinipopReactionSummaryResponse> summaryMap = new LinkedHashMap<>();
         for (KkinipopReaction reaction : reactions) {
+            boolean reacted = reaction.getMember().getId().equals(memberId);
             KkinipopReactionSummaryResponse summary = summaryMap.get(reaction.getEmojiCode());
             if (summary == null) {
-                summaryMap.put(reaction.getEmojiCode(), KkinipopReactionSummaryResponse.from(reaction, 1L));
+                summaryMap.put(reaction.getEmojiCode(), KkinipopReactionSummaryResponse.from(reaction, 1L, reacted));
                 continue;
             }
 
             summaryMap.put(
                     reaction.getEmojiCode(),
-                    KkinipopReactionSummaryResponse.of(summary, summary.count() + 1L)
+                    KkinipopReactionSummaryResponse.of(summary, summary.count() + 1L, summary.reacted() || reacted)
             );
         }
 

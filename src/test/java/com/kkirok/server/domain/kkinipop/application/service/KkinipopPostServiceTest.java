@@ -27,6 +27,7 @@ import com.kkirok.server.support.fixture.MemberFixture;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,6 +44,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
 class KkinipopPostServiceTest {
@@ -190,8 +192,9 @@ class KkinipopPostServiceTest {
         given(kkinipopUseCase.findGroupMember(10L, 1L)).willReturn(groupMember);
         given(kkinipopUseCase.findPostById(30L)).willReturn(post);
         given(kkinipopUseCase.findCustomEmojiById(5L)).willReturn(customEmoji);
-        given(reactionRepository.existsByPostAndMemberAndEmojiCode(30L, 1L, "CUSTOM_5")).willReturn(false);
+        given(reactionRepository.findByPostAndMemberAndEmojiCode(30L, 1L, "CUSTOM_5")).willReturn(Optional.empty());
         given(reactionRepository.save(any(KkinipopReaction.class))).willAnswer(invocation -> invocation.getArgument(0));
+        given(reactionRepository.countByPostAndEmojiCode(30L, "CUSTOM_5")).willReturn(1L);
 
         // When
         KkinipopReactionSummaryResponse response = kkinipopPostService.reactToPost(1L, 10L, 30L, "CUSTOM_5");
@@ -201,6 +204,7 @@ class KkinipopPostServiceTest {
         assertThat(response.label()).isEqualTo("chew");
         assertThat(response.count()).isEqualTo(1L);
         assertThat(response.emojiType()).isEqualTo("CUSTOM_EMOJI");
+        assertThat(response.reacted()).isTrue();
     }
 
     @Test
@@ -215,8 +219,9 @@ class KkinipopPostServiceTest {
 
         given(kkinipopUseCase.findGroupMember(10L, 2L)).willReturn(groupMember);
         given(kkinipopUseCase.findPostById(30L)).willReturn(post);
-        given(reactionRepository.existsByPostAndMemberAndEmojiCode(30L, 2L, "SYSTEM_HEART")).willReturn(false);
+        given(reactionRepository.findByPostAndMemberAndEmojiCode(30L, 2L, "SYSTEM_HEART")).willReturn(Optional.empty());
         given(reactionRepository.save(any(KkinipopReaction.class))).willAnswer(invocation -> invocation.getArgument(0));
+        given(reactionRepository.countByPostAndEmojiCode(30L, "SYSTEM_HEART")).willReturn(1L);
 
         // When
         kkinipopPostService.reactToPost(2L, 10L, 30L, "SYSTEM_HEART");
@@ -237,19 +242,51 @@ class KkinipopPostServiceTest {
     }
 
     @Test
-    @DisplayName("동일한 게시글, 반응자, 이모지 조합이 이미 있으면 알림을 발행하지 않는다")
-    void shouldNotPublishReactionEvent_whenReactionAlreadyExists() {
+    @DisplayName("동일한 게시글, 반응자, 이모지 조합이 이미 있으면 리액션을 해제한다")
+    void shouldRemoveReaction_whenSameEmojiAlreadyExists() {
         // Given
         KkinipopGroup group = createGroup(10L, "아침 챌린저스");
         Member writer = createMember(1L, "작성자");
         Member reactor = createMember(2L, "반응자");
         KkinipopGroupMember groupMember = createGroupMember(100L, group, reactor);
         KkinipopPost post = createPost(30L, group, writer, null, LocalDate.of(2026, 4, 24), "uuid_post");
+        KkinipopReaction existingReaction = createDefaultReaction(post, reactor, KkinipopReactionEmoji.HEART);
 
         given(kkinipopUseCase.findGroupMember(10L, 2L)).willReturn(groupMember);
         given(kkinipopUseCase.findPostById(30L)).willReturn(post);
-        given(reactionRepository.existsByPostAndMemberAndEmojiCode(30L, 2L, "SYSTEM_HEART")).willReturn(true);
-        given(reactionRepository.save(any(KkinipopReaction.class))).willAnswer(invocation -> invocation.getArgument(0));
+        given(reactionRepository.findByPostAndMemberAndEmojiCode(30L, 2L, "SYSTEM_HEART"))
+                .willReturn(Optional.of(existingReaction));
+        given(reactionRepository.countByPostAndEmojiCode(30L, "SYSTEM_HEART")).willReturn(1L);
+
+        // When
+        KkinipopReactionSummaryResponse response = kkinipopPostService.reactToPost(2L, 10L, 30L, "SYSTEM_HEART");
+
+        // Then
+        assertThat(response.emojiCode()).isEqualTo("SYSTEM_HEART");
+        assertThat(response.label()).isEqualTo("하트");
+        assertThat(response.count()).isEqualTo(1L);
+        assertThat(response.emojiType()).isEqualTo("SYSTEM_EMOJI");
+        assertThat(response.reacted()).isFalse();
+        then(reactionRepository).should().delete(existingReaction);
+        then(reactionRepository).should(never()).save(any(KkinipopReaction.class));
+    }
+
+    @Test
+    @DisplayName("리액션 해제 시 알림 이벤트를 발행하지 않는다")
+    void shouldNotPublishEvent_whenReactionIsRemoved() {
+        // Given
+        KkinipopGroup group = createGroup(10L, "아침 챌린저스");
+        Member writer = createMember(1L, "작성자");
+        Member reactor = createMember(2L, "반응자");
+        KkinipopGroupMember groupMember = createGroupMember(100L, group, reactor);
+        KkinipopPost post = createPost(30L, group, writer, null, LocalDate.of(2026, 4, 24), "uuid_post");
+        KkinipopReaction existingReaction = createDefaultReaction(post, reactor, KkinipopReactionEmoji.HEART);
+
+        given(kkinipopUseCase.findGroupMember(10L, 2L)).willReturn(groupMember);
+        given(kkinipopUseCase.findPostById(30L)).willReturn(post);
+        given(reactionRepository.findByPostAndMemberAndEmojiCode(30L, 2L, "SYSTEM_HEART"))
+                .willReturn(Optional.of(existingReaction));
+        given(reactionRepository.countByPostAndEmojiCode(30L, "SYSTEM_HEART")).willReturn(0L);
 
         // When
         kkinipopPostService.reactToPost(2L, 10L, 30L, "SYSTEM_HEART");
@@ -269,8 +306,9 @@ class KkinipopPostServiceTest {
 
         given(kkinipopUseCase.findGroupMember(10L, 1L)).willReturn(groupMember);
         given(kkinipopUseCase.findPostById(30L)).willReturn(post);
-        given(reactionRepository.existsByPostAndMemberAndEmojiCode(30L, 1L, "SYSTEM_HEART")).willReturn(false);
+        given(reactionRepository.findByPostAndMemberAndEmojiCode(30L, 1L, "SYSTEM_HEART")).willReturn(Optional.empty());
         given(reactionRepository.save(any(KkinipopReaction.class))).willAnswer(invocation -> invocation.getArgument(0));
+        given(reactionRepository.countByPostAndEmojiCode(30L, "SYSTEM_HEART")).willReturn(1L);
 
         // When
         kkinipopPostService.reactToPost(1L, 10L, 30L, "SYSTEM_HEART");
@@ -280,7 +318,7 @@ class KkinipopPostServiceTest {
     }
 
     @Test
-    @DisplayName("게시글을 조회하면 오늘 기준 최근 일주일치 날짜별 목록을 반환한다")
+    @DisplayName("게시글을 조회하면 이번 주 월요일부터 일요일까지 날짜별 목록을 반환한다")
     void shouldReturnWeeklyDailyPostResponses_whenRequestingPosts() {
         // Given
         KkinipopGroup group = createGroup(10L, "아침 챌린저스");
@@ -296,7 +334,7 @@ class KkinipopPostServiceTest {
 
         given(kkinipopUseCase.findGroupMember(10L, 1L)).willReturn(groupMember);
         given(dateTimeProvider.today()).willReturn(LocalDate.of(2026, 4, 24));
-        given(postRepository.findPostsInDateRange(10L, LocalDate.of(2026, 4, 17), LocalDate.of(2026, 4, 24), null))
+        given(postRepository.findPostsInDateRange(10L, LocalDate.of(2026, 4, 20), LocalDate.of(2026, 4, 26), null))
                 .willReturn(List.of(post));
         given(reactionRepository.findPostReactions(List.of(30L))).willReturn(List.of(reaction));
 
@@ -304,12 +342,14 @@ class KkinipopPostServiceTest {
         List<KkinipopDailyPostResponse> responses = kkinipopPostService.getPosts(1L, 10L, null);
 
         // Then
-        assertThat(responses).hasSize(8);
-        assertThat(responses.get(0).date()).isEqualTo(LocalDate.of(2026, 4, 24));
-        assertThat(responses.get(0).posts()).hasSize(1);
-        assertThat(responses.get(0).posts().get(0).reactions()).hasSize(1);
-        assertThat(responses.get(0).posts().get(0).reactions().get(0).emojiType()).isEqualTo("SYSTEM_EMOJI");
-        assertThat(responses.get(7).date()).isEqualTo(LocalDate.of(2026, 4, 17));
+        assertThat(responses).hasSize(7);
+        assertThat(responses.get(0).date()).isEqualTo(LocalDate.of(2026, 4, 26));
+        assertThat(responses.get(2).date()).isEqualTo(LocalDate.of(2026, 4, 24));
+        assertThat(responses.get(2).posts()).hasSize(1);
+        assertThat(responses.get(2).posts().get(0).reactions()).hasSize(1);
+        assertThat(responses.get(2).posts().get(0).reactions().get(0).emojiType()).isEqualTo("SYSTEM_EMOJI");
+        assertThat(responses.get(2).posts().get(0).reactions().get(0).reacted()).isTrue();
+        assertThat(responses.get(6).date()).isEqualTo(LocalDate.of(2026, 4, 20));
     }
 
     @Test
@@ -332,7 +372,7 @@ class KkinipopPostServiceTest {
                 LocalDate.of(2026, 4, 24).atStartOfDay(),
                 LocalDate.of(2026, 4, 25).atStartOfDay()
         )).willReturn(java.util.Optional.of(mission));
-        given(postRepository.findPostsInDateRange(10L, LocalDate.of(2026, 4, 17), LocalDate.of(2026, 4, 24), 20L))
+        given(postRepository.findPostsInDateRange(10L, LocalDate.of(2026, 4, 20), LocalDate.of(2026, 4, 26), 20L))
                 .willReturn(List.of(post));
         given(reactionRepository.findPostReactions(List.of(30L))).willReturn(List.of());
 
@@ -340,8 +380,8 @@ class KkinipopPostServiceTest {
         List<KkinipopDailyPostResponse> responses = kkinipopPostService.getPosts(1L, 10L, 20L);
 
         // Then
-        assertThat(responses.get(0).posts()).hasSize(1);
-        assertThat(responses.get(0).posts().get(0).missionId()).isEqualTo(20L);
+        assertThat(responses.get(2).posts()).hasSize(1);
+        assertThat(responses.get(2).posts().get(0).missionId()).isEqualTo(20L);
     }
 
     @Test
