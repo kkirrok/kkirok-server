@@ -90,6 +90,12 @@ public class MealRecordService implements MealRecordUseCase {
         return createMealByImageFile(memberId, file, ScanType.IMAGE);
     }
 
+    /** 이미지로 기록 **/
+    @Override
+    public MealResponse createMealByImage(Long memberId, MultipartFile file, ScanType scanType) {
+        return null; // TODO: @xiadot 구현 필요
+    }
+
     /** 카메라로 식단 기록 **/
     @Override
     @Transactional

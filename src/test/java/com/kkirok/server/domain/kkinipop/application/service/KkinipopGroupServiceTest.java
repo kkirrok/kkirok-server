@@ -11,6 +11,7 @@ import com.kkirok.server.domain.kkinipop.exception.KkinipopErrorCode;
 import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
 import com.kkirok.server.domain.member.domain.Member;
 import com.kkirok.server.global.common.exception.ConflictException;
+import com.kkirok.server.global.common.exception.ForbiddenException;
 import com.kkirok.server.global.common.util.DateTimeProvider;
 import com.kkirok.server.support.fixture.MemberFixture;
 import java.time.LocalDateTime;
@@ -28,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
 class KkinipopGroupServiceTest {
@@ -133,6 +135,49 @@ class KkinipopGroupServiceTest {
 
         // Then
         assertThat(groupMember.getLeftAt()).isEqualTo(now);
+        assertThat(groupMember.isBanned()).isFalse();
+    }
+
+    @Test
+    @DisplayName("방장이 멤버를 추방하면 추방 상태와 탈퇴 시간이 기록된다")
+    void shouldBanMember_whenLeaderRemovesMember() {
+        // Given
+        KkinipopGroup group = createGroup(10L, "아침 챌린저스");
+        Member leader = createMember(1L, "방장");
+        Member target = createMember(2L, "멤버");
+        KkinipopGroupMember leaderGroupMember = createLeaderGroupMember(100L, group, leader);
+        KkinipopGroupMember targetGroupMember = createMemberGroupMember(101L, group, target);
+        LocalDateTime now = LocalDateTime.of(2026, 4, 24, 10, 0);
+
+        given(kkinipopUseCase.findGroupMember(10L, 1L)).willReturn(leaderGroupMember);
+        given(kkinipopUseCase.findGroupMember(10L, 2L)).willReturn(targetGroupMember);
+        given(dateTimeProvider.now()).willReturn(now);
+
+        // When
+        kkinipopGroupService.removeGroupMember(1L, 10L, 2L);
+
+        // Then
+        assertThat(targetGroupMember.getLeftAt()).isEqualTo(now);
+        assertThat(targetGroupMember.isBanned()).isTrue();
+    }
+
+    @Test
+    @DisplayName("추방된 멤버는 초대코드로 다시 참여할 수 없다")
+    void shouldThrowForbiddenException_whenBannedMemberTriesToRejoin() {
+        // Given
+        Member member = createMember(1L, "끼록이");
+        KkinipopGroup group = createGroup(10L, "아침 챌린저스");
+
+        given(memberUseCase.findMemberByMemberId(1L)).willReturn(member);
+        given(groupRepository.findByInviteCode("AB12CD")).willReturn(Optional.of(group));
+        given(groupMemberRepository.existsBannedMembership(10L, 1L)).willReturn(true);
+
+        // When, Then
+        assertThatThrownBy(() -> kkinipopGroupService.joinGroup(1L, "AB12CD"))
+                .isInstanceOf(ForbiddenException.class)
+                .extracting("baseErrorCode")
+                .isEqualTo(KkinipopErrorCode.GROUP_BANNED);
+        then(groupMemberRepository).should(never()).existsActiveMembership(10L, 1L);
     }
 
     private Member createMember(Long memberId, String nickname) {

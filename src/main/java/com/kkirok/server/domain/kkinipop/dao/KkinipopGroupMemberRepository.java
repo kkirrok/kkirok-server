@@ -54,4 +54,13 @@ public interface KkinipopGroupMemberRepository extends JpaRepository<KkinipopGro
             """)
     boolean existsActiveMembership(@Param("groupId") Long groupId, @Param("memberId") Long memberId);
 
+    @Query("""
+            select count(gm) > 0
+            from KkinipopGroupMember gm
+            where gm.group.id = :groupId
+              and gm.member.id = :memberId
+              and gm.banned = true
+            """)
+    boolean existsBannedMembership(@Param("groupId") Long groupId, @Param("memberId") Long memberId);
+
 }

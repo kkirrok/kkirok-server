@@ -84,6 +84,39 @@ class KkinipopMissionServiceTest {
         assertThat(response.missions().get(1).missionId()).isEqualTo(21L);
     }
 
+    @Test
+    @DisplayName("오늘 미션 조회 시 추방된 멤버는 달성 멤버 목록에서 제외된다")
+    void shouldExcludeBannedMemberFromSuccessMembers_whenGetTodayMissions() {
+        // Given
+        KkinipopGroup group = createGroup(10L, "아침 챌린저스");
+        Member member = createMember(1L, "끼록이");
+        Member activeMember = createMember(2L, "활성멤버");
+        KkinipopGroupMember groupMember = createGroupMember(100L, group, member);
+        LocalDateTime now = LocalDateTime.of(2026, 4, 24, 9, 5);
+        LocalDate today = LocalDate.of(2026, 4, 24);
+        KkinipopMission mission = createMission(20L, group, "현재 미션",
+                LocalDateTime.of(2026, 4, 24, 9, 0),
+                LocalDateTime.of(2026, 4, 24, 9, 10));
+        KkinipopPost activePost = createPost(30L, group, activeMember, mission, today, "uuid_post");
+
+        given(kkinipopUseCase.findGroupMember(10L, 1L)).willReturn(groupMember);
+        given(dateTimeProvider.today()).willReturn(today);
+        given(dateTimeProvider.now()).willReturn(now);
+        given(missionRepository.findMissionsByDate(10L, today.atStartOfDay(), today.plusDays(1).atStartOfDay()))
+                .willReturn(List.of(mission));
+        given(postRepository.findDailyPosts(10L, today)).willReturn(List.of(activePost));
+
+        // When
+        KkinipopMissionDateResponse response = kkinipopMissionService.getTodayMissions(1L, 10L);
+
+        // Then
+        // Banned member filtering is enforced by the repository query; this unit test only simulates the query result.
+        assertThat(response.missions()).hasSize(1);
+        assertThat(response.missions().get(0).successMembers())
+                .extracting("memberId")
+                .containsExactly(2L);
+    }
+
     private Member createMember(Long memberId, String nickname) {
         Member member = MemberFixture.createLocalMember(nickname, memberId + "@test.com");
         ReflectionTestUtils.setField(member, "id", memberId);

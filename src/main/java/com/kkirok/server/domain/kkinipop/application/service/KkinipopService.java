@@ -10,6 +10,7 @@ import com.kkirok.server.domain.kkinipop.domain.KkinipopGroup;
 import com.kkirok.server.domain.kkinipop.domain.KkinipopGroupMember;
 import com.kkirok.server.domain.kkinipop.domain.KkinipopPost;
 import com.kkirok.server.domain.kkinipop.exception.KkinipopErrorCode;
+import com.kkirok.server.global.common.exception.ForbiddenException;
 import com.kkirok.server.global.common.exception.NotFoundException;
 import com.kkirok.server.global.common.util.DateTimeProvider;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +34,12 @@ public class KkinipopService implements KkinipopUseCase {
     @Override
     public KkinipopGroupMember findGroupMember(Long groupId, Long memberId) {
         return groupMemberRepository.findActiveMembership(groupId, memberId)
-                .orElseThrow(() -> new NotFoundException(KkinipopErrorCode.GROUP_MEMBER_NOT_FOUND));
+                .orElseThrow(() -> {
+                    if (groupMemberRepository.existsBannedMembership(groupId, memberId)) {
+                        return new ForbiddenException(KkinipopErrorCode.GROUP_BANNED);
+                    }
+                    return new NotFoundException(KkinipopErrorCode.GROUP_MEMBER_NOT_FOUND);
+                });
     }
 
     @Override

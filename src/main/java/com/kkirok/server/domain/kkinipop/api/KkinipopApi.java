@@ -12,6 +12,7 @@ import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopMyKkir
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopPostResponse;
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopReactionSummaryResponse;
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopSystemEmojiResponse;
+import com.kkirok.server.domain.meal.domain.ScanType;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
 import com.kkirok.server.global.common.dto.SuccessResponse;
 import com.kkirok.server.domain.kkinipop.exception.KkinipopErrorCode;
@@ -200,10 +201,10 @@ public interface KkinipopApi {
     @Operation(
             summary = "게시글 조회 [USER]",
             description = """
-                    오늘 기준 최근 일주일치 게시글을 날짜별로 묶어서 조회합니다.
+                    이번 주 월요일부터 일요일까지 게시글을 날짜별로 묶어서 조회합니다.
 
                     - 사전 조건: 요청한 사용자가 해당 그룹에 속해 있어야 합니다.
-                    - 조회 범위: 오늘부터 7일 전까지의 게시글을 조회합니다.
+                    - 조회 범위: 오늘이 속한 주의 월요일부터 일요일까지 게시글을 조회합니다.
                     - `missionId`가 있으면 오늘 날짜 미션 중 해당 미션에 속한 게시글만 조회합니다.
                     - `missionId`가 없으면 미션 조건 없이 전체 게시글을 조회합니다.
                     - 응답: 날짜별 게시글 목록, 요일 라벨, 요일 숫자(0:일 ~ 6:토)
@@ -252,6 +253,7 @@ public interface KkinipopApi {
                     `multipart/form-data`로 요청합니다.
                     - `saveToPersonalLog`: 나의끼록과 같이 저장할지 여부
                     - `image`: 업로드할 이미지 파일
+                    - 'scanType': 이미지 업로드 수단
                     - 현재 시간에 해당하는 실시간 미션이 없으면 실패합니다.
                     - `saveToPersonalLog=true`인 끼니팝 게시글은 하루 최대 3회까지 저장할 수 있습니다.
                     """,
@@ -280,6 +282,8 @@ public interface KkinipopApi {
             Long groupId,
             @Parameter(description = "나의끼록과 같이 저장 여부", required = false, example = "false")
             @RequestParam("saveToPersonalLog") boolean saveToPersonalLog,
+            @Parameter(description = "이미지 스캔타입", required = true, example = "CAMERA")
+            @RequestPart("missionId") ScanType scanType,
             @Parameter(description = "업로드할 게시글 이미지 파일", required = true)
             @RequestPart("image") MultipartFile image
     );
@@ -392,11 +396,14 @@ public interface KkinipopApi {
     @Operation(
             summary = "게시글 리액션 [USER]",
             description = """
-                    게시글에 시스템/커스텀 이모지 리액션을 남깁니다.
+                    게시글에 시스템/커스텀 이모지 리액션을 남기거나 해제합니다.
 
                     - 사전 조건: 요청한 사용자가 해당 그룹에 속해 있어야 합니다.
                     - `emojiCode`는 `SYSTEM_...` 또는 `CUSTOM_{id}` 형식을 사용합니다.
                     - 시스템 이모지는 시스템 이모지 조회 api에서 종류를 조회할 수 있습니다.
+                    - 같은 사용자가 같은 게시글에 같은 `emojiCode`로 다시 요청하면 기존 리액션을 삭제합니다.
+                    - 응답의 `count`는 요청 처리 후 해당 이모지의 전체 리액션 수입니다.
+                    - 응답의 `reacted`는 요청 처리 후 현재 사용자의 리액션 여부입니다.
                     """
     )
     @ApiResponse(responseCode = "201", useReturnTypeSchema = true)

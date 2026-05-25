@@ -48,6 +48,9 @@ public class KkinipopGroupMember extends BaseTimeEntity {
     @Column(name = "left_at")
     private LocalDateTime leftAt;
 
+    @Column(name = "banned", nullable = false)
+    private boolean banned = false;
+
     @Builder
     private KkinipopGroupMember(KkinipopGroup group, Member member, KkinipopGroupRole role) {
         this.group = group;
@@ -81,5 +84,14 @@ public class KkinipopGroupMember extends BaseTimeEntity {
 
     public void leave(LocalDateTime leftAt) {
         this.leftAt = leftAt;
+    }
+
+    public void ban(LocalDateTime bannedAt) {
+        this.leftAt = bannedAt;
+        this.banned = true;
+    }
+
+    public boolean isBanned() {
+        return banned;
     }
 }

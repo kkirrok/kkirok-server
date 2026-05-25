@@ -12,23 +12,31 @@ public record KkinipopReactionSummaryResponse(
         @Schema(description = "리액션 수", example = "3")
         long count,
         @Schema(description = "이모지 타입", example = "SYSTEM_EMOJI")
-        String emojiType
+        String emojiType,
+        @Schema(description = "현재 사용자의 리액션 여부", example = "true")
+        boolean reacted
 ) {
     public static KkinipopReactionSummaryResponse from(KkinipopReaction reaction, long count) {
+        return from(reaction, count, true);
+    }
+
+    public static KkinipopReactionSummaryResponse from(KkinipopReaction reaction, long count, boolean reacted) {
         return new KkinipopReactionSummaryResponse(
                 reaction.getEmojiCode(),
                 reaction.getEmojiLabel(),
                 count,
-                reaction.isCustomEmoji() ? "CUSTOM_EMOJI" : "SYSTEM_EMOJI"
+                reaction.isCustomEmoji() ? "CUSTOM_EMOJI" : "SYSTEM_EMOJI",
+                reacted
         );
     }
 
-    public static KkinipopReactionSummaryResponse of(KkinipopReactionSummaryResponse summary, long count) {
+    public static KkinipopReactionSummaryResponse of(KkinipopReactionSummaryResponse summary, long count, boolean reacted) {
         return new KkinipopReactionSummaryResponse(
                 summary.emojiCode(),
                 summary.label(),
                 count,
-                summary.emojiType()
+                summary.emojiType(),
+                reacted
         );
     }
 }
