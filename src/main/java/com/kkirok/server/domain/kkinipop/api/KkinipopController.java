@@ -16,6 +16,7 @@ import com.kkirok.server.domain.kkinipop.application.service.KkinipopGroupServic
 import com.kkirok.server.domain.kkinipop.application.service.KkinipopMissionService;
 import com.kkirok.server.domain.kkinipop.application.service.KkinipopPostService;
 import com.kkirok.server.domain.kkinipop.exception.KkinipopSuccessCode;
+import com.kkirok.server.domain.meal.domain.ScanType;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
 import com.kkirok.server.global.auth.annotation.RoleUserAuth;
 import com.kkirok.server.global.common.dto.SuccessResponse;
@@ -149,10 +150,11 @@ public class KkinipopController implements KkinipopApi {
             @CurrentMember Long memberId,
             @PathVariable Long groupId,
             @RequestParam(value = "saveToPersonalLog", required = false, defaultValue = "false") boolean saveToPersonalLog,
+            @RequestParam("missionId") ScanType scanType,
             @RequestPart("image") MultipartFile image
-    ) {
+            ) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(SuccessResponse.of(KkinipopSuccessCode.POST_CREATE_SUCCESS, kkinipopPostService.createPost(memberId, groupId, saveToPersonalLog, image)));
+                .body(SuccessResponse.of(KkinipopSuccessCode.POST_CREATE_SUCCESS, kkinipopPostService.createPost(memberId, groupId, saveToPersonalLog, image, scanType)));
     }
 
     // 글 삭제 API

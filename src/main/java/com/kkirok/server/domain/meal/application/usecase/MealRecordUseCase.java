@@ -36,6 +36,7 @@ import com.kkirok.server.domain.meal.application.dto.request.MealUpdateRequest;
 import com.kkirok.server.domain.meal.application.dto.response.MealResponse;
 import com.kkirok.server.domain.meal.application.dto.response.TodayNutritionSummaryResponse;
 import com.kkirok.server.domain.meal.domain.MealRecord;
+import com.kkirok.server.domain.meal.domain.ScanType;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -49,6 +50,8 @@ public interface MealRecordUseCase {
     MealResponse createMealByCamera(Long memberId, MultipartFile file);
 
     MealResponse createMealByAlbum(Long memberId, MultipartFile file);
+
+    MealResponse createMealByImage(Long memberId, MultipartFile file, ScanType scanType);
 
     MealResponse updateMeal(Long memberId, Long mealId, MealUpdateRequest request);
 

@@ -16,6 +16,8 @@ import com.kkirok.server.domain.kkinipop.domain.KkinipopPost;
 import com.kkirok.server.domain.kkinipop.domain.KkinipopReaction;
 import com.kkirok.server.domain.kkinipop.domain.KkinipopReactionEmoji;
 import com.kkirok.server.domain.kkinipop.exception.KkinipopErrorCode;
+import com.kkirok.server.domain.meal.application.usecase.MealRecordUseCase;
+import com.kkirok.server.domain.meal.domain.ScanType;
 import com.kkirok.server.domain.member.domain.Member;
 import com.kkirok.server.global.common.exception.BadRequestException;
 import com.kkirok.server.global.common.exception.ConflictException;
@@ -51,6 +53,9 @@ class KkinipopPostServiceTest {
 
     @Mock
     private KkinipopUseCase kkinipopUseCase;
+
+    @Mock
+    private MealRecordUseCase mealRecordUseCase;
 
     @Mock
     private KkinipopMissionRepository missionRepository;
@@ -101,13 +106,14 @@ class KkinipopPostServiceTest {
         });
 
         // When
-        KkinipopPostResponse response = kkinipopPostService.createPost(1L, 10L, true, image);
+        KkinipopPostResponse response = kkinipopPostService.createPost(1L, 10L, true, image, ScanType.CAMERA);
 
         // Then
         assertThat(response.postId()).isEqualTo(30L);
         assertThat(response.memberId()).isEqualTo(1L);
         assertThat(response.missionId()).isEqualTo(20L);
         assertThat(response.image()).isEqualTo("uuid_kkinipopPostImage");
+        then(mealRecordUseCase).should().createMealByImage(1L, image, ScanType.CAMERA);
     }
 
     @Test
@@ -126,7 +132,7 @@ class KkinipopPostServiceTest {
         given(missionRepository.findLiveMissions(10L, now)).willReturn(List.of());
 
         // When, Then
-        assertThatThrownBy(() -> kkinipopPostService.createPost(1L, 10L, true, image))
+        assertThatThrownBy(() -> kkinipopPostService.createPost(1L, 10L, true, image, ScanType.CAMERA))
                 .isInstanceOf(BadRequestException.class)
                 .extracting("baseErrorCode")
                 .isEqualTo(KkinipopErrorCode.LIVE_MISSION_NOT_FOUND);
@@ -153,7 +159,7 @@ class KkinipopPostServiceTest {
         given(postRepository.countMyKkirokSavedPosts(10L, 1L, today)).willReturn(3L);
 
         // When, Then
-        assertThatThrownBy(() -> kkinipopPostService.createPost(1L, 10L, true, image))
+        assertThatThrownBy(() -> kkinipopPostService.createPost(1L, 10L, true, image, ScanType.CAMERA))
                 .isInstanceOf(ConflictException.class)
                 .extracting("baseErrorCode")
                 .isEqualTo(KkinipopErrorCode.GENERAL_POST_LIMIT_EXCEEDED);
