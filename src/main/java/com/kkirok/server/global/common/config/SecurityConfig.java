@@ -40,6 +40,7 @@ public class SecurityConfig {
                 "/v1/users/email-verification/send",
                 "/v1/users/email-verification/verify",
                 "/error",
+                "/v1/enums",
 //                actuatorEndPoint + "/health",
 //                actuatorEndPoint + "/prometheus", // TODO: 추후 모니터링 추가하면 활성화
                 "/"
