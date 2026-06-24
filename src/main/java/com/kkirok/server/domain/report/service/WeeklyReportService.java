@@ -54,6 +54,10 @@ public class WeeklyReportService {
     }
 
     private WeeklyReportRequest buildInput(List<MealRecord> meals) {
+        Map<String, Integer> dailyKcals = new LinkedHashMap<>();
+        for (DayOfWeek dow : DayOfWeek.values()) {
+            dailyKcals.put(dow.name(), 0);
+        }
         long recordedDays = meals.stream()
                 .map(MealRecord::getMealDate)
                 .distinct()
@@ -63,6 +67,7 @@ public class WeeklyReportService {
         int    totalKcal          = 0;
         double totalProteinG      = 0.0;
         double totalCarbohydrateG = 0.0;
+        double totalSugarG        = 0.0;
         double totalFatG          = 0.0;
         double totalSodiumMg      = 0.0;
 
@@ -77,8 +82,13 @@ public class WeeklyReportService {
                 totalKcal          += n.getKcal();
                 totalProteinG      += n.getProteinG();
                 totalCarbohydrateG += n.getCarbohydrateG();
+                totalSugarG        += n.getSugarG();
                 totalFatG          += n.getFatG();
                 totalSodiumMg      += n.getSodiumMg();
+
+                // 요일별 칼로리 누적
+                String dow = meal.getMealDate().getDayOfWeek().name();
+                dailyKcals.merge(dow, n.getKcal(), Integer::sum);
             }
             slotCounts.merge(meal.getMealTimeSlot().name(), 1, Integer::sum);
         }
@@ -87,10 +97,12 @@ public class WeeklyReportService {
                 totalKcal / days,
                 Math.round(totalProteinG      / days * 10.0) / 10.0,
                 Math.round(totalCarbohydrateG / days * 10.0) / 10.0,
+                Math.round(totalSugarG / days * 10.0) / 10.0,
                 Math.round(totalFatG          / days * 10.0) / 10.0,
                 Math.round(totalSodiumMg      / days * 10.0) / 10.0,
                 days,
-                slotCounts
+                slotCounts,
+                dailyKcals
         );
     }
 
@@ -111,8 +123,13 @@ public class WeeklyReportService {
                 .map(s -> new WeeklyReportResponse.Suggestion(s.title(), s.content()))
                 .toList();
 
+        int totalWeeklyKcal = input.dailyKcals().values().stream()
+                .mapToInt(Integer::intValue).sum();
+
         return new WeeklyReportResponse(
                 input.avgDailyKcal(),
+                totalWeeklyKcal,
+                input.dailyKcals(),
                 result.kcalFeedback(),
                 result.kcalStatus(),
                 nutrientFeedbacks,
