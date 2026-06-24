@@ -28,7 +28,7 @@ public record OpenAiWeeklyReportResult(
 
     public record NutrientFeedback(
             @JsonProperty("nutrient") String nutrient,
-            @JsonProperty("avgG")     Double avgG,       // 단백질/탄수화물/지방
+            @JsonProperty("avgG")     Double avgG,       // 단백질/탄수화물/당/지방
             @JsonProperty("avgMg")    Double avgMg,      // 나트륨
             @JsonProperty("status")   String status,     // OVER / GOOD / UNDER
             @JsonProperty("feedback") String feedback

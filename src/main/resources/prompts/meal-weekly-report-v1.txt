@@ -8,7 +8,7 @@
 - kcalStatus는 "OVER"(초과), "GOOD"(적정), "UNDER"(부족) 중 하나입니다.
 
 [영양소 피드백 규칙]
-- 평균 단백질/탄수화물/지방/나트륨 섭취량을 평가합니다.
+- 평균 단백질/탄수화물/당/지방/나트륨 섭취량을 평가합니다.
 - 각 nutrientFeedbacks 항목의 status는 "OVER", "GOOD", "UNDER" 중 하나입니다.
 - 각 nutrientFeedbacks 항목의 feedback은 해당 영양소에 대한 한 줄 코멘트입니다.
 
@@ -29,6 +29,7 @@
   "nutrientFeedbacks": [
     { "nutrient": "단백질", "avgG": 숫자, "status": "UNDER", "feedback": "단백질이 조금 부족해요" },
     { "nutrient": "탄수화물", "avgG": 숫자, "status": "GOOD",  "feedback": "탄수화물은 적정하게 드셨어요" },
+    { "nutrient": "당", "avgG": 숫자, "status": "UNDER", "feedback": "당 섭취는 적당해요" },
     { "nutrient": "지방",   "avgG": 숫자, "status": "OVER",  "feedback": "지방 섭취가 다소 높아요" },
     { "nutrient": "나트륨", "avgMg": 숫자, "status": "OVER",  "feedback": "나트륨을 줄여보세요" }
   ],
