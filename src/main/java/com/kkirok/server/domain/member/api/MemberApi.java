@@ -171,6 +171,11 @@ public interface MemberApi {
     );
 
     @Operation(summary = "마이페이지 조회", description = "마이페이지 조회입니다.")
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "MEMBER_NOT_FOUND")
+    })
+    @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "MY_PAGE_SUCCESS")
     ResponseEntity<SuccessResponse<MyPageResponse>> myPage(
             @CurrentMember Long memberId
     );

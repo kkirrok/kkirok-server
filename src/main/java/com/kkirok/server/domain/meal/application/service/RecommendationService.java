@@ -92,7 +92,7 @@ public class RecommendationService implements RecommendedAmountUseCase {
 
     @Override
     public int getRecommendedKcal(Long memberId) {
-        return 0;
+        return getRecommendedKcal(memberId, LocalDate.now());
     }
 
     @Override
@@ -102,7 +102,7 @@ public class RecommendationService implements RecommendedAmountUseCase {
 
     @Override
     public OpenAiRecommendedAmountResponse getAllRecommendedNutrition(Long memberId) {
-        return null;
+        return getAllRecommendedNutrition(memberId, LocalDate.now());
     }
 
     @Override
