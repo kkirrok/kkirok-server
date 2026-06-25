@@ -16,7 +16,6 @@ import com.kkirok.server.domain.kkinipop.domain.KkinipopPost;
 import com.kkirok.server.domain.kkinipop.domain.KkinipopReaction;
 import com.kkirok.server.domain.kkinipop.domain.KkinipopReactionEmoji;
 import com.kkirok.server.domain.kkinipop.exception.KkinipopErrorCode;
-import com.kkirok.server.domain.meal.application.usecase.MealRecordUseCase;
 import com.kkirok.server.domain.meal.domain.ScanType;
 import com.kkirok.server.domain.member.domain.Member;
 import com.kkirok.server.global.common.exception.BadRequestException;
@@ -55,7 +54,7 @@ class KkinipopPostServiceTest {
     private KkinipopUseCase kkinipopUseCase;
 
     @Mock
-    private MealRecordUseCase mealRecordUseCase;
+    private KkinipopPersonalLogService personalLogService;
 
     @Mock
     private KkinipopMissionRepository missionRepository;
@@ -98,6 +97,7 @@ class KkinipopPostServiceTest {
         given(missionRepository.findLiveMissions(10L, now)).willReturn(List.of(mission));
         given(postRepository.countMyKkirokSavedPosts(10L, 1L, today)).willReturn(0L);
         given(r2UploadService.upload(image)).willReturn("uuid_kkinipopPostImage");
+        given(personalLogService.tryRecordPersonalLog(1L, image, ScanType.CAMERA)).willReturn(true);
         given(postRepository.save(any(KkinipopPost.class))).willAnswer(invocation -> {
             KkinipopPost post = invocation.getArgument(0);
             ReflectionTestUtils.setField(post, "id", 30L);
@@ -113,7 +113,45 @@ class KkinipopPostServiceTest {
         assertThat(response.memberId()).isEqualTo(1L);
         assertThat(response.missionId()).isEqualTo(20L);
         assertThat(response.image()).isEqualTo("uuid_kkinipopPostImage");
-        then(mealRecordUseCase).should().createMealByImage(1L, image, ScanType.CAMERA);
+        then(personalLogService).should().tryRecordPersonalLog(1L, image, ScanType.CAMERA);
+    }
+
+    @Test
+    @DisplayName("나의끼록 저장 실패 시 게시글은 생성되고 저장 횟수는 차감되지 않는다")
+    void shouldCreatePostWithoutPersonalLog_whenPersonalLogRecordingFails() {
+        // Given
+        KkinipopGroup group = createGroup(10L, "아침 챌린저스");
+        Member member = createMember(1L, "끼록이");
+        KkinipopGroupMember groupMember = createGroupMember(100L, group, member);
+        KkinipopMission mission = createMission(20L, group, "실시간 미션",
+                LocalDateTime.of(2026, 4, 24, 9, 0),
+                LocalDateTime.of(2026, 4, 24, 9, 10));
+        LocalDateTime now = LocalDateTime.of(2026, 4, 24, 9, 5);
+        LocalDate today = LocalDate.of(2026, 4, 24);
+        MockMultipartFile image = new MockMultipartFile("image", "meal.png", "image/png", "meal".getBytes());
+
+        given(kkinipopUseCase.findGroupMember(10L, 1L)).willReturn(groupMember);
+        given(dateTimeProvider.today()).willReturn(today);
+        given(dateTimeProvider.now()).willReturn(now);
+        given(missionRepository.findLiveMissions(10L, now)).willReturn(List.of(mission));
+        given(postRepository.countMyKkirokSavedPosts(10L, 1L, today)).willReturn(0L);
+        given(r2UploadService.upload(image)).willReturn("uuid_kkinipopPostImage");
+        given(personalLogService.tryRecordPersonalLog(1L, image, ScanType.CAMERA)).willReturn(false);
+
+        ArgumentCaptor<KkinipopPost> postCaptor = ArgumentCaptor.forClass(KkinipopPost.class);
+        given(postRepository.save(postCaptor.capture())).willAnswer(invocation -> {
+            KkinipopPost post = invocation.getArgument(0);
+            ReflectionTestUtils.setField(post, "id", 31L);
+            ReflectionTestUtils.setField(post, "createdAt", LocalDateTime.of(2026, 4, 24, 9, 5, 10));
+            return post;
+        });
+
+        // When
+        KkinipopPostResponse response = kkinipopPostService.createPost(1L, 10L, true, image, ScanType.CAMERA);
+
+        // Then
+        assertThat(response.postId()).isEqualTo(31L);
+        assertThat(postCaptor.getValue().isSaveToPersonalLog()).isFalse();
     }
 
     @Test

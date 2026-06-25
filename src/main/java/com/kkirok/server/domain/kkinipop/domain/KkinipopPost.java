@@ -101,4 +101,8 @@ public class KkinipopPost extends BaseTimeEntity {
     public void delete(LocalDateTime deletedAt) {
         this.deletedAt = deletedAt;
     }
+
+    public void cancelPersonalLogSave() {
+        this.saveToPersonalLog = false;
+    }
 }
