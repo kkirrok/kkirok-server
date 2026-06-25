@@ -3,6 +3,7 @@ package com.kkirok.server.domain.member.api;
 import com.kkirok.server.domain.member.application.dto.request.FindEmailRequest;
 import com.kkirok.server.domain.member.application.dto.request.ProfileSettingRequest;
 import com.kkirok.server.domain.member.application.dto.request.ResetPasswordRequest;
+import com.kkirok.server.domain.member.application.dto.response.MyPageResponse;
 import com.kkirok.server.domain.member.application.dto.response.OnboardingOptionResponse;
 import com.kkirok.server.domain.member.application.dto.response.FoundEmailResponse;
 import com.kkirok.server.domain.member.application.dto.response.OnboardingProfileResponse;
@@ -166,6 +167,11 @@ public interface MemberApi {
             회원탈퇴입니다. 복구 정책을 대비하여 완전 삭제하지 않습니다.
             """)
     ResponseEntity<SuccessResponse<Void>> quitMember(
+            @CurrentMember Long memberId
+    );
+
+    @Operation(summary = "마이페이지 조회", description = "마이페이지 조회입니다.")
+    ResponseEntity<SuccessResponse<MyPageResponse>> myPage(
             @CurrentMember Long memberId
     );
 

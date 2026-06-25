@@ -36,4 +36,15 @@ class NoMealTodayPolicyTest {
                 new MealReminderTarget(2L, "DAY-20260506")
         );
     }
+
+    @Test
+    @DisplayName("오늘 식사 미기록 알림 대상 여부를 확인한다")
+    void shouldCheckNoMealTodayTarget() {
+        LocalDateTime now = LocalDateTime.of(2026, 5, 6, 12, 0);
+        given(mealRecordRepository.findMemberIdsWithoutMealOn(now.toLocalDate()))
+                .willReturn(List.of(1L));
+
+        assertThat(noMealTodayPolicy.isImTarget(now, 1L)).isTrue();
+        assertThat(noMealTodayPolicy.isImTarget(now, 2L)).isFalse();
+    }
 }

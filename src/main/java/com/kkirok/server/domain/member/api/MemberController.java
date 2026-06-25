@@ -4,10 +4,12 @@ import com.kkirok.server.domain.member.application.dto.request.FindEmailRequest;
 import com.kkirok.server.domain.member.application.dto.request.ProfileSettingRequest;
 import com.kkirok.server.domain.member.application.dto.request.ResetPasswordRequest;
 import com.kkirok.server.domain.member.application.dto.response.FoundEmailResponse;
+import com.kkirok.server.domain.member.application.dto.response.MyPageResponse;
 import com.kkirok.server.domain.member.application.dto.response.OnboardingOptionResponse;
 import com.kkirok.server.domain.member.application.dto.response.OnboardingProfileResponse;
 import com.kkirok.server.domain.member.application.service.AccountRecoveryService;
 import com.kkirok.server.domain.member.application.service.MemberService;
+import com.kkirok.server.domain.member.application.service.MyPageService;
 import com.kkirok.server.domain.member.application.service.OnboardingService;
 import com.kkirok.server.domain.member.domain.OnboardingHabit;
 import com.kkirok.server.domain.member.domain.OnboardingPurpose;
@@ -34,6 +36,7 @@ public class MemberController implements MemberApi {
     private final AccountRecoveryService accountRecoveryService;
     private final OnboardingService onboardingService;
     private final MemberService memberService;
+    private final MyPageService myPageService;
 
     @Override
     @PostMapping("/recovery/email")
@@ -109,6 +112,14 @@ public class MemberController implements MemberApi {
         memberService.quit(memberId);
         return ResponseEntity.ok()
                 .body(SuccessResponse.from(MemberSuccessCode.USER_DELETE_SUCCESS));
+    }
+
+    @Override
+    @RoleUserAuth
+    public ResponseEntity<SuccessResponse<MyPageResponse>> myPage(Long memberId) {
+        MyPageResponse myPageResponse = myPageService.myPage(memberId);
+        return ResponseEntity.ok()
+                .body(SuccessResponse.of(MemberSuccessCode.MYPAGE_GET_SUCCESS, myPageResponse));
     }
 
 

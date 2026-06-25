@@ -12,4 +12,7 @@ public interface MealReminderPolicy {
     String body();
 
     List<MealReminderTarget> findTargets(LocalDateTime now);
+
+    Boolean isImTarget(LocalDateTime now, Long memberId);
+
 }

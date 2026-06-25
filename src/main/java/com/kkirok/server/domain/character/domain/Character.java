@@ -23,7 +23,7 @@ import lombok.*;
 
 @Entity
 @Getter
-@Table(name = "character")
+@Table(name = "memberInfo")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Character extends BaseTimeEntity {
 

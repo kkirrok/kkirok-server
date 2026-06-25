@@ -45,4 +45,10 @@ public class NoMealTodayPolicy implements MealReminderPolicy {
                 .map(memberId -> new MealReminderTarget(memberId, daySuffix))
                 .toList();
     }
+
+    @Override
+    public Boolean isImTarget(LocalDateTime now, Long memberId) {
+        return findTargets(now).stream()
+                .anyMatch(target -> target.memberId().equals(memberId));
+    }
 }

@@ -24,7 +24,8 @@ public enum MemberSuccessCode implements BaseSuccessCode {
 	PROFILE_SETTING_SUCCESS(200, "프로필 설정 성공"),
 	ONBOARDING_PURPOSE_LIST_SUCCESS(200, "온보딩 목표 목록 조회 성공"),
 	ONBOARDING_HABIT_LIST_SUCCESS(200, "식습관 유형 목록 조회 성공"),
-	CURRENT_ROLE_GET_SUCCESS(200, "현재 권한 조회 성공")
+	CURRENT_ROLE_GET_SUCCESS(200, "현재 권한 조회 성공"),
+	MYPAGE_GET_SUCCESS(200, "마이페이지 조회 성공")
 
 
 	;
