@@ -13,7 +13,7 @@ public class CharacterTypeInitializer implements ApplicationRunner {
 
     private static final String DEFAULT_CHARACTER_TYPE_CODE = "BASIC";
     private static final String DEFAULT_CHARACTER_TYPE_NAME = "기본 캐릭터";
-    private static final String DEFAULT_CHARACTER_BASE_IMAGE = "memberInfo-base.png";
+    private static final String DEFAULT_CHARACTER_BASE_IMAGE = "character-base.png";
 
     private final CharacterTypeRepository characterTypeRepository;
 

@@ -13,6 +13,9 @@ public interface MealReminderPolicy {
 
     List<MealReminderTarget> findTargets(LocalDateTime now);
 
-    Boolean isImTarget(LocalDateTime now, Long memberId);
+    default Boolean isImTarget(LocalDateTime now, Long memberId) {
+        return findTargets(now).stream()
+                .anyMatch(target -> target.memberId().equals(memberId));
+    }
 
 }

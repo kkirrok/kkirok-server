@@ -40,7 +40,7 @@ class CharacterInitializationServiceTest {
     void shouldCreateInitialCharacter_whenMemberRegisters() {
         // Given
         Member member = MemberFixture.createLocalMember();
-        CharacterType characterType = CharacterType.create("BASIC", "기본 캐릭터", "memberInfo-base.png");
+        CharacterType characterType = CharacterType.create("BASIC", "기본 캐릭터", "character-base.png");
 
         given(characterTypeRepository.findByTypeCode("BASIC")).willReturn(Optional.of(characterType));
 

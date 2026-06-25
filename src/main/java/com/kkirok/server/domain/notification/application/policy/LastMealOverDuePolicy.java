@@ -46,12 +46,6 @@ public class LastMealOverDuePolicy implements MealReminderPolicy {
                 .toList();
     }
 
-    @Override
-    public Boolean isImTarget(LocalDateTime now, Long memberId) {
-        return findTargets(now).stream()
-                .anyMatch(target -> target.memberId().equals(memberId));
-    }
-
     private MealReminderTarget toTarget(MealReminderRow row) {
         // row projection을 알림 디스패치용 target 형식으로 변환한다.
         return new MealReminderTarget(row.memberId(), String.valueOf(row.lastMealId()));

@@ -162,7 +162,7 @@ class CharacterWearingServiceTest {
     }
 
     private Character createCharacter() {
-        CharacterType characterType = CharacterType.create("BASIC", "기본 캐릭터", "memberInfo-base.png");
+        CharacterType characterType = CharacterType.create("BASIC", "기본 캐릭터", "character-base.png");
         Character character = Character.builder()
                 .member(MemberFixture.createLocalMember())
                 .characterType(characterType)
