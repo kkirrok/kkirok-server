@@ -16,7 +16,6 @@ import com.kkirok.server.domain.kkinipop.domain.KkinipopPost;
 import com.kkirok.server.domain.kkinipop.domain.KkinipopReaction;
 import com.kkirok.server.domain.kkinipop.domain.KkinipopReactionEmoji;
 import com.kkirok.server.domain.kkinipop.exception.KkinipopErrorCode;
-import com.kkirok.server.domain.meal.application.usecase.MealRecordUseCase;
 import com.kkirok.server.domain.meal.domain.ScanType;
 import com.kkirok.server.global.common.exception.BadRequestException;
 import com.kkirok.server.global.common.exception.ConflictException;
@@ -48,7 +47,7 @@ public class KkinipopPostService {
     public static final int MAX_MY_KKIROK_SAVE_COUNT = 3;
 
     private final KkinipopUseCase kkinipopUseCase;
-    private final MealRecordUseCase mealRecordUseCase;
+    private final KkinipopPersonalLogService personalLogService;
     private final KkinipopMissionRepository missionRepository;
     private final KkinipopPostRepository postRepository;
     private final KkinipopReactionRepository reactionRepository;
@@ -105,21 +104,15 @@ public class KkinipopPostService {
 
         validateMyKkirokLimit(groupId, memberId, recordDate, saveToPersonalLog);
 
-        // 오늘 진행한 미션 개수 조회
-//        long missionDailyCount = postRepository.countMissionPosts(memberId, mission.getId(), recordDate);
-//        if (missionDailyCount >= mission.getDailyPostLimit()) {
-//            throw new ConflictException(KkinipopErrorCode.MISSION_POST_LIMIT_EXCEEDED);
-//        }
-
         // 사진 업로드
         String imageKey = r2UploadService.upload(image);
         KkinipopPost post = postRepository.save(
                 KkinipopPost.create(groupMember, mission, imageKey, recordDate, saveToPersonalLog)
         );
 
-        // 끼니팝 게시글과 식단기록을 동시에 올리기 ( 하루 횟수 제한 있음 )
-        if (saveToPersonalLog && kkinipopUseCase.getMyKkirokCount(memberId, groupId) < MAX_MY_KKIROK_SAVE_COUNT ) {
-            mealRecordUseCase.createMealByImage(memberId, image, scanType);
+        // 끼니팝 게시글과 식단기록을 동시에 올리기 (이미지 분석 실패 시 게시글은 유지하고 나의끼록 저장만 취소)
+        if (saveToPersonalLog && !personalLogService.tryRecordPersonalLog(memberId, image, scanType)) {
+            post.cancelPersonalLogSave();
         }
 
         return KkinipopPostResponse.from(post, List.of());
