@@ -45,4 +45,5 @@ public class NoMealTodayPolicy implements MealReminderPolicy {
                 .map(memberId -> new MealReminderTarget(memberId, daySuffix))
                 .toList();
     }
+
 }

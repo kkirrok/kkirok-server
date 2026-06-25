@@ -12,4 +12,10 @@ public interface MealReminderPolicy {
     String body();
 
     List<MealReminderTarget> findTargets(LocalDateTime now);
+
+    default Boolean isImTarget(LocalDateTime now, Long memberId) {
+        return findTargets(now).stream()
+                .anyMatch(target -> target.memberId().equals(memberId));
+    }
+
 }

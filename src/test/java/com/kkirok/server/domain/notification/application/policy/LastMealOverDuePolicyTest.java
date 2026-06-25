@@ -40,4 +40,15 @@ class LastMealOverDuePolicyTest {
                 new MealReminderTarget(11L, "101")
         );
     }
+
+    @Test
+    @DisplayName("마지막 식사 알림 대상 여부를 확인한다")
+    void shouldCheckOverdueTarget() {
+        LocalDateTime now = LocalDateTime.of(2026, 5, 6, 12, 0);
+        given(mealRecordRepository.findOverdueTargets(LocalDateTime.of(2026, 5, 6, 9, 0)))
+                .willReturn(List.of(new MealReminderRow(10L, 100L)));
+
+        assertThat(lastMealOverDuePolicy.isImTarget(now, 10L)).isTrue();
+        assertThat(lastMealOverDuePolicy.isImTarget(now, 11L)).isFalse();
+    }
 }

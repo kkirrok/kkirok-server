@@ -1,21 +1,27 @@
 package com.kkirok.server.domain.home.application.dto.response;
 
+import com.kkirok.server.domain.member.domain.MealStyle;
+
 public record HomeResponse(
 
-        HomeCharacter character,
+        HomeMemberInfo memberInfo,
         HomeReminder reminder,
         HomeNutrition nutrition,
         HomeFeedback feedback
 
 ) {
 
-    public record HomeCharacter(){
+    public record HomeMemberInfo(
+            MealStyle mealStyle,
+            String mealStyleLabel,
+            String nickname
+    ){}
 
-    }
-
-    public record HomeReminder(){
-
-    }
+    public record HomeReminder(
+            Boolean isTimeToKkirok,
+            String description
+    )
+    {}
 
     public record HomeNutrition(){
 
