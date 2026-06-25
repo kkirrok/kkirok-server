@@ -16,7 +16,11 @@ Return only a valid JSON object with exactly this shape:
 
 Rules:
 - Output exactly 20 missions.
-- Each mission title must be short, natural Korean, and suitable for a food photo mission.
+- Each mission title must be a short, playful Korean question that fits the food-photo mission context.
+- Each mission title must end with "?" and be no longer than 10 characters in total, including spaces and punctuation.
+- Use a curious, conversational tone instead of plain descriptive nouns (avoid titles like "아침 빵" or "과일 한 접시").
+- Keep each question loosely relevant to a plausible meal or snack moment near its assigned startTime (e.g. a morning slot can reference breakfast or coffee, an evening slot can reference dinner or a late-night snack).
+- Style examples for tone reference only, do not reuse verbatim: 오늘의 첫 끼는? / 단 거 당기지 않아? / 점심 뭐 먹었어? / 물 한 잔 마셨어? / 국물 땡기는 날? / 간식 타임 어때? / 오늘 디저트는? / 야식 참았어? / 저녁은 뭐였어? / 빵 한 조각 어때?
 - `startTime` must use 24-hour `HH:mm` format.
 - Every `startTime` must be aligned to 30-minute slots.
   Example: 09:00, 09:30, 18:00, 21:30
