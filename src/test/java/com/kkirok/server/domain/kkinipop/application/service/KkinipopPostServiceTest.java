@@ -383,7 +383,7 @@ class KkinipopPostServiceTest {
         given(reactionRepository.findPostReactions(List.of(30L))).willReturn(List.of(reaction));
 
         // When
-        List<KkinipopDailyPostResponse> responses = kkinipopPostService.getPosts(1L, 10L, null);
+        List<KkinipopDailyPostResponse> responses = kkinipopPostService.getPosts(1L, 10L, null, null);
 
         // Then
         assertThat(responses).hasSize(7);
@@ -410,7 +410,7 @@ class KkinipopPostServiceTest {
                 .willReturn(List.of());
 
         // When
-        List<KkinipopDailyPostResponse> responses = kkinipopPostService.getPosts(1L, 10L, null);
+        List<KkinipopDailyPostResponse> responses = kkinipopPostService.getPosts(1L, 10L, null, null);
 
         // Then
         // Banned member filtering is enforced by the repository query; this unit test only simulates the query result.
@@ -440,7 +440,7 @@ class KkinipopPostServiceTest {
         given(reactionRepository.findPostReactions(List.of(30L))).willReturn(List.of());
 
         // When
-        List<KkinipopDailyPostResponse> responses = kkinipopPostService.getPosts(1L, 10L, null);
+        List<KkinipopDailyPostResponse> responses = kkinipopPostService.getPosts(1L, 10L, null, null);
 
         // Then
         // Banned reaction filtering is enforced by the repository query; this unit test only simulates the query result.
@@ -474,7 +474,7 @@ class KkinipopPostServiceTest {
         given(reactionRepository.findPostReactions(List.of(30L))).willReturn(List.of());
 
         // When
-        List<KkinipopDailyPostResponse> responses = kkinipopPostService.getPosts(1L, 10L, 20L);
+        List<KkinipopDailyPostResponse> responses = kkinipopPostService.getPosts(1L, 10L, null, 20L);
 
         // Then
         assertThat(responses.get(2).posts()).hasSize(1);
@@ -499,7 +499,7 @@ class KkinipopPostServiceTest {
         )).willReturn(java.util.Optional.empty());
 
         // When, Then
-        assertThatThrownBy(() -> kkinipopPostService.getPosts(1L, 10L, 20L))
+        assertThatThrownBy(() -> kkinipopPostService.getPosts(1L, 10L, null, 20L))
                 .isInstanceOf(NotFoundException.class)
                 .extracting("baseErrorCode")
                 .isEqualTo(KkinipopErrorCode.MISSION_NOT_FOUND);
