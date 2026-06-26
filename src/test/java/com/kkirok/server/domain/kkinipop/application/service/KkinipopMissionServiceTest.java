@@ -72,7 +72,7 @@ class KkinipopMissionServiceTest {
         given(postRepository.findDailyPosts(10L, today)).willReturn(List.of(successPost));
 
         // When
-        KkinipopMissionDateResponse response = kkinipopMissionService.getTodayMissions(1L, 10L);
+        KkinipopMissionDateResponse response = kkinipopMissionService.getTodayMissions(1L, 10L, null);
 
         // Then
         assertThat(response.date()).isEqualTo(today);
@@ -107,7 +107,7 @@ class KkinipopMissionServiceTest {
         given(postRepository.findDailyPosts(10L, today)).willReturn(List.of(activePost));
 
         // When
-        KkinipopMissionDateResponse response = kkinipopMissionService.getTodayMissions(1L, 10L);
+        KkinipopMissionDateResponse response = kkinipopMissionService.getTodayMissions(1L, 10L, null);
 
         // Then
         // Banned member filtering is enforced by the repository query; this unit test only simulates the query result.

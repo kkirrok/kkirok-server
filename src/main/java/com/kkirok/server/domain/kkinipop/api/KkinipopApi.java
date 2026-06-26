@@ -27,6 +27,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.time.LocalDate;
 import java.util.List;
 
 import jakarta.validation.Valid;
@@ -201,11 +202,12 @@ public interface KkinipopApi {
     @Operation(
             summary = "게시글 조회 [USER]",
             description = """
-                    이번 주 월요일부터 일요일까지 게시글을 날짜별로 묶어서 조회합니다.
+                    지정 날짜가 속한 주의 월요일부터 일요일까지 게시글을 날짜별로 묶어서 조회합니다.
 
                     - 사전 조건: 요청한 사용자가 해당 그룹에 속해 있어야 합니다.
-                    - 조회 범위: 오늘이 속한 주의 월요일부터 일요일까지 게시글을 조회합니다.
-                    - `missionId`가 있으면 오늘 날짜 미션 중 해당 미션에 속한 게시글만 조회합니다.
+                    - 조회 범위: `date`가 속한 주의 월요일부터 일요일까지 게시글을 조회합니다.
+                    - `date`가 없으면 오늘 날짜를 기준으로 조회합니다.
+                    - `missionId`가 있으면 기준 날짜 미션 중 해당 미션에 속한 게시글만 조회합니다.
                     - `missionId`가 없으면 미션 조건 없이 전체 게시글을 조회합니다.
                     - 응답: 날짜별 게시글 목록, 요일 라벨, 요일 숫자(0:일 ~ 6:토)
                     """
@@ -220,7 +222,9 @@ public interface KkinipopApi {
             @CurrentMember Long memberId,
             @Parameter(description = "조회할 그룹 ID", required = true, example = "10")
             Long groupId,
-            @Parameter(description = "오늘 날짜 미션 중 특정 미션 게시글만 조회할 때 사용하는 미션 ID. 없으면 전체 게시글을 조회합니다.", required = false, example = "7")
+            @Parameter(description = "조회 기준 날짜. 없으면 오늘 날짜를 기준으로 조회합니다.", required = false, example = "2025-03-10")
+            LocalDate date,
+            @Parameter(description = "기준 날짜 미션 중 특정 미션 게시글만 조회할 때 사용하는 미션 ID. 없으면 전체 게시글을 조회합니다.", required = false, example = "7")
             Long missionId
     );
 
@@ -429,9 +433,10 @@ public interface KkinipopApi {
     @Operation(
             summary = "미션 조회 [USER]",
             description = """
-                    오늘 날짜로 등록된 미션만 조회합니다.
+                    지정 날짜로 등록된 미션만 조회합니다.
 
                     - 사전 조건: 요청한 사용자가 해당 그룹에 속해 있어야 합니다.
+                    - `date`가 없으면 오늘 날짜를 기준으로 조회합니다.
                     - 모든 미션은 10분 동안 진행됩니다.
                     - 응답의 `missions`는 시작 시각이 오래된 순으로 정렬됩니다.
                     - 현재 시간에 해당하는 미션은 `isRealTime=true`로 표시됩니다.
@@ -447,7 +452,9 @@ public interface KkinipopApi {
     ResponseEntity<SuccessResponse<KkinipopMissionDateResponse>> getTodayMissions(
             @CurrentMember Long memberId,
             @Parameter(description = "조회할 그룹 ID", required = true, example = "10")
-            Long groupId
+            Long groupId,
+            @Parameter(description = "조회 기준 날짜. 없으면 오늘 날짜를 기준으로 조회합니다.", required = false, example = "2025-03-10")
+            LocalDate date
     );
 
     record KkinipopPostMultipartRequest(

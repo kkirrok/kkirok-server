@@ -20,10 +20,12 @@ import com.kkirok.server.domain.meal.domain.ScanType;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
 import com.kkirok.server.global.auth.annotation.RoleUserAuth;
 import com.kkirok.server.global.common.dto.SuccessResponse;
+import java.time.LocalDate;
 import java.util.List;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -126,9 +128,10 @@ public class KkinipopController implements KkinipopApi {
     public ResponseEntity<SuccessResponse<List<KkinipopDailyPostResponse>>> getPosts(
             @CurrentMember Long memberId,
             @PathVariable Long groupId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(required = false) Long missionId
     ) {
-        return ResponseEntity.ok(SuccessResponse.of(KkinipopSuccessCode.POST_LIST_SUCCESS, kkinipopPostService.getPosts(memberId, groupId, missionId)));
+        return ResponseEntity.ok(SuccessResponse.of(KkinipopSuccessCode.POST_LIST_SUCCESS, kkinipopPostService.getPosts(memberId, groupId, date, missionId)));
     }
 
     // 오늘 나의끼록과 같이 저장 가능한 횟수 조회 API
@@ -218,8 +221,9 @@ public class KkinipopController implements KkinipopApi {
     @GetMapping("/groups/{groupId}/missions")
     public ResponseEntity<SuccessResponse<KkinipopMissionDateResponse>> getTodayMissions(
             @CurrentMember Long memberId,
-            @PathVariable Long groupId
+            @PathVariable Long groupId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
-        return ResponseEntity.ok(SuccessResponse.of(KkinipopSuccessCode.MISSION_LIST_SUCCESS, kkinipopMissionService.getTodayMissions(memberId, groupId)));
+        return ResponseEntity.ok(SuccessResponse.of(KkinipopSuccessCode.MISSION_LIST_SUCCESS, kkinipopMissionService.getTodayMissions(memberId, groupId, date)));
     }
 }

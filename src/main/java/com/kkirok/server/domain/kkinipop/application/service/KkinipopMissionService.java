@@ -30,12 +30,12 @@ public class KkinipopMissionService {
     private final KkinipopPostRepository postRepository;
     private final DateTimeProvider dateTimeProvider;
 
-    // 오늘 날짜 미션 조회
+    // 지정 날짜 미션 조회
     @Transactional(readOnly = true)
-    public KkinipopMissionDateResponse getTodayMissions(Long memberId, Long groupId) {
+    public KkinipopMissionDateResponse getTodayMissions(Long memberId, Long groupId, LocalDate date) {
         kkinipopUseCase.findGroupMember(groupId, memberId);
 
-        LocalDate targetDate = dateTimeProvider.today();
+        LocalDate targetDate = date != null ? date : dateTimeProvider.today();
         LocalDateTime startOfDay = targetDate.atStartOfDay();
         LocalDateTime endOfDay = targetDate.plusDays(1).atStartOfDay();
         LocalDateTime currentTime = dateTimeProvider.now();
