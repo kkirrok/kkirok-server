@@ -62,7 +62,7 @@ public class KkinipopPostService {
 
         LocalDate targetDate = date != null ? date : dateTimeProvider.today();
         LocalDate startDate = targetDate.with(DayOfWeek.MONDAY);
-        LocalDate endDate = targetDate.with(DayOfWeek.FRIDAY);
+        LocalDate endDate = targetDate.with(DayOfWeek.SUNDAY);
         validateTodayMission(groupId, missionId, targetDate);
 
         List<KkinipopPost> posts = postRepository.findPostsInDateRange(groupId, startDate, endDate, missionId);
