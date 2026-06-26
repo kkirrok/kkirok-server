@@ -55,15 +55,15 @@ public class KkinipopPostService {
     private final DateTimeProvider dateTimeProvider;
     private final ApplicationEventPublisher eventPublisher;
 
-    // 이번 주 월요일부터 일요일까지 게시글 조회
+    // 지정 날짜가 속한 주의 월~금 게시글 조회
     @Transactional(readOnly = true)
-    public List<KkinipopDailyPostResponse> getPosts(Long memberId, Long groupId, Long missionId) {
+    public List<KkinipopDailyPostResponse> getPosts(Long memberId, Long groupId, LocalDate date, Long missionId) {
         kkinipopUseCase.findGroupMember(groupId, memberId);
 
-        LocalDate today = dateTimeProvider.today();
-        LocalDate startDate = today.with(DayOfWeek.MONDAY);
-        LocalDate endDate = today.with(DayOfWeek.SUNDAY);
-        validateTodayMission(groupId, missionId, today);
+        LocalDate targetDate = date != null ? date : dateTimeProvider.today();
+        LocalDate startDate = targetDate.with(DayOfWeek.MONDAY);
+        LocalDate endDate = targetDate.with(DayOfWeek.FRIDAY);
+        validateTodayMission(groupId, missionId, targetDate);
 
         List<KkinipopPost> posts = postRepository.findPostsInDateRange(groupId, startDate, endDate, missionId);
         Map<Long, List<KkinipopReaction>> reactionsByPostId = getReactionsByPostId(posts);
