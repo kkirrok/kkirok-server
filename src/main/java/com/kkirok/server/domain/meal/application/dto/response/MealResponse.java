@@ -46,11 +46,45 @@ public record MealResponse(
         @Schema(description = "나트륨(mg)", example = "6")
         Integer sodiumMg,
 
+        @Schema(description = "탄수화물 칼로리 비율(%)", example = "55")
+        Integer carbohydratePercent,
+
+        @Schema(description = "단백질 칼로리 비율(%)", example = "20")
+        Integer proteinPercent,
+
+        @Schema(description = "지방 칼로리 비율(%)", example = "25")
+        Integer fatPercent,
+
         @Schema(description = "메모")
         String memo
 ) {
     public static MealResponse from(MealRecord meal) {
         MealNutrition nutrition = meal.getMealNutrition();
+
+        Integer carbG = nutrition != null && nutrition.getCarbohydrateG() != null
+                ? nutrition.getCarbohydrateG().intValue() : null;
+        Integer proteinG = nutrition != null && nutrition.getProteinG() != null
+                ? nutrition.getProteinG().intValue() : null;
+        Integer fatG = nutrition != null && nutrition.getFatG() != null
+                ? nutrition.getFatG().intValue() : null;
+
+        // 탄수화물: 4 kcal/g, 단백질: 4 kcal/g, 지방: 9 kcal/g
+        Integer carbohydratePercent = null;
+        Integer proteinPercent = null;
+        Integer fatPercent = null;
+
+        if (carbG != null && proteinG != null && fatG != null) {
+            long carbKcal = carbG * 4L;
+            long proteinKcal = proteinG * 4L;
+            long fatKcal = fatG * 9L;
+            long macroTotal = carbKcal + proteinKcal + fatKcal;
+
+            if (macroTotal > 0) {
+                carbohydratePercent = (int) Math.round(carbKcal * 100.0 / macroTotal);
+                proteinPercent = (int) Math.round(proteinKcal * 100.0 / macroTotal);
+                fatPercent = 100 - carbohydratePercent - proteinPercent;
+            }
+        }
 
         return new MealResponse(
                 meal.getId(),
@@ -60,21 +94,16 @@ public record MealResponse(
                 meal.getScanType(),
                 meal.getName(),
                 nutrition != null ? nutrition.getKcal() : null,
-                nutrition != null && nutrition.getCarbohydrateG() != null
-                        ? nutrition.getCarbohydrateG().intValue()
-                        : null,
-                nutrition != null && nutrition.getProteinG() != null
-                        ? nutrition.getProteinG().intValue()
-                        : null,
-                nutrition != null && nutrition.getFatG() != null
-                        ? nutrition.getFatG().intValue()
-                        : null,
+                carbG,
+                proteinG,
+                fatG,
                 nutrition != null && nutrition.getSugarG() != null
-                        ? nutrition.getSugarG().intValue()
-                        : null,
+                        ? nutrition.getSugarG().intValue() : null,
                 nutrition != null && nutrition.getSodiumMg() != null
-                        ? nutrition.getSodiumMg().intValue()
-                        : null,
+                        ? nutrition.getSodiumMg().intValue() : null,
+                carbohydratePercent,
+                proteinPercent,
+                fatPercent,
                 meal.getMemo()
         );
     }
