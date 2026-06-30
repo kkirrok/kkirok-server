@@ -21,6 +21,18 @@ public record TodayNutritionSummaryResponse(
         Long totalSugarG,
 
         @Schema(description = "총 나트륨(mg)", example = "1800")
-        Long totalSodiumMg
+        Long totalSodiumMg,
+
+        @Schema(description = "권장 칼로리(kcal)", example = "2000")
+        Integer recommendedKcal,
+
+        @Schema(description = "권장 탄수화물(g)", example = "250")
+        Integer recommendedCarbohydrateG,
+
+        @Schema(description = "권장 단백질(g)", example = "100")
+        Integer recommendedProteinG,
+
+        @Schema(description = "권장 지방(g)", example = "67")
+        Integer recommendedFatG
 ) {
 }

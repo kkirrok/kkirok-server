@@ -7,6 +7,11 @@ import com.kkirok.server.domain.meal.application.dto.response.CalendarMonthRespo
 import com.kkirok.server.domain.meal.application.dto.response.DailyMealResponse;
 import com.kkirok.server.domain.meal.dao.MealRecordRepository;
 import com.kkirok.server.domain.meal.domain.MealRecord;
+import com.kkirok.server.domain.meal.util.RecommendedNutritionCalculator;
+import com.kkirok.server.domain.meal.util.RecommendedNutritionCalculator.NutritionRecommendation;
+import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
+import com.kkirok.server.domain.member.domain.Member;
+import com.kkirok.server.domain.member.domain.Onboarding;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +29,7 @@ import java.util.stream.Collectors;
 public class CalendarService {
 
     private final MealRecordRepository mealRecordRepository;
+    private final MemberUseCase memberUseCase;
 
     /**
      * 월간 캘린더 조회
@@ -69,13 +75,26 @@ public class CalendarService {
     }
 
     /**
-     * 특정 날짜의 식단 상세 조회
+     * 특정 날짜의 식단 상세 조회 (캘린더 날짜 클릭 시 호출)
+     * 유저의 성별·생년월일·온보딩 목적을 기반으로 권장 영양소를 함께 반환합니다.
      *
      * @param memberId 현재 로그인한 멤버 ID
      * @param date     조회할 날짜
      */
     public DailyMealResponse getDailyMealInfo(Long memberId, LocalDate date) {
         List<MealRecord> records = mealRecordRepository.getSpecifiedDateMealRecords(memberId, date);
-        return DailyMealResponse.from(date, records);
+
+        // 유저 정보(온보딩 포함) 조회 후 권장량 계산
+        Member member = memberUseCase.findWithOnboarding(memberId);
+
+        Onboarding onboarding = member.getOnboarding();
+        NutritionRecommendation recommendation = RecommendedNutritionCalculator.calculate(
+                member.getGender(),
+                member.getBirthday(),
+                onboarding != null ? onboarding.getPurpose() : null,
+                date
+        );
+
+        return DailyMealResponse.from(date, records, recommendation);
     }
 }
