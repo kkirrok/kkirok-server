@@ -10,6 +10,8 @@ import com.kkirok.server.domain.meal.application.dto.response.TodayStatusRespons
 import com.kkirok.server.domain.report.application.dto.response.WeeklyReportResponse;
 import com.kkirok.server.domain.meal.application.service.FoodNutritionSearchService;
 import com.kkirok.server.domain.meal.application.service.RecommendationService;
+import com.kkirok.server.domain.meal.application.service.CommunityMealService;
+import com.kkirok.server.domain.meal.application.dto.response.YesterdayPickResponse;
 import com.kkirok.server.domain.report.service.WeeklyReportService;
 import com.kkirok.server.domain.meal.application.usecase.MealRecordUseCase;
 import com.kkirok.server.domain.meal.exception.MealSuccessCode;
@@ -37,6 +39,7 @@ public class MealController implements MealApi {
     private final MealRecordUseCase mealRecordUseCase;
     private final FoodNutritionSearchService foodNutritionSearchService;
     private final RecommendationService recommendationService;
+    private final CommunityMealService communityMealService;
 
     @Override
     @GetMapping
@@ -155,6 +158,18 @@ public class MealController implements MealApi {
 
         return ResponseEntity.ok(
                 SuccessResponse.of(MealSuccessCode.FOOD_SEARCH_SUCCESS, results)
+        );
+    }
+
+    @Override
+    @GetMapping("/community/yesterday-picks")
+    public ResponseEntity<SuccessResponse<YesterdayPickResponse>> getYesterdayPicks(
+            @CurrentMember Long memberId
+    ) {
+        YesterdayPickResponse response = communityMealService.getYesterdayPicks(memberId);
+
+        return ResponseEntity.ok(
+                SuccessResponse.of(MealSuccessCode.YESTERDAY_PICKS_GET_SUCCESS, response)
         );
     }
 }

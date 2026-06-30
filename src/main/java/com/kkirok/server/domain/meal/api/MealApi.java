@@ -5,6 +5,7 @@ import com.kkirok.server.domain.meal.application.dto.request.MealImageUploadRequ
 import com.kkirok.server.domain.meal.application.dto.request.MealUpdateRequest;
 import com.kkirok.server.domain.meal.application.dto.response.MealResponse;
 import com.kkirok.server.domain.meal.application.dto.response.RecommendationResponse;
+import com.kkirok.server.domain.meal.application.dto.response.YesterdayPickResponse;
 import com.kkirok.server.domain.meal.application.dto.response.TodayNutritionSummaryResponse;
 import com.kkirok.server.domain.meal.application.dto.response.TodayStatusResponse;
 import com.kkirok.server.domain.report.application.dto.response.WeeklyReportResponse;
@@ -193,5 +194,25 @@ public interface MealApi {
     ResponseEntity<SuccessResponse<List<FoodNutritionSearchResult>>> searchFood(
             @Parameter(description = "검색할 음식명", example = "삼각김밥")
             @RequestParam String keyword
+    );
+
+    @Operation(
+            summary = "어제 이 시간대 같은 유형 끼록이 픽 조회 [USER]",
+            description = """
+                같은 MealStyle(식사 유형)을 가진 다른 유저들이 어제 현재 시간대에 기록한 식사를 최대 4개 반환합니다.
+
+                - 현재 시각(KST) 기준으로 시간대 슬롯을 결정합니다.
+                  - 06:00 ~ 10:00 → 아침(BREAKFAST)
+                  - 10:00 ~ 15:00 → 점심(LUNCH)
+                  - 15:00 ~ 20:00 → 저녁(DINNER)
+                  - 그 외 → 간식(SNACK)
+                - 유저의 MealStyle이 미설정 시 BALANCED 기준으로 조회합니다.
+                - 결과가 없으면 빈 목록을 반환합니다.
+                """
+    )
+    @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "YESTERDAY_PICKS_GET_SUCCESS")
+    ResponseEntity<SuccessResponse<YesterdayPickResponse>> getYesterdayPicks(
+            @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
+            Long memberId
     );
 }
