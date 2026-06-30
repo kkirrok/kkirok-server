@@ -5,6 +5,7 @@ import com.kkirok.server.domain.meal.application.dto.request.MealUpdateRequest;
 import com.kkirok.server.domain.meal.application.dto.response.MealResponse;
 import com.kkirok.server.domain.meal.application.dto.response.TodayNutritionSummaryResponse;
 import com.kkirok.server.domain.meal.application.usecase.MealRecordUseCase;
+import com.kkirok.server.domain.meal.util.RecommendedNutritionCalculator;
 import com.kkirok.server.domain.meal.dao.MealAiAnalysisRepository;
 import com.kkirok.server.domain.meal.dao.MealImageRepository;
 import com.kkirok.server.domain.meal.dao.MealNutritionRepository;
@@ -296,13 +297,26 @@ public class MealRecordService implements MealRecordUseCase {
                     : record.getMealNutrition().getSodiumMg().longValue();
         }
 
+        Member member = memberUseCase.findWithOnboarding(memberId);
+        RecommendedNutritionCalculator.NutritionRecommendation recommendation =
+                RecommendedNutritionCalculator.calculate(
+                        member.getGender(),
+                        member.getBirthday(),
+                        member.getOnboarding() != null ? member.getOnboarding().getPurpose() : null,
+                        today
+                );
+
         return new TodayNutritionSummaryResponse(
                 totalKcal,
                 totalCarbohydrateG,
                 totalProteinG,
                 totalFatG,
                 totalSugarG,
-                totalSodiumMg
+                totalSodiumMg,
+                recommendation.kcal(),
+                recommendation.carbohydrateG(),
+                recommendation.proteinG(),
+                recommendation.fatG()
         );
     }
 }
