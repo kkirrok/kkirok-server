@@ -93,6 +93,13 @@ public class MealReminderService {
         if (type == NotificationType.MEAL_REMINDER_NO_TODAY) {
             return target.dispatchSuffix() + ":" + target.memberId();
         }
+        // OVERDUE 정책은 같은 마지막 식사 기준으로 1시간에 한 번만 발송되도록 시간 슬롯을 붙인다.
+        if (type == NotificationType.MEAL_REMINDER_OVERDUE) {
+            String hourSlot = dateTimeProvider.now()
+                    .truncatedTo(java.time.temporal.ChronoUnit.HOURS)
+                    .toString();
+            return target.dispatchSuffix() + ":" + hourSlot;
+        }
         return target.dispatchSuffix();
     }
 

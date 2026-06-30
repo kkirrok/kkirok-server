@@ -64,6 +64,25 @@ public interface MealRecordRepository extends JpaRepository<MealRecord, Long> {
     List<MealReminderRow> findOverdueTargets(@Param("threshold") LocalDateTime threshold);
 
     @Query("""
+        FROM MealRecord mr
+        LEFT JOIN FETCH mr.mealNutrition
+        JOIN mr.member m
+        WHERE m.mealStyle = :mealStyle
+          AND m.id != :excludeMemberId
+          AND m.deletedAt IS NULL
+          AND mr.mealDate = :yesterday
+          AND mr.mealTimeSlot = :timeSlot
+        ORDER BY FUNCTION('RANDOM')
+    """)
+    List<MealRecord> findYesterdayPicksBySameStyle(
+            @Param("mealStyle") com.kkirok.server.domain.member.domain.MealStyle mealStyle,
+            @Param("excludeMemberId") Long excludeMemberId,
+            @Param("yesterday") LocalDate yesterday,
+            @Param("timeSlot") com.kkirok.server.domain.meal.domain.MealTimeSlot timeSlot,
+            org.springframework.data.domain.Pageable pageable
+    );
+
+    @Query("""
         select m.id from Member m
         where m.deletedAt is null
           and m.onboardingCompleted = true
