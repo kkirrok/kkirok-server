@@ -110,8 +110,8 @@ class MealReminderServiceTest {
                     .filter(Objects::nonNull)
                     .toList();
         });
-        given(notificationDispatchLogService.claim(NotificationType.MEAL_REMINDER_OVERDUE, "100")).willReturn(true);
-        given(notificationDispatchLogService.claim(NotificationType.MEAL_REMINDER_OVERDUE, "101")).willReturn(true);
+        given(notificationDispatchLogService.claim(NotificationType.MEAL_REMINDER_OVERDUE, "100:2026-05-06T10:00")).willReturn(true);
+        given(notificationDispatchLogService.claim(NotificationType.MEAL_REMINDER_OVERDUE, "101:2026-05-06T10:00")).willReturn(true);
         given(notificationDispatchLogService.claim(NotificationType.MEAL_REMINDER_NO_TODAY, "DAY-20260506:3")).willReturn(true);
 
         mealReminderService.runReminderCycle();
@@ -159,7 +159,7 @@ class MealReminderServiceTest {
         given(overduePolicy.type()).willReturn(NotificationType.MEAL_REMINDER_OVERDUE);
         given(overduePolicy.findTargets(now)).willReturn(List.of(new MealReminderTarget(1L, "100")));
         given(memberRepository.findAllById(any())).willReturn(List.of(member1));
-        given(notificationDispatchLogService.claim(NotificationType.MEAL_REMINDER_OVERDUE, "100")).willReturn(false);
+        given(notificationDispatchLogService.claim(NotificationType.MEAL_REMINDER_OVERDUE, "100:2026-05-06T11:00")).willReturn(false);
 
         mealReminderService.runReminderCycle();
 
