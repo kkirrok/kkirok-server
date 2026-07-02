@@ -1,9 +1,11 @@
 package com.kkirok.server.domain.member.api;
 
 import com.kkirok.server.domain.member.application.dto.request.FindEmailRequest;
+import com.kkirok.server.domain.member.application.dto.request.NotificationAgreeUpdateRequest;
 import com.kkirok.server.domain.member.application.dto.request.ProfileSettingRequest;
 import com.kkirok.server.domain.member.application.dto.request.ResetPasswordRequest;
 import com.kkirok.server.domain.member.application.dto.response.MyPageResponse;
+import com.kkirok.server.domain.member.application.dto.response.NotificationAgreeResponse;
 import com.kkirok.server.domain.member.application.dto.response.OnboardingOptionResponse;
 import com.kkirok.server.domain.member.application.dto.response.FoundEmailResponse;
 import com.kkirok.server.domain.member.application.dto.response.OnboardingProfileResponse;
@@ -178,6 +180,63 @@ public interface MemberApi {
     @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "MYPAGE_GET_SUCCESS")
     ResponseEntity<SuccessResponse<MyPageResponse>> myPage(
             @CurrentMember Long memberId
+    );
+
+    @Operation(summary = "알림 허용 설정 조회 [USER]", description = "내 알림 허용 설정 전체 목록을 조회합니다.")
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "MEMBER_NOT_FOUND")
+    })
+    @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "NOTIFICATION_AGREE_LIST_SUCCESS")
+    ResponseEntity<SuccessResponse<NotificationAgreeResponse>> getNotificationAgrees(
+            @CurrentMember Long memberId
+    );
+
+    @Operation(summary = "알림 허용 설정 변경 [USER]", description = """
+            알림 허용 설정을 변경합니다. 변경 후 전체 설정값을 반환합니다.
+
+            ## isAll
+            - `true`: 전체 알림 일괄 설정. `agrees`에 모든 유형 포함 필수, 모든 `isAgree` 값이 동일해야 합니다.
+            - `false`: 부분 설정. `agrees`에 변경할 유형만 포함합니다. 포함되지 않은 유형은 현재 값을 유지합니다.
+
+            ## 요청 예시 (전체 끄기)
+            ```json
+            {
+              "isAll": true,
+              "agrees": [
+                { "type": "KKIROK", "isAgree": false },
+                { "type": "GROUP_JOIN_AND_QUIT", "isAgree": false },
+                { "type": "KKINIPOP", "isAgree": false },
+                { "type": "REACTION", "isAgree": false }
+              ]
+            }
+            ```
+
+            ## 요청 예시 (부분 변경)
+            ```json
+            {
+              "isAll": false,
+              "agrees": [
+                { "type": "KKIROK", "isAgree": false }
+              ]
+            }
+            ```
+            
+            ## 응답
+            응답에는 클라이언트가 요청했던 isAll 값, 모든 설정 유형과 그 설정값을 반환합니다.
+            
+            """)
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "NOTIFICATION_AGREE_NOT_FOUND"),
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "NOTIFICATION_ALL_AGREE_TYPE_MISMATCH"),
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "NOTIFICATION_ALL_AGREE_VALUE_MISMATCH"),
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "NOTIFICATION_AGREE_DUPLICATE_TYPE")
+    })
+    @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "NOTIFICATION_AGREE_UPDATE_SUCCESS")
+    ResponseEntity<SuccessResponse<NotificationAgreeResponse>> updateNotificationAgree(
+            @CurrentMember Long memberId,
+            @Valid @RequestBody NotificationAgreeUpdateRequest request
     );
 
 }

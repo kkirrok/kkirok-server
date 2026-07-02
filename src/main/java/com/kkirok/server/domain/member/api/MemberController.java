@@ -1,15 +1,18 @@
 package com.kkirok.server.domain.member.api;
 
 import com.kkirok.server.domain.member.application.dto.request.FindEmailRequest;
+import com.kkirok.server.domain.member.application.dto.request.NotificationAgreeUpdateRequest;
 import com.kkirok.server.domain.member.application.dto.request.ProfileSettingRequest;
 import com.kkirok.server.domain.member.application.dto.request.ResetPasswordRequest;
 import com.kkirok.server.domain.member.application.dto.response.FoundEmailResponse;
 import com.kkirok.server.domain.member.application.dto.response.MyPageResponse;
+import com.kkirok.server.domain.member.application.dto.response.NotificationAgreeResponse;
 import com.kkirok.server.domain.member.application.dto.response.OnboardingOptionResponse;
 import com.kkirok.server.domain.member.application.dto.response.OnboardingProfileResponse;
 import com.kkirok.server.domain.member.application.service.AccountRecoveryService;
 import com.kkirok.server.domain.member.application.service.MemberService;
 import com.kkirok.server.domain.member.application.service.MyPageService;
+import com.kkirok.server.domain.member.application.service.NotificationAgreeService;
 import com.kkirok.server.domain.member.application.service.OnboardingService;
 import com.kkirok.server.domain.member.domain.OnboardingHabit;
 import com.kkirok.server.domain.member.domain.OnboardingPurpose;
@@ -37,6 +40,7 @@ public class MemberController implements MemberApi {
     private final OnboardingService onboardingService;
     private final MemberService memberService;
     private final MyPageService myPageService;
+    private final NotificationAgreeService notificationAgreeService;
 
     @Override
     @PostMapping("/recovery/email")
@@ -122,5 +126,27 @@ public class MemberController implements MemberApi {
                 .body(SuccessResponse.of(MemberSuccessCode.MYPAGE_GET_SUCCESS, myPageResponse));
     }
 
+    @Override
+    @GetMapping("/notifications")
+    @RoleUserAuth
+    public ResponseEntity<SuccessResponse<NotificationAgreeResponse>> getNotificationAgrees(
+            @CurrentMember Long memberId
+    ) {
+        return ResponseEntity.ok()
+                .body(SuccessResponse.of(MemberSuccessCode.NOTIFICATION_AGREE_LIST_SUCCESS,
+                        notificationAgreeService.getAll(memberId)));
+    }
+
+    @Override
+    @PatchMapping("/notifications")
+    @RoleUserAuth
+    public ResponseEntity<SuccessResponse<NotificationAgreeResponse>> updateNotificationAgree(
+            @CurrentMember Long memberId,
+            @Valid @RequestBody NotificationAgreeUpdateRequest request
+    ) {
+        return ResponseEntity.ok()
+                .body(SuccessResponse.of(MemberSuccessCode.NOTIFICATION_AGREE_UPDATE_SUCCESS,
+                        notificationAgreeService.update(memberId, request)));
+    }
 
 }

@@ -46,6 +46,9 @@ class MemberRegistrationServiceTest {
     @Mock
     private CharacterInitializationService characterInitializationService;
 
+    @Mock
+    private NotificationAgreeService notificationAgreeService;
+
     @InjectMocks
     private MemberRegistrationService memberRegistrationService;
 
@@ -81,6 +84,7 @@ class MemberRegistrationServiceTest {
 
         then(userRepository).should().flush();
         then(characterInitializationService).should().createInitialCharacter(registeredMember);
+        then(notificationAgreeService).should().initializeForMember(registeredMember);
         then(authIdentityRepository).should().save(authIdentityCaptor.capture());
         then(eventPublisher).should().publishEvent(eventCaptor.capture());
 
@@ -130,6 +134,7 @@ class MemberRegistrationServiceTest {
 
         AuthIdentity authIdentity = authIdentityCaptor.getValue();
         then(characterInitializationService).should().createInitialCharacter(authIdentity.getMember());
+        then(notificationAgreeService).should().initializeForMember(authIdentity.getMember());
         assertThat(authIdentity.getProvider()).isEqualTo(AuthProvider.KAKAO);
         assertThat(authIdentity.getProviderUserId()).isEqualTo("kakao-1001");
         assertThat(authIdentity.getPasswordHash()).isNull();
