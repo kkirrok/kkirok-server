@@ -10,14 +10,7 @@ import com.kkirok.server.domain.meal.domain.DayPatternType;
 import com.kkirok.server.domain.meal.domain.MealCategory;
 import com.kkirok.server.domain.meal.domain.MealTimeSlot;
 import com.kkirok.server.domain.meal.domain.ScanType;
-import com.kkirok.server.domain.member.domain.AuthProvider;
-import com.kkirok.server.domain.member.domain.Gender;
-import com.kkirok.server.domain.member.domain.MealStyle;
-import com.kkirok.server.domain.member.domain.OnboardingHabit;
-import com.kkirok.server.domain.member.domain.OnboardingPurpose;
-import com.kkirok.server.domain.member.domain.SocialType;
-import com.kkirok.server.domain.member.domain.TendencySourceType;
-import com.kkirok.server.domain.member.domain.TendencyType;
+import com.kkirok.server.domain.member.domain.*;
 import com.kkirok.server.domain.notification.domain.DevicePlatform;
 import com.kkirok.server.domain.report.domain.ReportItemType;
 import com.kkirok.server.domain.report.domain.ReportType;
@@ -38,7 +31,7 @@ public enum EnumList {
     ONBOARDING_PURPOSE(OnboardingPurpose.class, "온보딩 목표"),
     ONBOARDING_HABIT(OnboardingHabit.class, "온보딩 식습관"),
     MEAL_STYLE(MealStyle.class, "식습관 유형"),
-    MEMBER_NOTIFICATION_TYPE(com.kkirok.server.domain.member.domain.NotificationType.class, "회원 알림 동의 유형"),
+    NOTIFICATION_AGREE_TYPE(NotificationAgreeType.class, "회원 알림 동의 유형"),
     TENDENCY_TYPE(TendencyType.class, "식습관 성향"),
     TENDENCY_SOURCE_TYPE(TendencySourceType.class, "식습관 성향 출처"),
     MEAL_TIME_SLOT(MealTimeSlot.class, "식사 시간대"),

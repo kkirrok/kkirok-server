@@ -1,6 +1,7 @@
 package com.kkirok.server.domain.notification.application.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kkirok.server.domain.member.application.service.NotificationAgreeService;
 import com.kkirok.server.domain.member.domain.Member;
 import com.kkirok.server.domain.notification.dao.NotificationRepository;
 import com.kkirok.server.domain.notification.domain.Notification;
@@ -9,6 +10,7 @@ import com.kkirok.server.support.fixture.MemberFixture;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
@@ -39,11 +41,19 @@ class NotificationDispatcherTest {
     @Mock
     private NotificationDeliveryService notificationDeliveryService;
 
+    @Mock
+    private NotificationAgreeService notificationAgreeService;
+
     private NotificationDispatcher notificationDispatcher;
 
     @BeforeEach
     void setUp() {
-        notificationDispatcher = new NotificationDispatcher(notificationRepository, notificationDeliveryService, new ObjectMapper());
+        notificationDispatcher = new NotificationDispatcher(
+                notificationRepository,
+                notificationDeliveryService,
+                new ObjectMapper(),
+                notificationAgreeService
+        );
     }
 
     @AfterEach
@@ -61,6 +71,8 @@ class NotificationDispatcherTest {
         Member second = createMember(2L, "두번째");
         AtomicLong sequence = new AtomicLong(10L);
 
+        given(notificationAgreeService.findOptedOutMemberIds(Set.of(1L, 2L), NotificationType.GROUP_JOIN.getAgreeType()))
+                .willReturn(Set.of());
         given(notificationRepository.save(any(Notification.class))).willAnswer(invocation -> {
             Notification notification = invocation.getArgument(0);
             ReflectionTestUtils.setField(notification, "id", sequence.getAndIncrement());

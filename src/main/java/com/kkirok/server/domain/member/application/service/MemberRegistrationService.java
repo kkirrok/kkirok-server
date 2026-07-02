@@ -27,11 +27,13 @@ public class MemberRegistrationService {
     private final MemberRepository memberRepository;
     private final AuthIdentityRepository authIdentityRepository;
     private final CharacterInitializationService characterInitializationService;
+    private final NotificationAgreeService notificationAgreeService;
 
     @Transactional
     public Long registerMemberWithUserInfo(final MemberInfoResponse memberInfoResponse) {
         Member member = createMember(memberInfoResponse);
         characterInitializationService.createInitialCharacter(member);
+        notificationAgreeService.initializeForMember(member);
         authIdentityRepository.save(AuthIdentity.createSocial(
                 member,
                 AuthProvider.fromSocialType(memberInfoResponse.socialType()),
@@ -95,6 +97,7 @@ public class MemberRegistrationService {
         Member member = createLocalMember(email, role, name);
         if (initializeCharacter) {
             characterInitializationService.createInitialCharacter(member);
+            notificationAgreeService.initializeForMember(member);
         }
         authIdentityRepository.save(AuthIdentity.createLocal(member, email, passwordHash));
         if (publishRegisteredEvent) {

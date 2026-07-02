@@ -44,6 +44,10 @@ public enum MemberErrorCode implements BaseErrorCode {
 	LOCAL_ACCOUNT_NOT_FOUND(404, "로컬 계정을 찾을 수 없습니다."),
 	ACCOUNT_RECOVERY_INFO_MISMATCH(404, "일치하는 회원 정보가 없습니다."),
 	MEMBER_NOT_FOUND(404, "회원이 없습니다"),
+	NOTIFICATION_AGREE_NOT_FOUND(404, "알림 허용 설정을 찾을 수 없습니다."),
+	NOTIFICATION_ALL_AGREE_TYPE_MISMATCH(400, "전체 알림 설정 시 모든 유형을 포함해야 합니다."),
+	NOTIFICATION_ALL_AGREE_VALUE_MISMATCH(400, "전체 알림 설정 시 모든 유형의 허용 여부가 동일해야 합니다."),
+	NOTIFICATION_AGREE_DUPLICATE_TYPE(400, "중복된 알림 유형이 있습니다."),
 
 	;
 
