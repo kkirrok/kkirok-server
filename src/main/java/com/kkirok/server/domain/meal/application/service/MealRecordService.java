@@ -1,8 +1,10 @@
 package com.kkirok.server.domain.meal.application.service;
 
 import com.kkirok.server.domain.meal.application.dto.request.MealCreateRequest;
+import com.kkirok.server.domain.meal.application.dto.request.MealRecordConfirmRequest;
 import com.kkirok.server.domain.meal.application.dto.request.MealUpdateRequest;
 import com.kkirok.server.domain.meal.application.dto.response.MealResponse;
+import com.kkirok.server.domain.meal.application.dto.response.MealScanResponse;
 import com.kkirok.server.domain.meal.application.dto.response.TodayNutritionSummaryResponse;
 import com.kkirok.server.domain.meal.application.usecase.MealRecordUseCase;
 import com.kkirok.server.domain.meal.util.RecommendedNutritionCalculator;
@@ -84,31 +86,10 @@ public class MealRecordService implements MealRecordUseCase {
         return MealResponse.from(meal);
     }
 
-    /** 앨범에서 식단 기록 **/
+    /** 이미지 업로드 즉시 분석 + 저장 (끼니팝 등 내부 연동용, 리뷰 단계 없음) */
     @Override
     @Transactional
-    public MealResponse createMealByAlbum(Long memberId, MultipartFile file) {
-        return createMealByImageFile(memberId, file, ScanType.IMAGE);
-    }
-
-    /** 이미지로 기록 **/
-    @Override
     public MealResponse createMealByImage(Long memberId, MultipartFile file, ScanType scanType) {
-        return null; // TODO: @xiadot 구현 필요
-    }
-
-    /** 카메라로 식단 기록 **/
-    @Override
-    @Transactional
-    public MealResponse createMealByCamera(Long memberId, MultipartFile file) {
-        return createMealByImageFile(memberId, file, ScanType.CAMERA);
-    }
-
-    private MealResponse createMealByImageFile(
-            Long memberId,
-            MultipartFile file,
-            ScanType scanType
-    ) {
         Member member = memberUseCase.findMemberByMemberId(memberId);
 
         if (file == null || file.isEmpty()) {
@@ -126,6 +107,50 @@ public class MealRecordService implements MealRecordUseCase {
         OpenAiFoodAnalysisResult result = analyzeImage(imageUrl);
 
         return applyAnalysisResult(meal, result);
+    }
+
+    /** 1단계: 이미지 업로드 + AI 분석만 수행 (DB에 MealRecord 저장하지 않음) */
+    @Override
+    public MealScanResponse scanMeal(Long memberId, MultipartFile file, ScanType scanType) {
+        memberUseCase.findMemberByMemberId(memberId); // 회원 존재 검증만 수행
+
+        if (file == null || file.isEmpty()) {
+            throw new MealException(MealErrorCode.IMAGE_FILE_REQUIRED);
+        }
+
+        String imageKey = r2UploadService.upload(file);
+        String imageUrl = presignedUrlService.getPresignedUrl(imageKey).toString();
+
+        OpenAiFoodAnalysisResult result = analyzeImage(imageUrl);
+
+        return MealScanResponse.from(imageKey, scanType, result);
+    }
+
+    /** 2단계: 스캔 결과를 사용자가 확인/수정한 뒤 최종 저장 */
+    @Override
+    @Transactional
+    public MealResponse confirmMealRecord(Long memberId, MealRecordConfirmRequest request) {
+        Member member = memberUseCase.findMemberByMemberId(memberId);
+
+        MealRecord meal = MealRecord.createFromScan(member, request);
+        mealRecordRepository.save(meal);
+
+        mealImageRepository.save(MealImage.create(meal, request.imageKey()));
+
+        MealNutrition nutrition = MealNutrition.create(
+                meal,
+                request.kcal(),
+                request.proteinG() != null ? request.proteinG().doubleValue() : null,
+                request.carbohydrateG() != null ? request.carbohydrateG().doubleValue() : null,
+                request.sugarG() != null ? request.sugarG().doubleValue() : null,
+                request.fatG() != null ? request.fatG().doubleValue() : null,
+                request.sodiumMg() != null ? request.sodiumMg().doubleValue() : null
+        );
+
+        mealNutritionRepository.save(nutrition);
+        meal.assignMealNutrition(nutrition);
+
+        return MealResponse.from(meal);
     }
 
     @Override
@@ -210,7 +235,7 @@ public class MealRecordService implements MealRecordUseCase {
     }
 
     /**
-     * AI 분석 결과를 엔티티에 반영하고 저장합니다.
+     * AI 분석 결과를 엔티티에 반영하고 저장합니다. (createMealByImage 전용 - 즉시 저장 플로우)
      *
      * <ol>
      *   <li>MealAiAnalysis  — 원본 분석 결과 보존</li>

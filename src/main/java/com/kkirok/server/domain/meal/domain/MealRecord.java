@@ -2,6 +2,7 @@ package com.kkirok.server.domain.meal.domain;
 
 import com.kkirok.server.domain.BaseTimeEntity;
 import com.kkirok.server.domain.meal.application.dto.request.MealCreateRequest;
+import com.kkirok.server.domain.meal.application.dto.request.MealRecordConfirmRequest;
 import com.kkirok.server.domain.meal.application.dto.request.MealUpdateRequest;
 import com.kkirok.server.domain.member.domain.Member;
 import jakarta.persistence.*;
@@ -124,6 +125,23 @@ public class MealRecord extends BaseTimeEntity {
                 .category(MealCategory.MEAL)
                 .aiAnalyzed(true)
                 .scanType(scanType)
+                .build();
+    }
+
+    /** AI 스캔 결과를 사용자가 확인/수정한 뒤 최종 기록 생성 */
+    public static MealRecord createFromScan(Member member, MealRecordConfirmRequest request) {
+        LocalDateTime recordedAt = LocalDateTime.now(KOREA_ZONE);
+
+        return MealRecord.builder()
+                .member(member)
+                .recordedAt(recordedAt)
+                .mealDate(recordedAt.toLocalDate())
+                .mealTimeSlot(request.mealTimeSlot())
+                .name(request.foodName())
+                .category(request.category())
+                .aiAnalyzed(true)
+                .scanType(request.scanType())
+                .memo(request.memo())
                 .build();
     }
 

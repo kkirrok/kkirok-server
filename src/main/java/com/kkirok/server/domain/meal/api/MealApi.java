@@ -2,12 +2,15 @@ package com.kkirok.server.domain.meal.api;
 
 import com.kkirok.server.domain.meal.application.dto.request.MealCreateRequest;
 import com.kkirok.server.domain.meal.application.dto.request.MealImageUploadRequest;
+import com.kkirok.server.domain.meal.application.dto.request.MealRecordConfirmRequest;
 import com.kkirok.server.domain.meal.application.dto.request.MealUpdateRequest;
 import com.kkirok.server.domain.meal.application.dto.response.MealResponse;
+import com.kkirok.server.domain.meal.application.dto.response.MealScanResponse;
 import com.kkirok.server.domain.meal.application.dto.response.RecommendationResponse;
 import com.kkirok.server.domain.meal.application.dto.response.YesterdayPickResponse;
 import com.kkirok.server.domain.meal.application.dto.response.TodayNutritionSummaryResponse;
 import com.kkirok.server.domain.meal.application.dto.response.TodayStatusResponse;
+import com.kkirok.server.domain.meal.domain.ScanType;
 import com.kkirok.server.domain.report.application.dto.response.WeeklyReportResponse;
 import com.kkirok.server.domain.meal.exception.MealErrorCode;
 import com.kkirok.server.domain.meal.exception.MealSuccessCode;
@@ -99,45 +102,47 @@ public interface MealApi {
     );
 
     @Operation(
-            summary = "카메라 이미지 파일로 식사 기록 [USER]",
+            summary = "음식 이미지 스캔/분석 [USER]",
             description = """
-                    카메라로 촬영한 이미지 파일을 업로드하여 식사를 기록합니다.
+                    카메라/앨범 이미지를 업로드하여 AI로 음식을 분석합니다.
 
-                    - 인증된 사용자 기준으로 기록합니다.
+                    - 이 단계에서는 식단이 DB에 저장되지 않습니다.
+                    - 응답으로 받은 값(음식명/칼로리/영양성분/imageKey)을 사용자가 확인·수정한 뒤
+                      `/v1/meals/scan/confirm` 으로 최종 저장을 요청해야 합니다.
                     - multipart/form-data 형식의 이미지 파일을 업로드합니다.
-                    - Swagger에서 직접 파일 선택 후 테스트할 수 있습니다.
-                    - 응답: 기록된 식사 정보
                     """
     )
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(codeType = MealErrorCode.class, code = "IMAGE_FILE_REQUIRED")
     })
-    @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "MEAL_RECORD_SUCCESS")
-    ResponseEntity<SuccessResponse<MealResponse>> recordMealByCamera(
+    @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "MEAL_SCAN_SUCCESS")
+    ResponseEntity<SuccessResponse<MealScanResponse>> scanMeal(
             @CurrentMember Long memberId,
 
-            @Valid @ModelAttribute MealImageUploadRequest request
+            @Valid @ModelAttribute MealImageUploadRequest request,
+
+            @Parameter(description = "스캔 방식", example = "CAMERA")
+            @RequestParam ScanType scanType
     );
 
     @Operation(
-            summary = "앨범 이미지 파일로 식사 기록 [USER]",
+            summary = "스캔 결과 확인 후 최종 식사 기록 [USER]",
             description = """
-                    앨범에서 선택한 이미지 파일을 업로드하여 식사를 기록합니다.
+                    `/v1/meals/scan` 응답을 사용자가 확인·수정한 값으로 최종 식단을 저장합니다.
 
-                    - 인증된 사용자 기준으로 기록합니다.
-                    - multipart/form-data 형식의 이미지 파일을 업로드합니다.
-                    - Swagger에서 직접 파일 선택 후 테스트할 수 있습니다.
-                    - 응답: 기록된 식사 정보
+                    - `imageKey`는 스캔 단계에서 발급받은 값을 그대로 전달합니다(재업로드 불필요).
+                    - 응답: 저장된 식사 정보
                     """
     )
-    @ApiErrorCodeExamples({
-            @ApiErrorCodeExample(codeType = MealErrorCode.class, code = "IMAGE_FILE_REQUIRED")
-    })
     @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "MEAL_RECORD_SUCCESS")
-    ResponseEntity<SuccessResponse<MealResponse>> recordMealByAlbum(
+    ResponseEntity<SuccessResponse<MealResponse>> confirmMeal(
             @CurrentMember Long memberId,
 
-            @Valid @ModelAttribute MealImageUploadRequest request
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "확인/수정된 최종 식단 정보",
+                    required = true
+            )
+            @Valid @RequestBody MealRecordConfirmRequest request
     );
 
     @Operation(

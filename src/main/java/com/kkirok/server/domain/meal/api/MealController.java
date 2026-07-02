@@ -2,11 +2,14 @@ package com.kkirok.server.domain.meal.api;
 
 import com.kkirok.server.domain.meal.application.dto.request.MealCreateRequest;
 import com.kkirok.server.domain.meal.application.dto.request.MealImageUploadRequest;
+import com.kkirok.server.domain.meal.application.dto.request.MealRecordConfirmRequest;
 import com.kkirok.server.domain.meal.application.dto.request.MealUpdateRequest;
 import com.kkirok.server.domain.meal.application.dto.response.MealResponse;
+import com.kkirok.server.domain.meal.application.dto.response.MealScanResponse;
 import com.kkirok.server.domain.meal.application.dto.response.RecommendationResponse;
 import com.kkirok.server.domain.meal.application.dto.response.TodayNutritionSummaryResponse;
 import com.kkirok.server.domain.meal.application.dto.response.TodayStatusResponse;
+import com.kkirok.server.domain.meal.domain.ScanType;
 import com.kkirok.server.domain.report.application.dto.response.WeeklyReportResponse;
 import com.kkirok.server.domain.meal.application.service.FoodNutritionSearchService;
 import com.kkirok.server.domain.meal.application.service.RecommendationService;
@@ -70,30 +73,28 @@ public class MealController implements MealApi {
 
     @Override
     @PostMapping(
-            value = "/record/camera",
+            value = "/scan",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
-    public ResponseEntity<SuccessResponse<MealResponse>> recordMealByCamera(
+    public ResponseEntity<SuccessResponse<MealScanResponse>> scanMeal(
             @CurrentMember Long memberId,
-            @Valid @ModelAttribute MealImageUploadRequest request
+            @Valid @ModelAttribute MealImageUploadRequest request,
+            @RequestParam ScanType scanType
     ) {
-        MealResponse response = mealRecordUseCase.createMealByCamera(memberId, request.file());
+        MealScanResponse response = mealRecordUseCase.scanMeal(memberId, request.file(), scanType);
 
         return ResponseEntity.ok(
-                SuccessResponse.of(MealSuccessCode.MEAL_RECORD_SUCCESS, response)
+                SuccessResponse.of(MealSuccessCode.MEAL_SCAN_SUCCESS, response)
         );
     }
 
     @Override
-    @PostMapping(
-            value = "/record/album",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-    )
-    public ResponseEntity<SuccessResponse<MealResponse>> recordMealByAlbum(
+    @PostMapping("/scan/confirm")
+    public ResponseEntity<SuccessResponse<MealResponse>> confirmMeal(
             @CurrentMember Long memberId,
-            @Valid @ModelAttribute MealImageUploadRequest request
+            @Valid @RequestBody MealRecordConfirmRequest request
     ) {
-        MealResponse response = mealRecordUseCase.createMealByAlbum(memberId, request.file());
+        MealResponse response = mealRecordUseCase.confirmMealRecord(memberId, request);
 
         return ResponseEntity.ok(
                 SuccessResponse.of(MealSuccessCode.MEAL_RECORD_SUCCESS, response)
