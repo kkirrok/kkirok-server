@@ -4,6 +4,7 @@ import com.kkirok.server.domain.kkinipop.application.usecase.KkinipopUseCase;
 import com.kkirok.server.domain.kkinipop.application.dto.request.KkinipopGroupCreateRequest;
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopMissionGenerateResponse;
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopMissionGenerateResponse.MissionCandidate;
+import com.kkirok.server.domain.kkinipop.dao.KkinipopMissionRepository;
 import com.kkirok.server.domain.kkinipop.domain.KkinipopGroup;
 import com.kkirok.server.domain.kkinipop.domain.KkinipopMission;
 import com.kkirok.server.domain.kkinipop.domain.KkinipopMissionPolicy;
@@ -15,7 +16,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,11 +50,14 @@ class KkinipopMissionGenerateServiceTest {
     @Mock
     private OpenAiService openAiService;
 
+    @Mock
+    private KkinipopMissionRepository missionRepository;
+
     @Test
     @DisplayName("다음날 미션을 생성하면 각 그룹에 공통 후보 중 5개를 랜덤 배정한다")
     void shouldGenerateNextDayMissionsForAllGroups() {
         KkinipopMissionGenerateService missionGenerateService =
-                new KkinipopMissionGenerateService(kkinipopMissionInsertService, dateTimeProvider, openAiService, kkinipopUseCase);
+                new KkinipopMissionGenerateService(kkinipopMissionInsertService, dateTimeProvider, openAiService, kkinipopUseCase, missionRepository);
         LocalDate today = LocalDate.of(2026, 4, 24);
         LocalDate targetDate = today.plusDays(1);
         KkinipopGroup firstGroup = createGroup(10L, "아침 챌린저스");
@@ -85,7 +91,7 @@ class KkinipopMissionGenerateServiceTest {
     @DisplayName("다음날 미션 존재 여부와 무관하게 전체 그룹에 미션을 생성한다")
     void shouldGenerateMissionsWithoutCheckingExistingAssignments() {
         KkinipopMissionGenerateService missionGenerateService =
-                new KkinipopMissionGenerateService(kkinipopMissionInsertService, dateTimeProvider, openAiService, kkinipopUseCase);
+                new KkinipopMissionGenerateService(kkinipopMissionInsertService, dateTimeProvider, openAiService, kkinipopUseCase, missionRepository);
         LocalDate today = LocalDate.of(2026, 4, 24);
         LocalDate targetDate = today.plusDays(1);
         KkinipopGroup group = createGroup(10L, "아침 챌린저스");
@@ -107,7 +113,7 @@ class KkinipopMissionGenerateServiceTest {
     @DisplayName("OpenAI 공통 후보 응답이 비정상이면 미션 생성 예외가 발생한다")
     void shouldThrowInternalServerException_whenOpenAiResponseIsInvalid() {
         KkinipopMissionGenerateService missionGenerateService =
-                new KkinipopMissionGenerateService(kkinipopMissionInsertService, dateTimeProvider, openAiService, kkinipopUseCase);
+                new KkinipopMissionGenerateService(kkinipopMissionInsertService, dateTimeProvider, openAiService, kkinipopUseCase, missionRepository);
         LocalDate today = LocalDate.of(2026, 4, 24);
         KkinipopGroup group = createGroup(10L, "아침 챌린저스");
 
@@ -151,10 +157,104 @@ class KkinipopMissionGenerateServiceTest {
         assertThat(response.missions().get(0).durationMinutes()).isEqualTo(10);
     }
 
+    @Test
+    @DisplayName("OpenAI 응답이 재시도 중 성공하면 폴백을 호출하지 않는다")
+    void shouldNotUseFallback_whenOpenAiSucceedsDuringRetry() {
+        KkinipopMissionGenerateService missionGenerateService =
+                new KkinipopMissionGenerateService(kkinipopMissionInsertService, dateTimeProvider, openAiService, kkinipopUseCase, missionRepository);
+        LocalDate today = LocalDate.of(2026, 4, 24);
+        KkinipopGroup group = createGroup(10L, "아침 챌린저스");
+
+        given(dateTimeProvider.today()).willReturn(today);
+        given(kkinipopUseCase.findAllGroup()).willReturn(List.of(group));
+        given(openAiService.createObjectResponse(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.eq(KkinipopMissionGenerateResponse.class)
+        )).willReturn(null, null, new KkinipopMissionGenerateResponse(createMissionCandidates()));
+
+        missionGenerateService.generateNextDayMissions();
+
+        then(missionRepository).shouldHaveNoInteractions();
+        then(kkinipopMissionInsertService).should().insertMissions(anyList());
+    }
+
+    @Test
+    @DisplayName("OpenAI 5번 모두 실패하면 최근 14일 미션에서 20개를 랜덤 선택해 폴백 풀로 저장한다")
+    void shouldUseFallbackMissionPool_whenOpenAiFailsAllAttempts() {
+        KkinipopMissionGenerateService missionGenerateService =
+                new KkinipopMissionGenerateService(kkinipopMissionInsertService, dateTimeProvider, openAiService, kkinipopUseCase, missionRepository);
+        LocalDate today = LocalDate.of(2026, 4, 24);
+        LocalDate targetDate = today.plusDays(1);
+        KkinipopGroup group = createGroup(10L, "아침 챌린저스");
+        ArgumentCaptor<List<KkinipopMission>> missionsCaptor = ArgumentCaptor.forClass(List.class);
+
+        given(dateTimeProvider.today()).willReturn(today);
+        given(kkinipopUseCase.findAllGroup()).willReturn(List.of(group));
+        given(openAiService.createObjectResponse(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.eq(KkinipopMissionGenerateResponse.class)
+        )).willReturn(null);
+        given(missionRepository.findMissionsBetween(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any()
+        )).willReturn(createRecentMissions(group));
+
+        missionGenerateService.generateNextDayMissions();
+
+        then(openAiService).should(times(5)).createObjectResponse(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.eq(KkinipopMissionGenerateResponse.class)
+        );
+        then(kkinipopMissionInsertService).should().insertMissions(missionsCaptor.capture());
+        assertThat(missionsCaptor.getValue()).hasSize(KkinipopMissionPolicy.DAILY_MISSION_COUNT);
+        assertThat(missionsCaptor.getValue()).allSatisfy(mission ->
+                assertThat(mission.getStartAt().toLocalDate()).isEqualTo(targetDate));
+    }
+
+    @Test
+    @DisplayName("폴백 후보가 20개 미만이면 미션 생성 예외가 발생하고 저장하지 않는다")
+    void shouldThrowInternalServerException_whenFallbackCandidatesAreInsufficient() {
+        KkinipopMissionGenerateService missionGenerateService =
+                new KkinipopMissionGenerateService(kkinipopMissionInsertService, dateTimeProvider, openAiService, kkinipopUseCase, missionRepository);
+        LocalDate today = LocalDate.of(2026, 4, 24);
+        KkinipopGroup group = createGroup(10L, "아침 챌린저스");
+
+        given(dateTimeProvider.today()).willReturn(today);
+        given(kkinipopUseCase.findAllGroup()).willReturn(List.of(group));
+        given(openAiService.createObjectResponse(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.eq(KkinipopMissionGenerateResponse.class)
+        )).willReturn(null);
+        given(missionRepository.findMissionsBetween(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any()
+        )).willReturn(createRecentMissions(group).subList(0, 10));
+
+        assertThatThrownBy(missionGenerateService::generateNextDayMissions)
+                .isInstanceOf(InternalServerException.class)
+                .extracting("baseErrorCode")
+                .isEqualTo(KkinipopErrorCode.MISSION_GENERATION_FAILED);
+
+        then(kkinipopMissionInsertService).shouldHaveNoInteractions();
+    }
+
     private KkinipopGroup createGroup(Long groupId, String groupName) {
         KkinipopGroup group = KkinipopGroup.create(new KkinipopGroupCreateRequest(groupName), "AB12CD");
         ReflectionTestUtils.setField(group, "id", groupId);
         return group;
+    }
+
+    private List<KkinipopMission> createRecentMissions(KkinipopGroup group) {
+        List<KkinipopMission> missions = new ArrayList<>();
+        for (int i = 0; i < 20; i++) {
+            LocalDateTime startAt = LocalDate.of(2026, 4, 20).atTime(i / 2, (i % 2) * 30);
+            missions.add(KkinipopMission.create(group, "fallback미션" + i, startAt, startAt.plusMinutes(10)));
+        }
+        return missions;
     }
 
     private List<MissionCandidate> createMissionCandidates() {

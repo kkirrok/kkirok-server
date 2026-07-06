@@ -4,6 +4,7 @@ import com.kkirok.server.domain.kkinipop.application.dto.request.KkinipopMission
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopMissionGenerateResponse;
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopMissionGenerateResponse.MissionCandidate;
 import com.kkirok.server.domain.kkinipop.application.usecase.KkinipopUseCase;
+import com.kkirok.server.domain.kkinipop.dao.KkinipopMissionRepository;
 import com.kkirok.server.domain.kkinipop.domain.KkinipopGroup;
 import com.kkirok.server.domain.kkinipop.domain.KkinipopMission;
 import com.kkirok.server.domain.kkinipop.domain.KkinipopMissionPolicy;
@@ -13,12 +14,14 @@ import com.kkirok.server.global.common.util.DateTimeProvider;
 import com.kkirok.server.global.external.openai.OpenAiService;
 import com.kkirok.server.global.external.openai.prompt.PromptType;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
  * - 즉 제목/시간 후보 풀은 공통이지만, 팀별 선택 결과는 달라질 수 있다.
  *
  */
+@Slf4j
 @Service
 @Transactional(readOnly = false)
 @RequiredArgsConstructor
@@ -47,6 +51,7 @@ public class KkinipopMissionGenerateService {
     private final DateTimeProvider dateTimeProvider;
     private final OpenAiService openAiService;
     private final KkinipopUseCase kkinipopUseCase;
+    private final KkinipopMissionRepository missionRepository;
 
     /**
      * 다음날 미션을 전체 그룹에 대해 생성한다.
@@ -86,18 +91,58 @@ public class KkinipopMissionGenerateService {
      *   ]
      * }
      * </pre>
+     *
+     * <p>OpenAI 호출이 최대 {@value KkinipopMissionPolicy#MAX_GENERATION_ATTEMPTS}번 모두 실패하면
+     * 최근 {@value KkinipopMissionPolicy#FALLBACK_LOOKBACK_DAYS}일간의 미션 이력으로 폴백 후보 풀을 생성한다.
      */
     public List<MissionCandidate> generateSharedMissionPool(LocalDate targetDate) {
 
         // openai 요청 준비
         KkinipopMissionGenerateRequest request = KkinipopMissionGenerateRequest.create(targetDate);
 
-        // openai 요청 후 응답 생성
-        KkinipopMissionGenerateResponse response = openAiService.createObjectResponse(PromptType.KKINIPOP_MISSION, request, KkinipopMissionGenerateResponse.class);
+        for (int attempt = 1; attempt <= KkinipopMissionPolicy.MAX_GENERATION_ATTEMPTS; attempt++) {
+            try {
+                // openai 요청 후 응답 생성
+                KkinipopMissionGenerateResponse response = openAiService.createObjectResponse(PromptType.KKINIPOP_MISSION, request, KkinipopMissionGenerateResponse.class);
 
-        // 미션 풀 검증 ( OpenAI 응답의 개수와 시간 단위를 검증 )
-        validateMissionPool(response);
-        return response.missions();
+                // 미션 풀 검증 ( OpenAI 응답의 개수와 시간 단위를 검증 )
+                validateMissionPool(response);
+                return response.missions();
+            } catch (RuntimeException exception) {
+                log.warn("끼니팝 미션 생성 OpenAI 호출 실패. attempt={}", attempt, exception);
+            }
+        }
+
+        // OpenAI가 모두 실패하면 최근 미션 이력으로 폴백 후보 풀을 생성한다.
+        return buildFallbackMissionPool(targetDate);
+    }
+
+    /**
+     * OpenAI 호출이 모두 실패했을 때 최근 {@value KkinipopMissionPolicy#FALLBACK_LOOKBACK_DAYS}일간의
+     * 미션 이력에서 서로 다른 (제목, 시작 시각) 조합을 후보로 삼아 폴백 풀을 만든다.
+     *
+     * <p>폴백 후보가 {@value KkinipopMissionPolicy#DAILY_MISSION_CANDIDATE_COUNT}개 미만이면
+     * 미션 생성 실패로 처리한다.
+     */
+    private List<MissionCandidate> buildFallbackMissionPool(LocalDate targetDate) {
+        LocalDateTime from = targetDate.minusDays(KkinipopMissionPolicy.FALLBACK_LOOKBACK_DAYS).atStartOfDay();
+        LocalDateTime to = targetDate.atStartOfDay();
+
+        List<MissionCandidate> candidates = new ArrayList<>(missionRepository.findMissionsBetween(from, to).stream()
+                .map(mission -> new MissionCandidate(mission.getTitle(), mission.getStartAt().toLocalTime(), (int) mission.getDurationMinutes()))
+                .distinct()
+                .toList());
+        Collections.shuffle(candidates);
+
+        List<MissionCandidate> fallbackPool = candidates.stream()
+                .limit(KkinipopMissionPolicy.DAILY_MISSION_CANDIDATE_COUNT)
+                .toList();
+
+        if (fallbackPool.size() != KkinipopMissionPolicy.DAILY_MISSION_CANDIDATE_COUNT) {
+            throw new InternalServerException(KkinipopErrorCode.MISSION_GENERATION_FAILED);
+        }
+
+        return fallbackPool;
     }
 
     /**
