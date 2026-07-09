@@ -29,26 +29,6 @@
 - Build Tool: Gradle
 - Deploy: Docker, Railway, Cloudflare
 
-
-## 서버 아키텍처
-<!-- 아키텍처 다이어그램 이미지로 교체 -->
-![architecture](이미지_URL)
-
-- Spring Boot API 서버 + PostgreSQL + Redis
-- 식사 분석은 외부 AI 서버(FastAPI)와 OpenFeign으로 연동
-- 이미지 저장은 Cloudflare R2, 이메일은 AWS SES, 푸시는 Firebase FCM 사용
-- Railway(앱·DB) + Cloudflare(CDN·DNS) 단일 플랫폼 통합 운영
-
-
-## DB 다이어그램
-<!-- ERD 이미지로 교체 -->
-<img width="990" height="1179" alt="ERD" src="이미지_URL" />
-
-
-## API 문서
-- Swagger UI: `/swagger-ui/index.html` (springdoc-openapi)
-
-
 ## 프로젝트 구조
 #### 도메인형
 - 각 도메인 패키지는 엔티티, DTO, 컨트롤러, 서비스, 리포지토리 등 하위 패키지를 포함
