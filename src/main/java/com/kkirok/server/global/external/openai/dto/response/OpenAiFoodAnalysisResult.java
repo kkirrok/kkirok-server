@@ -7,12 +7,30 @@ import com.kkirok.server.domain.meal.domain.MealTimeSlot;
 /**
  * OpenAI Vision API 음식 분석 응답 DTO.
  *
- * snake_case 응답과 camelCase 응답을 모두 받을 수 있도록 JsonAlias를 사용합니다.
+ * snake_case 응답과 camelCase 응답을 모두 받을 수 있도록
+ * JsonAlias를 사용합니다.
  */
 public record OpenAiFoodAnalysisResult(
 
+        @JsonProperty("isFood")
+        @JsonAlias({
+                "is_food",
+                "food_detected"
+        })
+        Boolean isFood,
+
+        @JsonProperty("confidence")
+        Double confidence,
+
+        @JsonProperty("invalidReason")
+        @JsonAlias("invalid_reason")
+        String invalidReason,
+
         @JsonProperty("foodName")
-        @JsonAlias({"detected_food_name", "food_name"})
+        @JsonAlias({
+                "detected_food_name",
+                "food_name"
+        })
         String foodName,
 
         @JsonProperty("foodCategory")
@@ -66,48 +84,71 @@ public record OpenAiFoodAnalysisResult(
         @JsonAlias("raw_result_json")
         String rawResultJson
 ) {
+
+    public boolean isReliableFoodDetection() {
+        return Boolean.TRUE.equals(isFood)
+                && confidence != null
+                && confidence >= 0.6;
+    }
+
     public int kcalOrDefault() {
-        return kcal != null ? kcal : 0;
+        return kcal != null
+                ? kcal
+                : 0;
     }
 
     public double proteinOrDefault() {
-        return proteinG != null ? proteinG : 0.0;
+        return proteinG != null
+                ? proteinG
+                : 0.0;
     }
 
     public double carbohydrateOrDefault() {
-        return carbohydrateG != null ? carbohydrateG : 0.0;
+        return carbohydrateG != null
+                ? carbohydrateG
+                : 0.0;
     }
 
     public double sugarOrDefault() {
-        return sugarG != null ? sugarG : 0.0;
+        return sugarG != null
+                ? sugarG
+                : 0.0;
     }
 
     public double fatOrDefault() {
-        return fatG != null ? fatG : 0.0;
+        return fatG != null
+                ? fatG
+                : 0.0;
     }
 
     public double sodiumOrDefault() {
-        return sodiumMg != null ? sodiumMg : 0.0;
+        return sodiumMg != null
+                ? sodiumMg
+                : 0.0;
     }
 
     public String foodNameOrDefault() {
-        return foodName != null && !foodName.isBlank()
+        return foodName != null
+                && !foodName.isBlank()
                 ? foodName
                 : "알 수 없는 음식";
     }
 
     public String foodCategoryOrDefault() {
-        return foodCategory != null && !foodCategory.isBlank()
+        return foodCategory != null
+                && !foodCategory.isBlank()
                 ? foodCategory
                 : "기타";
     }
 
     public String nutritionSummaryOrDefault() {
-        if (nutritionSummary != null && !nutritionSummary.isBlank()) {
+        if (nutritionSummary != null
+                && !nutritionSummary.isBlank()) {
             return nutritionSummary;
         }
 
-        if (mealSummary != null && !mealSummary.isBlank()) {
+        if (mealSummary != null
+                && !mealSummary.isBlank()) {
             return mealSummary;
         }
 
@@ -115,10 +156,14 @@ public record OpenAiFoodAnalysisResult(
     }
 
     public String rawResultJsonOrDefault() {
-        return rawResultJson != null ? rawResultJson : "";
+        return rawResultJson != null
+                ? rawResultJson
+                : "";
     }
 
     public MealTimeSlot mealTimeSlotOrDefault() {
-        return mealTimeSlot != null ? mealTimeSlot : MealTimeSlot.BREAKFAST;
+        return mealTimeSlot != null
+                ? mealTimeSlot
+                : MealTimeSlot.BREAKFAST;
     }
 }

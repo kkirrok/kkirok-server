@@ -50,6 +50,7 @@ public class MealRecordService implements MealRecordUseCase {
     private final R2UploadService r2UploadService;
     private final PresignedUrlService presignedUrlService;
     private final OpenAiService openAiService;
+    private final MealImageValidator mealImageValidator;
 
     @Override
     public List<MealRecord> getTodayRecords(Long memberId) {
@@ -61,23 +62,41 @@ public class MealRecordService implements MealRecordUseCase {
         );
     }
 
-    /** 직접 입력으로 식단 기록 */
+    /**
+     * 직접 입력으로 식단 기록
+     */
     @Override
     @Transactional
-    public MealResponse create(Long memberId, MealCreateRequest request) {
-        Member member = memberUseCase.findMemberByMemberId(memberId);
+    public MealResponse create(
+            Long memberId,
+            MealCreateRequest request
+    ) {
+        Member member =
+                memberUseCase.findMemberByMemberId(memberId);
 
-        MealRecord meal = MealRecord.createManual(member, request);
+        MealRecord meal =
+                MealRecord.createManual(member, request);
+
         mealRecordRepository.save(meal);
 
         MealNutrition nutrition = MealNutrition.create(
                 meal,
                 request.kcal(),
-                request.proteinG() != null ? request.proteinG().doubleValue() : null,
-                request.carbohydrateG() != null ? request.carbohydrateG().doubleValue() : null,
-                request.sugarG() != null ? request.sugarG().doubleValue() : null,
-                request.fatG() != null ? request.fatG().doubleValue() : null,
-                request.sodiumMg() != null ? request.sodiumMg().doubleValue() : null
+                request.proteinG() != null
+                        ? request.proteinG().doubleValue()
+                        : null,
+                request.carbohydrateG() != null
+                        ? request.carbohydrateG().doubleValue()
+                        : null,
+                request.sugarG() != null
+                        ? request.sugarG().doubleValue()
+                        : null,
+                request.fatG() != null
+                        ? request.fatG().doubleValue()
+                        : null,
+                request.sodiumMg() != null
+                        ? request.sodiumMg().doubleValue()
+                        : null
         );
 
         mealNutritionRepository.save(nutrition);
@@ -86,65 +105,130 @@ public class MealRecordService implements MealRecordUseCase {
         return MealResponse.from(meal);
     }
 
-    /** 이미지 업로드 즉시 분석 + 저장 (끼니팝 등 내부 연동용, 리뷰 단계 없음) */
+    /**
+     * 이미지 업로드 즉시 분석 + 저장
+     * 끼니팝 등 내부 연동용으로 리뷰 단계가 없습니다.
+     */
     @Override
     @Transactional
-    public MealResponse createMealByImage(Long memberId, MultipartFile file, ScanType scanType) {
-        Member member = memberUseCase.findMemberByMemberId(memberId);
+    public MealResponse createMealByImage(
+            Long memberId,
+            MultipartFile file,
+            ScanType scanType
+    ) {
+        Member member =
+                memberUseCase.findMemberByMemberId(memberId);
 
         if (file == null || file.isEmpty()) {
-            throw new MealException(MealErrorCode.IMAGE_FILE_REQUIRED);
+            throw new MealException(
+                    MealErrorCode.IMAGE_FILE_REQUIRED
+            );
         }
 
-        MealRecord meal = MealRecord.createByAi(member, scanType);
+        mealImageValidator.validate(file);
+
+        MealRecord meal =
+                MealRecord.createByAi(member, scanType);
+
         mealRecordRepository.save(meal);
 
         String imageKey = r2UploadService.upload(file);
-        mealImageRepository.save(MealImage.create(meal, imageKey));
 
-        String imageUrl = presignedUrlService.getPresignedUrl(imageKey).toString();
+        mealImageRepository.save(
+                MealImage.create(meal, imageKey)
+        );
 
-        OpenAiFoodAnalysisResult result = analyzeImage(imageUrl);
+        String imageUrl =
+                presignedUrlService
+                        .getPresignedUrl(imageKey)
+                        .toString();
+
+        OpenAiFoodAnalysisResult result =
+                analyzeImage(imageUrl);
 
         return applyAnalysisResult(meal, result);
     }
 
-    /** 1단계: 이미지 업로드 + AI 분석만 수행 (DB에 MealRecord 저장하지 않음) */
+    /**
+     * 1단계: 이미지 업로드 + AI 분석만 수행
+     * DB에 MealRecord를 저장하지 않습니다.
+     */
     @Override
-    public MealScanResponse scanMeal(Long memberId, MultipartFile file, ScanType scanType) {
-        memberUseCase.findMemberByMemberId(memberId); // 회원 존재 검증만 수행
+    public MealScanResponse scanMeal(
+            Long memberId,
+            MultipartFile file,
+            ScanType scanType
+    ) {
+        // 회원 존재 검증만 수행
+        memberUseCase.findMemberByMemberId(memberId);
 
         if (file == null || file.isEmpty()) {
-            throw new MealException(MealErrorCode.IMAGE_FILE_REQUIRED);
+            throw new MealException(
+                    MealErrorCode.IMAGE_FILE_REQUIRED
+            );
         }
 
+        mealImageValidator.validate(file);
+
         String imageKey = r2UploadService.upload(file);
-        String imageUrl = presignedUrlService.getPresignedUrl(imageKey).toString();
 
-        OpenAiFoodAnalysisResult result = analyzeImage(imageUrl);
+        String imageUrl =
+                presignedUrlService
+                        .getPresignedUrl(imageKey)
+                        .toString();
 
-        return MealScanResponse.from(imageKey, scanType, result);
+        OpenAiFoodAnalysisResult result =
+                analyzeImage(imageUrl);
+
+        return MealScanResponse.from(
+                imageKey,
+                scanType,
+                result
+        );
     }
 
-    /** 2단계: 스캔 결과를 사용자가 확인/수정한 뒤 최종 저장 */
+    /**
+     * 2단계: 스캔 결과를 사용자가 확인하거나 수정한 뒤 최종 저장
+     */
     @Override
     @Transactional
-    public MealResponse confirmMealRecord(Long memberId, MealRecordConfirmRequest request) {
-        Member member = memberUseCase.findMemberByMemberId(memberId);
+    public MealResponse confirmMealRecord(
+            Long memberId,
+            MealRecordConfirmRequest request
+    ) {
+        Member member =
+                memberUseCase.findMemberByMemberId(memberId);
 
-        MealRecord meal = MealRecord.createFromScan(member, request);
+        MealRecord meal =
+                MealRecord.createFromScan(member, request);
+
         mealRecordRepository.save(meal);
 
-        mealImageRepository.save(MealImage.create(meal, request.imageKey()));
+        mealImageRepository.save(
+                MealImage.create(
+                        meal,
+                        request.imageKey()
+                )
+        );
 
         MealNutrition nutrition = MealNutrition.create(
                 meal,
                 request.kcal(),
-                request.proteinG() != null ? request.proteinG().doubleValue() : null,
-                request.carbohydrateG() != null ? request.carbohydrateG().doubleValue() : null,
-                request.sugarG() != null ? request.sugarG().doubleValue() : null,
-                request.fatG() != null ? request.fatG().doubleValue() : null,
-                request.sodiumMg() != null ? request.sodiumMg().doubleValue() : null
+                request.proteinG() != null
+                        ? request.proteinG().doubleValue()
+                        : null,
+                request.carbohydrateG() != null
+                        ? request.carbohydrateG().doubleValue()
+                        : null,
+                request.sugarG() != null
+                        ? request.sugarG().doubleValue()
+                        : null,
+                request.fatG() != null
+                        ? request.fatG().doubleValue()
+                        : null,
+                request.sodiumMg() != null
+                        ? request.sodiumMg().doubleValue()
+                        : null
         );
 
         mealNutritionRepository.save(nutrition);
@@ -155,18 +239,34 @@ public class MealRecordService implements MealRecordUseCase {
 
     @Override
     @Transactional
-    public MealResponse updateMeal(Long memberId, Long mealId, MealUpdateRequest request) {
-        MealRecord meal = findMealWithOwnerCheck(memberId, mealId);
+    public MealResponse updateMeal(
+            Long memberId,
+            Long mealId,
+            MealUpdateRequest request
+    ) {
+        MealRecord meal =
+                findMealWithOwnerCheck(memberId, mealId);
+
         meal.update(request);
 
         if (meal.getMealNutrition() != null) {
             meal.getMealNutrition().update(
                     request.kcal(),
-                    request.proteinG() != null ? request.proteinG().doubleValue() : null,
-                    request.carbohydrateG() != null ? request.carbohydrateG().doubleValue() : null,
-                    request.sugarG() != null ? request.sugarG().doubleValue() : null,
-                    request.fatG() != null ? request.fatG().doubleValue() : null,
-                    request.sodiumMg() != null ? request.sodiumMg().doubleValue() : null
+                    request.proteinG() != null
+                            ? request.proteinG().doubleValue()
+                            : null,
+                    request.carbohydrateG() != null
+                            ? request.carbohydrateG().doubleValue()
+                            : null,
+                    request.sugarG() != null
+                            ? request.sugarG().doubleValue()
+                            : null,
+                    request.fatG() != null
+                            ? request.fatG().doubleValue()
+                            : null,
+                    request.sodiumMg() != null
+                            ? request.sodiumMg().doubleValue()
+                            : null
             );
         }
 
@@ -175,18 +275,34 @@ public class MealRecordService implements MealRecordUseCase {
 
     @Override
     @Transactional
-    public void deleteMeal(Long memberId, Long mealId) {
-        MealRecord meal = findMealWithOwnerCheck(memberId, mealId);
+    public void deleteMeal(
+            Long memberId,
+            Long mealId
+    ) {
+        MealRecord meal =
+                findMealWithOwnerCheck(memberId, mealId);
+
         mealRecordRepository.delete(meal);
     }
 
     @Override
-    public MealRecord findMealWithOwnerCheck(Long memberId, Long mealId) {
-        MealRecord meal = mealRecordRepository.findByIdWithAnalyses(mealId)
-                .orElseThrow(() -> new MealException(MealErrorCode.MEAL_NOT_FOUND));
+    public MealRecord findMealWithOwnerCheck(
+            Long memberId,
+            Long mealId
+    ) {
+        MealRecord meal =
+                mealRecordRepository
+                        .findByIdWithAnalyses(mealId)
+                        .orElseThrow(
+                                () -> new MealException(
+                                        MealErrorCode.MEAL_NOT_FOUND
+                                )
+                        );
 
         if (!meal.getMember().getId().equals(memberId)) {
-            throw new ForbiddenException(MealErrorCode.MEAL_FORBIDDEN);
+            throw new ForbiddenException(
+                    MealErrorCode.MEAL_FORBIDDEN
+            );
         }
 
         return meal;
@@ -198,65 +314,72 @@ public class MealRecordService implements MealRecordUseCase {
 
     /**
      * OpenAI Vision으로 이미지 분석.
+     *
      * PromptType.MEAL_ANALYSIS 프롬프트를 system instruction으로,
-     * 이미지 URL + 보조 텍스트를 Vision input 배열로 전달합니다.
+     * 이미지 URL과 보조 텍스트를 Vision input 배열로 전달합니다.
      */
-    private OpenAiFoodAnalysisResult analyzeImage(String imageUrl) {
+    private OpenAiFoodAnalysisResult analyzeImage(
+            String imageUrl
+    ) {
         String userText = """
-            이미지 속 음식을 분석해서 반드시 아래 JSON 형식으로만 응답해줘.
+            먼저 이미지에 음식이 선명하게 보이는지 판단해줘.
+            검은 화면, 빈 화면, 심하게 어둡거나 밝은 사진, 음식이 없는 사진이면
+            절대로 음식명을 추측하지 말고 is_food를 false로 응답해줘.
 
-            {
-              "detected_food_name": "음식명",
-              "food_category": "한식/중식/일식/양식/기타 중 하나",
-              "kcal": 0,
-              "carbohydrate_g": 0,
-              "protein_g": 0,
-              "fat_g": 0,
-              "sugar_g": 0,
-              "sodium_mg": 0,
-              "meal_summary": "음식 요약",
-              "nutrition_summary": "영양 요약",
-              "positive_point": "좋은 점",
-              "improvement_suggestion": "개선 제안"
-            }
-
-            주의:
-            - 숫자 값은 추정치라도 반드시 숫자로 넣어줘.
-            - 확실하지 않으면 null이 아니라 0을 넣어줘.
-            - JSON 외의 설명 문장은 절대 넣지 마.
+            음식이 명확하게 보이는 경우에만 is_food를 true로 하고,
+            시스템 지침에 정의된 JSON 필드를 모두 채워서 JSON만 반환해줘.
             """;
 
-        return openAiService.createVisionResponse(
-                PromptType.MEAL_ANALYSIS,
-                imageUrl,
-                userText,
-                OpenAiFoodAnalysisResult.class
-        );
+        OpenAiFoodAnalysisResult result =
+                openAiService.createVisionResponse(
+                        PromptType.MEAL_ANALYSIS,
+                        imageUrl,
+                        userText,
+                        OpenAiFoodAnalysisResult.class
+                );
+
+        if (result == null
+                || !result.isReliableFoodDetection()) {
+            throw new MealException(
+                    MealErrorCode.UNRECOGNIZABLE_MEAL_IMAGE
+            );
+        }
+
+        return result;
     }
 
     /**
-     * AI 분석 결과를 엔티티에 반영하고 저장합니다. (createMealByImage 전용 - 즉시 저장 플로우)
+     * AI 분석 결과를 엔티티에 반영하고 저장합니다.
+     * createMealByImage 전용 즉시 저장 플로우입니다.
      *
-     * <ol>
-     *   <li>MealAiAnalysis  — 원본 분석 결과 보존</li>
-     *   <li>MealNutrition   — 영양 정보 저장</li>
-     *   <li>meal.applyAiResult()       — 음식 이름 / 시간대 업데이트</li>
-     *   <li>meal.assignMealNutrition() — 영양 정보 연결</li>
-     * </ol>
+     * 1. MealAiAnalysis: 원본 분석 결과 보존
+     * 2. MealNutrition: 영양 정보 저장
+     * 3. meal.applyAiResult(): 음식 이름 및 시간대 업데이트
+     * 4. meal.assignMealNutrition(): 영양 정보 연결
      */
-    private MealResponse applyAnalysisResult(MealRecord meal, OpenAiFoodAnalysisResult result) {
-        // MealAiAnalysis 저장
-        MealAiAnalysis aiAnalysis = MealAiAnalysis.builder()
-                .mealRecord(meal)
-                .detectedFoodName(result.foodNameOrDefault())
-                .foodCategory(result.foodCategoryOrDefault())
-                .nutritionSummary(result.nutritionSummaryOrDefault())
-                .rawResultJson(result.rawResultJsonOrDefault())
-                .build();
+    private MealResponse applyAnalysisResult(
+            MealRecord meal,
+            OpenAiFoodAnalysisResult result
+    ) {
+        MealAiAnalysis aiAnalysis =
+                MealAiAnalysis.builder()
+                        .mealRecord(meal)
+                        .detectedFoodName(
+                                result.foodNameOrDefault()
+                        )
+                        .foodCategory(
+                                result.foodCategoryOrDefault()
+                        )
+                        .nutritionSummary(
+                                result.nutritionSummaryOrDefault()
+                        )
+                        .rawResultJson(
+                                result.rawResultJsonOrDefault()
+                        )
+                        .build();
 
         mealAiAnalysisRepository.save(aiAnalysis);
 
-        // MealNutrition 저장
         MealNutrition nutrition = MealNutrition.create(
                 meal,
                 result.kcalOrDefault(),
@@ -269,21 +392,28 @@ public class MealRecordService implements MealRecordUseCase {
 
         mealNutritionRepository.save(nutrition);
 
-        // MealRecord 업데이트
-        meal.applyAiResult(result.foodNameOrDefault(), result.mealTimeSlotOrDefault());
+        meal.applyAiResult(
+                result.foodNameOrDefault(),
+                result.mealTimeSlotOrDefault()
+        );
+
         meal.assignMealNutrition(nutrition);
 
         return MealResponse.from(meal);
     }
 
     @Override
-    public TodayNutritionSummaryResponse getTodayNutritionSummary(Long memberId) {
-        LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
+    public TodayNutritionSummaryResponse getTodayNutritionSummary(
+            Long memberId
+    ) {
+        LocalDate today =
+                LocalDate.now(ZoneId.of("Asia/Seoul"));
 
-        List<MealRecord> records = mealRecordRepository.getSpecifiedDateMealRecords(
-                memberId,
-                today
-        );
+        List<MealRecord> records =
+                mealRecordRepository.getSpecifiedDateMealRecords(
+                        memberId,
+                        today
+                );
 
         int totalKcal = 0;
         long totalCarbohydrateG = 0L;
@@ -297,37 +427,63 @@ public class MealRecordService implements MealRecordUseCase {
                 continue;
             }
 
-            totalKcal += record.getMealNutrition().getKcal() == null
-                    ? 0
-                    : record.getMealNutrition().getKcal();
+            totalKcal +=
+                    record.getMealNutrition().getKcal() == null
+                            ? 0
+                            : record.getMealNutrition().getKcal();
 
-            totalCarbohydrateG += record.getMealNutrition().getCarbohydrateG() == null
-                    ? 0L
-                    : record.getMealNutrition().getCarbohydrateG().longValue();
+            totalCarbohydrateG +=
+                    record.getMealNutrition()
+                            .getCarbohydrateG() == null
+                            ? 0L
+                            : record.getMealNutrition()
+                            .getCarbohydrateG()
+                            .longValue();
 
-            totalProteinG += record.getMealNutrition().getProteinG() == null
-                    ? 0L
-                    : record.getMealNutrition().getProteinG().longValue();
+            totalProteinG +=
+                    record.getMealNutrition()
+                            .getProteinG() == null
+                            ? 0L
+                            : record.getMealNutrition()
+                            .getProteinG()
+                            .longValue();
 
-            totalFatG += record.getMealNutrition().getFatG() == null
-                    ? 0L
-                    : record.getMealNutrition().getFatG().longValue();
+            totalFatG +=
+                    record.getMealNutrition()
+                            .getFatG() == null
+                            ? 0L
+                            : record.getMealNutrition()
+                            .getFatG()
+                            .longValue();
 
-            totalSugarG += record.getMealNutrition().getSugarG() == null
-                    ? 0L
-                    : record.getMealNutrition().getSugarG().longValue();
+            totalSugarG +=
+                    record.getMealNutrition()
+                            .getSugarG() == null
+                            ? 0L
+                            : record.getMealNutrition()
+                            .getSugarG()
+                            .longValue();
 
-            totalSodiumMg += record.getMealNutrition().getSodiumMg() == null
-                    ? 0L
-                    : record.getMealNutrition().getSodiumMg().longValue();
+            totalSodiumMg +=
+                    record.getMealNutrition()
+                            .getSodiumMg() == null
+                            ? 0L
+                            : record.getMealNutrition()
+                            .getSodiumMg()
+                            .longValue();
         }
 
-        Member member = memberUseCase.findWithOnboarding(memberId);
-        RecommendedNutritionCalculator.NutritionRecommendation recommendation =
+        Member member =
+                memberUseCase.findWithOnboarding(memberId);
+
+        RecommendedNutritionCalculator.NutritionRecommendation
+                recommendation =
                 RecommendedNutritionCalculator.calculate(
                         member.getGender(),
                         member.getBirthday(),
-                        member.getOnboarding() != null ? member.getOnboarding().getPurpose() : null,
+                        member.getOnboarding() != null
+                                ? member.getOnboarding().getPurpose()
+                                : null,
                         today
                 );
 
