@@ -2,6 +2,7 @@ package com.kkirok.server.domain.member.domain;
 
 import com.kkirok.server.domain.BaseTimeEntity;
 import com.kkirok.server.domain.member.application.dto.request.ProfileSettingRequest;
+import com.kkirok.server.domain.member.application.dto.request.ResetPasswordRequest;
 import com.kkirok.server.domain.user.domain.Users;
 import com.kkirok.server.global.auth.client.dto.MemberInfoResponse;
 import jakarta.persistence.*;
@@ -175,6 +176,10 @@ public class Member extends BaseTimeEntity {
             return name;
         }
         return "이름없음";
+    }
+
+    public boolean compareInfo(ResetPasswordRequest dto) { // 정보 다르면 false
+        return this.email.equals(dto.email()) && this.name.equals(dto.name());
     }
 
 }
