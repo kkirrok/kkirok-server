@@ -46,7 +46,7 @@ public class AccountRecoveryService {
     public void resetPassword(final ResetPasswordRequest request) {
 
         // 이메일 인증 여부 검증
-        emailVerificationStateService.consumeVerifiedEmail(request.email());
+        emailVerificationStateService.validateVerifiedEmail(request.email());
 
         // 인증정보 조회
         AuthIdentity authIdentity = authIdentityRepository
@@ -62,5 +62,8 @@ public class AccountRecoveryService {
 
         // 비밀번호 변경
         authIdentity.changePassword(passwordEncoder.encode(request.newPassword()));
+
+        // 이메일 인증번호 폐기
+        emailVerificationStateService.consumeVerifiedEmail(request.email());
     }
 }

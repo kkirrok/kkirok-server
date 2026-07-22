@@ -114,7 +114,7 @@ class AccountRecoveryServiceTest {
         ResetPasswordRequest request = ResetPasswordRequestFixture.create();
         BDDMockito.willThrow(new EmailException(EmailErrorCode.EMAIL_NOT_VERIFIED))
                 .given(emailVerificationStateService)
-                .consumeVerifiedEmail(request.email());
+                .validateVerifiedEmail(request.email());
 
         // When, Then
         assertThatThrownBy(() -> accountRecoveryService.resetPassword(request))

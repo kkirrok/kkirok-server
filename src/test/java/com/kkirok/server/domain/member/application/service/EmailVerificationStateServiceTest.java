@@ -83,7 +83,7 @@ class EmailVerificationStateServiceTest {
         given(emailVerificationRepository.isVerified(email)).willReturn(false);
 
         // When, Then
-        assertBadRequest(() -> emailVerificationStateService.consumeVerifiedEmail(email),
+        assertBadRequest(() -> emailVerificationStateService.validateVerifiedEmail(email),
                 EmailErrorCode.EMAIL_NOT_VERIFIED);
     }
 

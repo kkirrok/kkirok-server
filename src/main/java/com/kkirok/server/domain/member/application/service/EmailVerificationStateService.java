@@ -16,7 +16,7 @@ public class EmailVerificationStateService {
     private final EmailVerificationHistoryRepository emailVerificationHistoryRepository;
     private final EmailVerificationRepository emailVerificationRepository;
 
-    @Transactional
+    @Transactional(readOnly = false)
     public void verify(final String email, final String code) {
         String verificationCode = emailVerificationRepository.getVerificationCode(email)
                 .orElseThrow(() -> new EmailException(EmailErrorCode.EMAIL_VERIFICATION_CODE_NOT_FOUND));
@@ -38,9 +38,7 @@ public class EmailVerificationStateService {
         }
     }
 
-    @Transactional
     public void consumeVerifiedEmail(final String email) {
-        validateVerifiedEmail(email);
         emailVerificationRepository.deleteVerified(email);
     }
 }
