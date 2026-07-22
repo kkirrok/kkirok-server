@@ -72,7 +72,6 @@ public interface MemberApi {
     })
     @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "RESET_PASSWORD_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> resetPassword(
-            @CurrentMember final Long memberId,
             @Valid @RequestBody final ResetPasswordRequest request
     );
 

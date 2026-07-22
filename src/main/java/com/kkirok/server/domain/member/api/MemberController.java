@@ -53,12 +53,10 @@ public class MemberController implements MemberApi {
 
     @Override
     @PostMapping("/recovery/password")
-    @RoleUserAuth
     public ResponseEntity<SuccessResponse<Void>> resetPassword(
-            @CurrentMember final Long memberId,
             @Valid @RequestBody final ResetPasswordRequest request
     ) {
-        accountRecoveryService.resetPassword(memberId, request);
+        accountRecoveryService.resetPassword(request);
         return ResponseEntity.ok().body(SuccessResponse.from(MemberSuccessCode.RESET_PASSWORD_SUCCESS));
     }
 

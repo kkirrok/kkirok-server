@@ -3,7 +3,10 @@ package com.kkirok.server.domain.member.application.dto.response;
 import com.kkirok.server.domain.member.domain.*;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Pattern;
+import jdk.jshell.execution.JdiExecutionControl;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -17,6 +20,15 @@ public record OnboardingProfileResponse(
 
         @Schema(example = "550e8400-e29b-41d4-a716-446655440000-profile.png", description = "프로필 이미지 저장 key", nullable = true)
         String profileImage,
+
+        @Schema(example = "김끼록", description = "유저 닉네임", nullable = false)
+        String name,
+
+        @Schema(example = "2002-12-25", description = "유저 생년월일, yyyy-MM-dd 형식", pattern = "yyyy-MM-dd", nullable = false)
+        LocalDate birth,
+
+        @Schema(example = "01011112222", description = "유저 전화번호", pattern = "^01[0-9]{8,9}$", nullable = false)
+        String phone,
 
         @ArraySchema(
                 arraySchema = @Schema(description = "온보딩 목표 선택지 목록"),
@@ -44,6 +56,9 @@ public record OnboardingProfileResponse(
                 member.getNickname(),
                 member.getGender(),
                 member.getProfileImage(),
+                member.getName(),
+                member.getBirthday(),
+                member.getPhone(),
                 createPurposeInfos(selectedPurpose),
                 createHabitInfos(selectedHabits)
         );

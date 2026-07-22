@@ -37,7 +37,7 @@ public class LocalLoginService {
         if (authIdentityRepository.existsByProviderAndProviderUserId(AuthProvider.LOCAL, request.email())) {
             throw new ConflictException(MemberErrorCode.LOCAL_EMAIL_ALREADY_EXISTS);
         }
-        emailVerificationStateService.consumeVerifiedEmail(request.email());
+        emailVerificationStateService.validateVerifiedEmail(request.email()); // 이메일 인증 검증
         checkPasswordValidation(request.password());
 
         String encodedPassword = passwordEncoder.encode(request.password());
@@ -46,7 +46,9 @@ public class LocalLoginService {
                 encodedPassword
         );
 
-        return authenticationService.generateLoginSuccessResponse(member);
+        LoginSuccessResponse loginSuccessResponse = authenticationService.generateLoginSuccessResponse(member);
+        emailVerificationStateService.consumeVerifiedEmail(request.email()); // 이메일 인증번호 폐기
+        return loginSuccessResponse;
     }
 
     @Transactional

@@ -99,7 +99,7 @@ class AccountRecoveryServiceTest {
         given(passwordEncoder.encode(request.newPassword())).willReturn("encoded-new-password");
 
         // When
-        accountRecoveryService.resetPassword(1L, request);
+        accountRecoveryService.resetPassword(request);
 
         // Then
         then(emailVerificationStateService).should().consumeVerifiedEmail(request.email());
@@ -114,10 +114,10 @@ class AccountRecoveryServiceTest {
         ResetPasswordRequest request = ResetPasswordRequestFixture.create();
         BDDMockito.willThrow(new EmailException(EmailErrorCode.EMAIL_NOT_VERIFIED))
                 .given(emailVerificationStateService)
-                .consumeVerifiedEmail(request.email());
+                .validateVerifiedEmail(request.email());
 
         // When, Then
-        assertThatThrownBy(() -> accountRecoveryService.resetPassword(1L, request))
+        assertThatThrownBy(() -> accountRecoveryService.resetPassword(request))
                 .isInstanceOf(EmailException.class)
                 .extracting("baseErrorCode")
                 .isEqualTo(EmailErrorCode.EMAIL_NOT_VERIFIED);
@@ -136,29 +136,10 @@ class AccountRecoveryServiceTest {
                 .willReturn(Optional.of(authIdentity));
 
         // When, Then
-        assertThatThrownBy(() -> accountRecoveryService.resetPassword(1L, request))
+        assertThatThrownBy(() -> accountRecoveryService.resetPassword(request))
                 .isInstanceOf(NotFoundException.class)
                 .extracting("baseErrorCode")
                 .isEqualTo(MemberErrorCode.ACCOUNT_RECOVERY_INFO_MISMATCH);
-    }
-
-    @Test
-    @DisplayName("로그인한 회원과 다른 계정의 비밀번호는 재설정할 수 없다")
-    void shouldThrowForbiddenException_whenCurrentMemberDoesNotMatchResetTarget() {
-        // Given
-        ResetPasswordRequest request = ResetPasswordRequestFixture.create();
-        Member member = createProfiledLocalMember();
-        AuthIdentity authIdentity = AuthIdentityFixture.createLocal(member, request.email(), "old-password");
-
-        ReflectionTestUtils.setField(member, "id", 2L);
-        given(authIdentityRepository.findByProviderAndProviderUserId(AuthProvider.LOCAL, request.email()))
-                .willReturn(Optional.of(authIdentity));
-
-        // When, Then
-        assertThatThrownBy(() -> accountRecoveryService.resetPassword(1L, request))
-                .isInstanceOf(ForbiddenException.class)
-                .extracting("baseErrorCode")
-                .isEqualTo(MemberErrorCode.ACCOUNT_RECOVERY_FORBIDDEN);
     }
 
     private Member createProfiledLocalMember() {

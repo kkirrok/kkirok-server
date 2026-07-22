@@ -30,6 +30,8 @@ public class SecurityConfig {
                 "/v1/users/login/**",
                 "/v1/users/sign-up/local",
                 "/v1/users/refresh-token",
+                "/v1/users/recovery/**",
+                "/v1/users/email-verification/**",
                 "/v1/main",
                 "/api-docs/**",
                 "/v3/api-docs/**",
@@ -37,8 +39,7 @@ public class SecurityConfig {
                 "/swagger-ui.html",
                 "/swagger-resources/**",
                 "/api/files/**",
-                "/v1/users/email-verification/send",
-                "/v1/users/email-verification/verify",
+
                 "/error",
                 "/v1/enums",
 //                actuatorEndPoint + "/health",
