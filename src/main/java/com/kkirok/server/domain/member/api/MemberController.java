@@ -4,7 +4,9 @@ import com.kkirok.server.domain.member.application.dto.request.FindEmailRequest;
 import com.kkirok.server.domain.member.application.dto.request.NotificationAgreeUpdateRequest;
 import com.kkirok.server.domain.member.application.dto.request.ProfileSettingRequest;
 import com.kkirok.server.domain.member.application.dto.request.ResetPasswordRequest;
+import com.kkirok.server.domain.member.application.dto.request.UpdateKcalRequest;
 import com.kkirok.server.domain.member.application.dto.response.FoundEmailResponse;
+import com.kkirok.server.domain.member.application.dto.response.KcalResponse;
 import com.kkirok.server.domain.member.application.dto.response.MyPageResponse;
 import com.kkirok.server.domain.member.application.dto.response.NotificationAgreeResponse;
 import com.kkirok.server.domain.member.application.dto.response.OnboardingOptionResponse;
@@ -145,6 +147,27 @@ public class MemberController implements MemberApi {
         return ResponseEntity.ok()
                 .body(SuccessResponse.of(MemberSuccessCode.NOTIFICATION_AGREE_UPDATE_SUCCESS,
                         notificationAgreeService.update(memberId, request)));
+    }
+
+    @Override
+    @PatchMapping("/kcal")
+    @RoleUserAuth
+    public ResponseEntity<SuccessResponse<Void>> updateKcal(
+            @CurrentMember Long memberId,
+            @Valid @RequestBody UpdateKcalRequest request
+    ) {
+        myPageService.updateKcal(memberId, request.kcal());
+        return ResponseEntity.ok().body(SuccessResponse.from(MemberSuccessCode.KCAL_UPDATE_SUCCESS));
+    }
+
+    @Override
+    @GetMapping("/kcal")
+    @RoleUserAuth
+    public ResponseEntity<SuccessResponse<KcalResponse>> getKcal(
+            @CurrentMember Long memberId
+    ) {
+        KcalResponse response = KcalResponse.from(myPageService.getSuggestedKcal(memberId));
+        return ResponseEntity.ok().body(SuccessResponse.of(MemberSuccessCode.KCAL_GET_SUCCESS, response));
     }
 
 }
