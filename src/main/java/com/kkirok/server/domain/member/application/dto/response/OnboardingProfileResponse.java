@@ -30,6 +30,15 @@ public record OnboardingProfileResponse(
         @Schema(example = "01011112222", description = "유저 전화번호", pattern = "^01[0-9]{8,9}$", nullable = false)
         String phone,
 
+        @Schema(example = "BALANCED", description = "식습관 유형 Enum 상수", nullable = true)
+        MealStyle mealStyle,
+
+        @Schema(example = "균형형", description = "식습관 유형 Label", nullable = true)
+        String mealStyleLabel,
+
+        @Schema(example = "100", description = "유저 권장 칼로리 Int", nullable = true)
+        Integer recommendedKcal,
+
         @ArraySchema(
                 arraySchema = @Schema(description = "온보딩 목표 선택지 목록"),
                 schema = @Schema(implementation = OnboardingLabelInfo.class)
@@ -59,6 +68,9 @@ public record OnboardingProfileResponse(
                 member.getName(),
                 member.getBirthday(),
                 member.getPhone(),
+                member.getMealStyle(),
+                member.getMealStyle() != null ? member.getMealStyle().getLabel() : null,
+                member.getSuggestedKcal(),
                 createPurposeInfos(selectedPurpose),
                 createHabitInfos(selectedHabits)
         );

@@ -27,7 +27,9 @@ public enum MemberSuccessCode implements BaseSuccessCode {
 	CURRENT_ROLE_GET_SUCCESS(200, "현재 권한 조회 성공"),
 	MYPAGE_GET_SUCCESS(200, "마이페이지 조회 성공"),
 	NOTIFICATION_AGREE_LIST_SUCCESS(200, "알림 허용 설정 조회 성공"),
-	NOTIFICATION_AGREE_UPDATE_SUCCESS(200, "알림 허용 설정 변경 성공")
+	NOTIFICATION_AGREE_UPDATE_SUCCESS(200, "알림 허용 설정 변경 성공"),
+	KCAL_UPDATE_SUCCESS(200, "권장 칼로리 수정 성공"),
+	KCAL_GET_SUCCESS(200, "권장 칼로리 조회 성공")
 
 
 	;

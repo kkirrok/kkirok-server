@@ -4,6 +4,8 @@ import com.kkirok.server.domain.member.application.dto.request.FindEmailRequest;
 import com.kkirok.server.domain.member.application.dto.request.NotificationAgreeUpdateRequest;
 import com.kkirok.server.domain.member.application.dto.request.ProfileSettingRequest;
 import com.kkirok.server.domain.member.application.dto.request.ResetPasswordRequest;
+import com.kkirok.server.domain.member.application.dto.request.UpdateKcalRequest;
+import com.kkirok.server.domain.member.application.dto.response.KcalResponse;
 import com.kkirok.server.domain.member.application.dto.response.MyPageResponse;
 import com.kkirok.server.domain.member.application.dto.response.NotificationAgreeResponse;
 import com.kkirok.server.domain.member.application.dto.response.OnboardingOptionResponse;
@@ -236,6 +238,31 @@ public interface MemberApi {
     ResponseEntity<SuccessResponse<NotificationAgreeResponse>> updateNotificationAgree(
             @CurrentMember Long memberId,
             @Valid @RequestBody NotificationAgreeUpdateRequest request
+    );
+
+    @Operation(summary = "권장 칼로리 수정 [USER]", description = """
+            내 권장 칼로리를 수동으로 수정합니다.
+            """)
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "MEMBER_NOT_FOUND")
+    })
+    @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "KCAL_UPDATE_SUCCESS")
+    ResponseEntity<SuccessResponse<Void>> updateKcal(
+            @CurrentMember Long memberId,
+            @Valid @RequestBody UpdateKcalRequest request
+    );
+
+    @Operation(summary = "권장 칼로리 조회 [USER]", description = """
+            내 권장 칼로리를 조회합니다. 값이 설정되어 있지 않으면 suggestedKcal은 null입니다.
+            """)
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "MEMBER_NOT_FOUND")
+    })
+    @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "KCAL_GET_SUCCESS")
+    ResponseEntity<SuccessResponse<KcalResponse>> getKcal(
+            @CurrentMember Long memberId
     );
 
 }

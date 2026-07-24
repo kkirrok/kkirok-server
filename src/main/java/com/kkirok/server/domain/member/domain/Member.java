@@ -74,6 +74,9 @@ public class Member extends BaseTimeEntity {
     @Column(name = "meal_style", length = 20)
     private MealStyle mealStyle;
 
+    @Column(name = "suggested_kcal")
+    private Integer suggestedKcal;
+
     @Builder
     private Member(String nickname, String name, String email, String profileImage,
                    Users user, Long socialId, SocialType socialType
@@ -154,6 +157,10 @@ public class Member extends BaseTimeEntity {
 
     public void updateMealStyle(MealStyle mealStyle) {
         this.mealStyle = mealStyle;
+    }
+
+    public void updateSuggestedKcal(int suggestedKcal) {
+        this.suggestedKcal = suggestedKcal;
     }
 
     void assignOnboarding(final Onboarding onboarding) {
