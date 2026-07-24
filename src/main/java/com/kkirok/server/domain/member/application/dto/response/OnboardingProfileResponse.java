@@ -69,7 +69,7 @@ public record OnboardingProfileResponse(
                 member.getBirthday(),
                 member.getPhone(),
                 member.getMealStyle(),
-                member.getMealStyle().getLabel(),
+                member.getMealStyle() != null ? member.getMealStyle().getLabel() : null,
                 member.getSuggestedKcal(),
                 createPurposeInfos(selectedPurpose),
                 createHabitInfos(selectedHabits)
