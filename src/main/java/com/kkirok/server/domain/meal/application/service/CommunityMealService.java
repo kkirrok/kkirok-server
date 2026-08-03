@@ -89,7 +89,7 @@ public class CommunityMealService {
                 })
                 .toList();
 
-        return new YesterdayPickResponse(mealStyle, currentSlot, picks);
+        return new YesterdayPickResponse(mealStyle, mealStyle.getLabel(), currentSlot, picks);
     }
 
     /**
