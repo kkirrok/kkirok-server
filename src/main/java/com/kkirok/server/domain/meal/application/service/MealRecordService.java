@@ -497,7 +497,9 @@ public class MealRecordService implements MealRecordUseCase {
                 recommendation.kcal(),
                 recommendation.carbohydrateG(),
                 recommendation.proteinG(),
-                recommendation.fatG()
+                recommendation.fatG(),
+                recommendation.sugarG(),
+                recommendation.sodiumMg()
         );
     }
 }

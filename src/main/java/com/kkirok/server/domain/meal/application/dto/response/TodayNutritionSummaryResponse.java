@@ -33,6 +33,12 @@ public record TodayNutritionSummaryResponse(
         Integer recommendedProteinG,
 
         @Schema(description = "권장 지방(g)", example = "67")
-        Integer recommendedFatG
+        Integer recommendedFatG,
+
+        @Schema(description = "권장 당(g)", example = "50")
+        Integer recommendedSugarG,
+
+        @Schema(description = "권장 나트륨(mg)", example = "2000")
+        Integer recommendedSodiumMg
 ) {
 }
