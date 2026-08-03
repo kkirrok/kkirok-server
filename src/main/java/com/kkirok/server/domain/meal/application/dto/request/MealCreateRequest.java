@@ -1,7 +1,9 @@
 package com.kkirok.server.domain.meal.application.dto.request;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.kkirok.server.domain.meal.domain.MealCategory;
 import com.kkirok.server.domain.meal.domain.MealTimeSlot;
+import com.kkirok.server.global.common.converter.KstFlexibleLocalDateTimeDeserializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.NotBlank;
@@ -10,7 +12,8 @@ import jakarta.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 
 public record MealCreateRequest (
-        @Schema(description = "식사 기록 날짜 및 시간", example = "2026-05-11T12:30:00")
+        @JsonDeserialize(using = KstFlexibleLocalDateTimeDeserializer.class)
+        @Schema(description = "식사 기록 날짜 및 시간 (KST 로컬 시각 또는 오프셋 포함 ISO-8601)", example = "2026-05-11T12:30:00")
         LocalDateTime recordedAt,
 
         @NotNull
