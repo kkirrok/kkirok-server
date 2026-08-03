@@ -15,6 +15,8 @@ import java.time.Period;
  *   <li>좌식 생활 기준 활동계수(×1.375) 적용하여 TDEE 산출</li>
  *   <li>목적별 칼로리 보정: 감량 -300 kcal / 증량 +300 kcal / 유지·습관 그대로</li>
  *   <li>탄수화물 50% / 단백질 20% / 지방 30% 비율로 분배</li>
+ *   <li>당(free sugar): WHO 권고 기준 총 열량의 10% 이내 (4 kcal/g 환산)</li>
+ *   <li>나트륨: WHO 권고 기준 하루 2,000mg (열량과 무관한 고정값)</li>
  * </ol>
  */
 public final class RecommendedNutritionCalculator {
@@ -36,6 +38,13 @@ public final class RecommendedNutritionCalculator {
     private static final double RATIO_PROTEIN = 0.20;
     private static final double RATIO_FAT     = 0.30;
 
+    // 당(free sugar) 권장 상한 비율 (WHO: 총 열량의 10% 이내)
+    private static final double RATIO_SUGAR   = 0.10;
+    private static final double KCAL_PER_G_SUGAR = 4.0;
+
+    // 나트륨 하루 권장 상한 (WHO: 2,000mg) - 열량과 무관한 고정값
+    private static final int RECOMMENDED_SODIUM_MG = 2000;
+
     // 성별별 평균 신장·체중 (신체 정보 미보유 시 사용)
     private static final double DEFAULT_HEIGHT_MALE   = 173.0; // cm
     private static final double DEFAULT_WEIGHT_MALE   =  73.0; // kg
@@ -48,7 +57,9 @@ public final class RecommendedNutritionCalculator {
             int kcal,
             int carbohydrateG,
             int proteinG,
-            int fatG
+            int fatG,
+            int sugarG,
+            int sodiumMg
     ) {}
 
     /**
@@ -76,8 +87,10 @@ public final class RecommendedNutritionCalculator {
         int carbohydrateG  = (int) Math.round(targetKcal * RATIO_CARB    / KCAL_PER_G_CARB);
         int proteinG       = (int) Math.round(targetKcal * RATIO_PROTEIN / KCAL_PER_G_PROTEIN);
         int fatG           = (int) Math.round(targetKcal * RATIO_FAT     / KCAL_PER_G_FAT);
+        int sugarG         = (int) Math.round(targetKcal * RATIO_SUGAR   / KCAL_PER_G_SUGAR);
+        int sodiumMg       = RECOMMENDED_SODIUM_MG;
 
-        return new NutritionRecommendation(kcal, carbohydrateG, proteinG, fatG);
+        return new NutritionRecommendation(kcal, carbohydrateG, proteinG, fatG, sugarG, sodiumMg);
     }
 
     // ────────────────────────────────────────────
