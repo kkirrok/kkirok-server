@@ -12,6 +12,9 @@ public record YesterdayPickResponse(
         @Schema(description = "현재 유저의 식사 유형", example = "BALANCED")
         MealStyle mealStyle,
 
+        @Schema(description = "현재 유저의 식사 유형 라벨", example = "디저트 집착 유형")
+        String mealStyleLabel,
+
         @Schema(description = "현재 시간대 슬롯", example = "LUNCH")
         MealTimeSlot timeSlot,
 
