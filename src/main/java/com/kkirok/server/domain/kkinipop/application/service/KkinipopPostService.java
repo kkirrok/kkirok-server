@@ -110,9 +110,9 @@ public class KkinipopPostService {
                 KkinipopPost.create(groupMember, mission, imageKey, recordDate, saveToPersonalLog)
         );
 
-        // 끼니팝 게시글과 식단기록을 동시에 올리기 (이미지 분석 실패 시 게시글은 유지하고 나의끼록 저장만 취소)
-        if (saveToPersonalLog && !personalLogService.tryRecordPersonalLog(memberId, image, scanType)) {
-            post.cancelPersonalLogSave();
+        // 끼니팝 게시글과 식단기록을 동시에 올리기 (나의끼록 저장 실패 시 예외가 전파되어 게시글 저장도 함께 롤백됨)
+        if (saveToPersonalLog) {
+            personalLogService.recordPersonalLog(memberId, image, scanType);
         }
 
         return KkinipopPostResponse.from(post, List.of());

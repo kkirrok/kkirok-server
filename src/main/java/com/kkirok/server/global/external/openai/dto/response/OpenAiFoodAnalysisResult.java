@@ -85,12 +85,6 @@ public record OpenAiFoodAnalysisResult(
         String rawResultJson
 ) {
 
-    public boolean isReliableFoodDetection() {
-        return Boolean.TRUE.equals(isFood)
-                && confidence != null
-                && confidence >= 0.6;
-    }
-
     public int kcalOrDefault() {
         return kcal != null
                 ? kcal
