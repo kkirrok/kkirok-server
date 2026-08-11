@@ -39,12 +39,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
+import com.kkirok.server.domain.meal.exception.MealErrorCode;
+import com.kkirok.server.domain.meal.exception.MealException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
@@ -97,7 +101,7 @@ class KkinipopPostServiceTest {
         given(missionRepository.findLiveMissions(10L, now)).willReturn(List.of(mission));
         given(postRepository.countMyKkirokSavedPosts(10L, 1L, today)).willReturn(0L);
         given(r2UploadService.upload(image)).willReturn("uuid_kkinipopPostImage");
-        given(personalLogService.tryRecordPersonalLog(1L, image, ScanType.CAMERA)).willReturn(true);
+        willDoNothing().given(personalLogService).recordPersonalLog(1L, image, ScanType.CAMERA);
         given(postRepository.save(any(KkinipopPost.class))).willAnswer(invocation -> {
             KkinipopPost post = invocation.getArgument(0);
             ReflectionTestUtils.setField(post, "id", 30L);
@@ -113,12 +117,12 @@ class KkinipopPostServiceTest {
         assertThat(response.memberId()).isEqualTo(1L);
         assertThat(response.missionId()).isEqualTo(20L);
         assertThat(response.image()).isEqualTo("uuid_kkinipopPostImage");
-        then(personalLogService).should().tryRecordPersonalLog(1L, image, ScanType.CAMERA);
+        then(personalLogService).should().recordPersonalLog(1L, image, ScanType.CAMERA);
     }
 
     @Test
-    @DisplayName("나의끼록 저장 실패 시 게시글은 생성되고 저장 횟수는 차감되지 않는다")
-    void shouldCreatePostWithoutPersonalLog_whenPersonalLogRecordingFails() {
+    @DisplayName("나의끼록 저장 실패 시 예외가 그대로 전파되어 게시글도 생성되지 않는다")
+    void shouldThrowException_whenPersonalLogRecordingFails() {
         // Given
         KkinipopGroup group = createGroup(10L, "아침 챌린저스");
         Member member = createMember(1L, "끼록이");
@@ -136,22 +140,12 @@ class KkinipopPostServiceTest {
         given(missionRepository.findLiveMissions(10L, now)).willReturn(List.of(mission));
         given(postRepository.countMyKkirokSavedPosts(10L, 1L, today)).willReturn(0L);
         given(r2UploadService.upload(image)).willReturn("uuid_kkinipopPostImage");
-        given(personalLogService.tryRecordPersonalLog(1L, image, ScanType.CAMERA)).willReturn(false);
+        willThrow(new MealException(MealErrorCode.NOT_FOOD_IMAGE))
+                .given(personalLogService).recordPersonalLog(1L, image, ScanType.CAMERA);
 
-        ArgumentCaptor<KkinipopPost> postCaptor = ArgumentCaptor.forClass(KkinipopPost.class);
-        given(postRepository.save(postCaptor.capture())).willAnswer(invocation -> {
-            KkinipopPost post = invocation.getArgument(0);
-            ReflectionTestUtils.setField(post, "id", 31L);
-            ReflectionTestUtils.setField(post, "createdAt", LocalDateTime.of(2026, 4, 24, 9, 5, 10));
-            return post;
-        });
-
-        // When
-        KkinipopPostResponse response = kkinipopPostService.createPost(1L, 10L, true, image, ScanType.CAMERA);
-
-        // Then
-        assertThat(response.postId()).isEqualTo(31L);
-        assertThat(postCaptor.getValue().isSaveToPersonalLog()).isFalse();
+        // When & Then
+        assertThatThrownBy(() -> kkinipopPostService.createPost(1L, 10L, true, image, ScanType.CAMERA))
+                .isInstanceOf(MealException.class);
     }
 
     @Test
