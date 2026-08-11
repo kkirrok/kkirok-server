@@ -108,13 +108,15 @@ class AuthenticationServiceTest {
     @DisplayName("유효한 리프레시 토큰이 전달되면 새로운 액세스 토큰을 발급한다")
     void shouldGenerateAccessToken_whenRefreshTokenIsValid() {
         // Given
+        Users user = UserFixture.create(Role.USER);
+        Member member = MemberFixture.createLocalMember("kkirok", "kkirok@test.com", user);
         ArgumentCaptor<UsernamePasswordAuthenticationToken> authCaptor =
                 ArgumentCaptor.forClass(UsernamePasswordAuthenticationToken.class);
 
         given(jwtTokenProvider.validateToken("refresh-token")).willReturn(JwtValidationType.VALID_JWT);
         given(jwtTokenProvider.getMemberIdFromJwt("refresh-token")).willReturn(1L);
-        given(jwtTokenProvider.getRoleFromJwt("refresh-token")).willReturn(Role.USER);
         given(tokenService.findIdByRefreshToken("refresh-token")).willReturn(1L);
+        given(memberUseCase.findMemberByMemberId(1L)).willReturn(member);
         given(jwtTokenProvider.issueAccessToken(any(UsernamePasswordAuthenticationToken.class)))
                 .willReturn("new-access-token");
 

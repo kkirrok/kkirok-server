@@ -1,6 +1,7 @@
 package com.kkirok.server.global.auth.jwt.filter;
 
 
+import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
 import com.kkirok.server.domain.user.domain.Role;
 import com.kkirok.server.global.auth.jwt.provider.JwtTokenProvider;
 import com.kkirok.server.global.auth.jwt.provider.JwtValidationType;
@@ -31,6 +32,7 @@ import java.util.List;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtTokenProvider jwtTokenProvider;
+	private final MemberUseCase memberUseCase;
 
 	@Override
 	protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -62,7 +64,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private void setAuthentication(String token, HttpServletRequest request) {
 		Long memberId = jwtTokenProvider.getMemberIdFromJwt(token);
-		Role role = jwtTokenProvider.getRoleFromJwt(token);
+		Role role = memberUseCase.findMemberByMemberId(memberId).getUser().getRole();
 
 		log.info("Setting authentication for memberId: {} with role: {}", memberId, role);
 
