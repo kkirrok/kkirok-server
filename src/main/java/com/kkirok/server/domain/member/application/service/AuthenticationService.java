@@ -2,9 +2,9 @@ package com.kkirok.server.domain.member.application.service;
 
 import com.kkirok.server.domain.member.application.dto.response.AccessTokenGenerateResponse;
 import com.kkirok.server.domain.member.application.dto.response.LoginSuccessResponse;
-import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
 import com.kkirok.server.domain.member.domain.Member;
 import com.kkirok.server.domain.user.domain.Role;
+import com.kkirok.server.global.auth.jwt.application.RoleCacheService;
 import com.kkirok.server.global.auth.jwt.application.TokenService;
 import com.kkirok.server.global.auth.jwt.exception.TokenErrorCode;
 import com.kkirok.server.global.auth.jwt.provider.JwtTokenProvider;
@@ -30,7 +30,7 @@ import java.util.List;
 public class AuthenticationService {
     private final JwtTokenProvider jwtTokenProvider;
     private final TokenService tokenService;
-    private final MemberUseCase memberUseCase;
+    private final RoleCacheService roleCacheService;
 
     /**
      * 사용자의 로그인 성공 시 Access Token과 Refresh Token을 생성하고,
@@ -77,7 +77,7 @@ public class AuthenticationService {
         Long memberId = jwtTokenProvider.getMemberIdFromJwt(refreshToken);
         verifyMemberIdWithStoredToken(refreshToken, memberId);
 
-        Role role = memberUseCase.findMemberByMemberId(memberId).getUser().getRole();
+        Role role = roleCacheService.getRole(memberId);
         Collection<GrantedAuthority> authorities = List.of(role.toGrantedAuthority());
 
         UsernamePasswordAuthenticationToken authenticationToken = createAuthenticationToken(memberId, role, authorities);
