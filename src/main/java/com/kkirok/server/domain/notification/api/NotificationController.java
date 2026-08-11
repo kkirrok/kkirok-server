@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/notifications")
+@RequestMapping("/v1/notifications")
 @RoleUserAuth
 public class NotificationController implements NotificationApi {
 
