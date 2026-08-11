@@ -2,10 +2,10 @@ package com.kkirok.server.domain.member.application.service;
 
 import com.kkirok.server.domain.member.application.dto.response.AccessTokenGenerateResponse;
 import com.kkirok.server.domain.member.application.dto.response.LoginSuccessResponse;
-import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
 import com.kkirok.server.domain.member.domain.Member;
 import com.kkirok.server.domain.user.domain.Role;
 import com.kkirok.server.domain.user.domain.Users;
+import com.kkirok.server.global.auth.jwt.application.RoleCacheService;
 import com.kkirok.server.global.auth.jwt.application.TokenService;
 import com.kkirok.server.global.auth.jwt.exception.TokenErrorCode;
 import com.kkirok.server.global.auth.jwt.provider.JwtTokenProvider;
@@ -41,7 +41,7 @@ class AuthenticationServiceTest {
     private TokenService tokenService;
 
     @Mock
-    private MemberUseCase memberUseCase;
+    private RoleCacheService roleCacheService;
 
     @InjectMocks
     private AuthenticationService authenticationService;
@@ -113,8 +113,8 @@ class AuthenticationServiceTest {
 
         given(jwtTokenProvider.validateToken("refresh-token")).willReturn(JwtValidationType.VALID_JWT);
         given(jwtTokenProvider.getMemberIdFromJwt("refresh-token")).willReturn(1L);
-        given(jwtTokenProvider.getRoleFromJwt("refresh-token")).willReturn(Role.USER);
         given(tokenService.findIdByRefreshToken("refresh-token")).willReturn(1L);
+        given(roleCacheService.getRole(1L)).willReturn(Role.USER);
         given(jwtTokenProvider.issueAccessToken(any(UsernamePasswordAuthenticationToken.class)))
                 .willReturn("new-access-token");
 

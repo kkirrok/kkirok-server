@@ -52,6 +52,8 @@ public class MealRecordService implements MealRecordUseCase {
     private final OpenAiService openAiService;
     private final MealImageValidator mealImageValidator;
 
+    private static final double MIN_FOOD_DETECTION_CONFIDENCE = 0.6;
+
     @Override
     public List<MealRecord> getTodayRecords(Long memberId) {
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
@@ -132,7 +134,15 @@ public class MealRecordService implements MealRecordUseCase {
 
         mealRecordRepository.save(meal);
 
-        String imageKey = r2UploadService.upload(file);
+        String imageKey;
+        try {
+            imageKey = r2UploadService.upload(file);
+        } catch (RuntimeException exception) {
+            throw new MealException(
+                    MealErrorCode.MEAL_ANALYSIS_FAILED,
+                    exception.getMessage()
+            );
+        }
 
         mealImageRepository.save(
                 MealImage.create(meal, imageKey)
@@ -330,16 +340,36 @@ public class MealRecordService implements MealRecordUseCase {
             시스템 지침에 정의된 JSON 필드를 모두 채워서 JSON만 반환해줘.
             """;
 
-        OpenAiFoodAnalysisResult result =
-                openAiService.createVisionResponse(
-                        PromptType.MEAL_ANALYSIS,
-                        imageUrl,
-                        userText,
-                        OpenAiFoodAnalysisResult.class
-                );
+        OpenAiFoodAnalysisResult result;
+        try {
+            result = openAiService.createVisionResponse(
+                    PromptType.MEAL_ANALYSIS,
+                    imageUrl,
+                    userText,
+                    OpenAiFoodAnalysisResult.class
+            );
+        } catch (RuntimeException exception) {
+            throw new MealException(
+                    MealErrorCode.MEAL_ANALYSIS_FAILED,
+                    exception.getMessage()
+            );
+        }
 
-        if (result == null
-                || !result.isReliableFoodDetection()) {
+        if (result == null) {
+            throw new MealException(
+                    MealErrorCode.MEAL_ANALYSIS_FAILED,
+                    "AI 분석 결과가 비어 있습니다."
+            );
+        }
+
+        if (!Boolean.TRUE.equals(result.isFood())) {
+            throw new MealException(
+                    MealErrorCode.NOT_FOOD_IMAGE
+            );
+        }
+
+        if (result.confidence() == null
+                || result.confidence() < MIN_FOOD_DETECTION_CONFIDENCE) {
             throw new MealException(
                     MealErrorCode.UNRECOGNIZABLE_MEAL_IMAGE
             );

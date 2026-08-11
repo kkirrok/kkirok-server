@@ -1,6 +1,5 @@
 package com.kkirok.server.global.auth.jwt.provider;
 
-import com.kkirok.server.domain.user.domain.Role;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
@@ -8,7 +7,6 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -30,7 +28,6 @@ public class JwtTokenProvider {
 	private long refreshTokenExpireTime;
 
 	private static final String MEMBER_ID = "memberId";
-	private static final String ROLE_KEY = "role";
 
 	@PostConstruct
 	protected void init() {
@@ -77,19 +74,6 @@ public class JwtTokenProvider {
 		return memberId;
 	}
 
-	public Role getRoleFromJwt(String token) {
-		Claims claims = getBody(token);
-		String roleName = claims.get(ROLE_KEY, String.class);
-
-		log.info("Extracted role from JWT: {}", roleName);
-
-		// "ROLE_" 접두사 제거
-		String enumValue = roleName.replace("ROLE_", "");
-		log.info("Final role after processing: {}", enumValue);
-
-		return Role.valueOf(enumValue.toUpperCase());
-	}
-
 	private String issueToken(final Authentication authentication, final long expiredTime) {
 		final Date now = new Date();
 
@@ -97,18 +81,6 @@ public class JwtTokenProvider {
 
 		claims.put(MEMBER_ID, authentication.getPrincipal());
 		log.info("Added member ID to claims: {}", authentication.getPrincipal());
-		log.info("Authorities before token generation: {}", authentication.getAuthorities());
-
-		String role = authentication.getAuthorities()
-			.stream()
-			.map(GrantedAuthority::getAuthority)
-			.findFirst()
-			.orElseThrow(() -> new IllegalArgumentException("No authorities found for user"));
-
-		log.info("Selected role for token: {}", role);
-
-		claims.put(ROLE_KEY, role);
-		log.info("Added role to claims: {}", role);
 
 		return Jwts.builder()
 			.setHeaderParam(Header.TYPE, Header.JWT_TYPE)

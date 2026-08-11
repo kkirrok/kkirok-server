@@ -6,4 +6,8 @@ public class MealException extends KkirokException {
     public MealException(MealErrorCode baseErrorCode) {
         super(baseErrorCode);
     }
+
+    public MealException(MealErrorCode baseErrorCode, String additionalMessage) {
+        super(baseErrorCode, additionalMessage);
+    }
 }

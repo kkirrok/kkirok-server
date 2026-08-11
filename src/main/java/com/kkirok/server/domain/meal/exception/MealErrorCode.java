@@ -22,6 +22,22 @@ public enum MealErrorCode implements BaseErrorCode {
     ),
 
     /*
+     * 409 Conflict
+     */
+    NOT_FOOD_IMAGE(
+            409,
+            "음식이 아닌 사진은 기록할 수 없습니다."
+    ),
+
+    /*
+     * 500 Internal Server Error
+     */
+    MEAL_ANALYSIS_FAILED(
+            500,
+            "이미지 분석 중 오류가 발생했습니다."
+    ),
+
+    /*
      * 403 Forbidden
      */
     MEAL_FORBIDDEN(
