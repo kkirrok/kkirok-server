@@ -7,6 +7,7 @@ import com.kkirok.server.global.common.redis.exception.RedisException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -18,6 +19,7 @@ public class RoleCacheService {
     private final RoleCacheRepository roleCacheRepository;
     private final MemberUseCase memberUseCase;
 
+    @Transactional(readOnly = true)
     public Role getRole(Long memberId) {
         Optional<Role> cached = readCache(memberId);
         if (cached.isPresent()) {
