@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -30,6 +32,7 @@ public class GroupJoinedNotificationListener {
     private final NotificationDispatcher notificationDispatcher;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT) // 트랜잭션 성공한 뒤에만 알림 보내도록 함
+    @Transactional(propagation = Propagation.REQUIRES_NEW) // dispatchToMembers()가 새 트랜잭션을 열지 않고 이 트랜잭션에 합류하도록 함 (MISSION_START와 동일 패턴). REQUIRED는 Spring이 TransactionalEventListener에서 허용하지 않음
     public void handle(KkinipopGroupJoinedEvent event) {
 
         List<Member> recipients = groupMemberRepository.findActiveGroupMembers(event.groupId()).stream()

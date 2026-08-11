@@ -66,10 +66,19 @@ public class NotificationDispatcher {
             notificationsById.put(notification.getId(), notification);
         }
 
+        log.info("Notification dispatch prepared: type={}, targetCount={}, notificationIds={}",
+                type, filteredTargets.size(), notificationMemberIds.keySet());
+
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                notificationDeliveryService.deliver(notificationMemberIds, List.copyOf(notificationsById.values()));
+                try {
+                    notificationDeliveryService.deliver(notificationMemberIds, List.copyOf(notificationsById.values()));
+                } catch (RuntimeException e) {
+                    log.error("Notification delivery failed after commit: type={}, notificationIds={}",
+                            type, notificationMemberIds.keySet(), e);
+                    throw e;
+                }
             }
         });
     }

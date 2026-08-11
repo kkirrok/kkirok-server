@@ -55,9 +55,13 @@ public class NotificationDeliveryService {
                         Collectors.mapping(Device::getToken, Collectors.toList())
                 ));
 
+        int sentCount = 0;
+        int failedCount = 0;
+
         for (Notification notification : notifications) {
             Notification managedNotification = notificationsById.get(notification.getId());
             if (managedNotification == null) {
+                log.warn("Notification not found for delivery, skipping: notificationId={}", notification.getId());
                 continue;
             }
 
@@ -67,6 +71,7 @@ public class NotificationDeliveryService {
             List<String> tokens = tokensByMemberId.getOrDefault(memberId, List.of());
             if (tokens.isEmpty()) {
                 managedNotification.markFailed(now, "NO_DEVICE");
+                failedCount++;
                 continue;
             }
 
@@ -88,15 +93,21 @@ public class NotificationDeliveryService {
                 );
                 if (result.successCount() > 0) {
                     managedNotification.markSent(now);
+                    sentCount++;
                 } else {
                     managedNotification.markFailed(now, "FCM_NO_SUCCESS");
+                    failedCount++;
                 }
                 deleteInvalidTokens(result.invalidTokens());
             } catch (RuntimeException e) {
                 log.warn("Failed to send notification {} to member {}", notification.getId(), memberId, e);
                 managedNotification.markFailed(now, e.getMessage());
+                failedCount++;
             }
         }
+
+        log.info("Notification delivery finished: total={}, sent={}, failed={}",
+                notifications.size(), sentCount, failedCount);
     }
 
     private Map<String, String> parseData(String dataJson) {
