@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -24,6 +26,7 @@ public class KkinipopReactionNotificationListener {
     private final NotificationDispatcher notificationDispatcher;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW) // dispatchToMembers()가 새 트랜잭션을 열지 않고 이 트랜잭션에 합류하도록 함 (MISSION_START와 동일 패턴). REQUIRED는 Spring이 TransactionalEventListener에서 허용하지 않음
     public void handle(KkinipopReactionAddedEvent event) {
         Member postAuthor = memberUseCase.findMemberByMemberId(event.postAuthorMemberId());
         Member reactor = memberUseCase.findMemberByMemberId(event.reactorMemberId());
