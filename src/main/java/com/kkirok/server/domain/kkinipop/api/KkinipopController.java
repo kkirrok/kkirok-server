@@ -153,7 +153,7 @@ public class KkinipopController implements KkinipopApi {
             @CurrentMember Long memberId,
             @PathVariable Long groupId,
             @RequestParam(value = "saveToPersonalLog", required = false, defaultValue = "false") boolean saveToPersonalLog,
-            @RequestParam("missionId") ScanType scanType,
+            @RequestParam ScanType scanType,
             @RequestPart("image") MultipartFile image
             ) {
         return ResponseEntity.status(HttpStatus.CREATED)

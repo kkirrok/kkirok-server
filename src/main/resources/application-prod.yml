@@ -44,6 +44,11 @@ spring:
       port: ${PROD_REDIS_PORT:${REDISPORT:6379}}
       password: ${PROD_REDIS_PASSWORD:${REDISPASSWORD:}}
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
 firebase:
   credential-path: ${PROD_FIREBASE_CREDENTIAL_PATH:${FIREBASE_CREDENTIAL_PATH:file:/opt/kkirok/firebase-key.json}}
 
