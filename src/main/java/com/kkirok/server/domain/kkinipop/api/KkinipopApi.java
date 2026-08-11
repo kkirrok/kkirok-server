@@ -287,7 +287,7 @@ public interface KkinipopApi {
             @Parameter(description = "나의끼록과 같이 저장 여부", required = false, example = "false")
             @RequestParam("saveToPersonalLog") boolean saveToPersonalLog,
             @Parameter(description = "이미지 스캔타입", required = true, example = "CAMERA")
-            @RequestPart("missionId") ScanType scanType,
+            @RequestPart ScanType scanType,
             @Parameter(description = "업로드할 게시글 이미지 파일", required = true)
             @RequestPart("image") MultipartFile image
     );

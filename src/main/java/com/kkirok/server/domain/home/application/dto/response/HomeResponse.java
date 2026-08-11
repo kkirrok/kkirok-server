@@ -1,12 +1,13 @@
 package com.kkirok.server.domain.home.application.dto.response;
 
+import com.kkirok.server.domain.meal.application.dto.response.TodayNutritionSummaryResponse;
 import com.kkirok.server.domain.member.domain.MealStyle;
 
 public record HomeResponse(
 
         HomeMemberInfo memberInfo,
         HomeReminder reminder,
-        HomeNutrition nutrition,
+        TodayNutritionSummaryResponse nutrition,
         HomeFeedback feedback
 
 ) {
@@ -19,27 +20,18 @@ public record HomeResponse(
 
     public record HomeReminder(
             Boolean isTimeToKkirok,
+            String title,
             String description
-    )
-    {}
+    ){}
 
-    public record HomeNutrition(){
-
+    public enum HomeKcalStatus {
+        OVER, GOOD, UNDER, NO_RECORD
     }
 
-    public record HomeFeedback(){
-
-
-    }
-
-    public record HomeFeedbackCard(){ // 홈화면 피드백 하단 카드섹션 부분
-
-    }
-
-    public record HomeFeedbackBottom(){ // 홈화면 최하단 부분 TODO: 이 클래스 이름은 적절하게 다시 정의 부탁드립니다
-
-    }
-
-
+    public record HomeFeedback(
+            HomeKcalStatus kcalStatus,
+            String title,
+            String comment
+    ){}
 
 }
