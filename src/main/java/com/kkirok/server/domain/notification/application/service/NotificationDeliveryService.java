@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -178,29 +179,43 @@ public class NotificationDeliveryService {
         int failedCount = 0;
 
         if (!messages.isEmpty()) {
-            List<PushBatchItemResult> results = pushSender.sendEach(messages);
-
-            Map<Notification, Boolean> successByNotification = new LinkedHashMap<>();
-            List<String> invalidTokens = new ArrayList<>();
-            for (int index = 0; index < results.size(); index++) {
-                PushBatchItemResult result = results.get(index);
-                Notification owner = messageOwners.get(index);
-                successByNotification.merge(owner, result.success(), (existing, current) -> existing || current);
-                if (result.invalidToken()) {
-                    invalidTokens.add(result.token());
-                }
-            }
-
-            for (Map.Entry<Notification, Boolean> entry : successByNotification.entrySet()) {
-                if (entry.getValue()) {
-                    entry.getKey().markSent(now);
-                    sentCount++;
-                } else {
-                    entry.getKey().markFailed(now, "FCM_NO_SUCCESS");
+            List<PushBatchItemResult> results;
+            try {
+                results = pushSender.sendEach(messages);
+            } catch (RuntimeException e) {
+                // sendEach() 예외가 그대로 전파되면 REQUIRES_NEW 트랜잭션 전체가 롤백되어
+                // 이미 처리한 NO_DEVICE 마킹까지 유실되므로, 여기서 잡아 배치 단위 실패로 격리한다.
+                log.warn("Failed to send pending notification batch: batchSize={}", messages.size(), e);
+                for (Notification owner : new LinkedHashSet<>(messageOwners)) {
+                    owner.markFailed(now, "FCM_BATCH_SEND_FAILED");
                     failedCount++;
                 }
+                results = null;
             }
-            deleteInvalidTokens(invalidTokens);
+
+            if (results != null) {
+                Map<Notification, Boolean> successByNotification = new LinkedHashMap<>();
+                List<String> invalidTokens = new ArrayList<>();
+                for (int index = 0; index < results.size(); index++) {
+                    PushBatchItemResult result = results.get(index);
+                    Notification owner = messageOwners.get(index);
+                    successByNotification.merge(owner, result.success(), (existing, current) -> existing || current);
+                    if (result.invalidToken()) {
+                        invalidTokens.add(result.token());
+                    }
+                }
+
+                for (Map.Entry<Notification, Boolean> entry : successByNotification.entrySet()) {
+                    if (entry.getValue()) {
+                        entry.getKey().markSent(now);
+                        sentCount++;
+                    } else {
+                        entry.getKey().markFailed(now, "FCM_NO_SUCCESS");
+                        failedCount++;
+                    }
+                }
+                deleteInvalidTokens(invalidTokens);
+            }
         }
 
         log.info("Pending notification batch finished: total={}, sent={}, failed={}",
