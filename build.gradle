@@ -54,6 +54,10 @@ dependencies {
 //	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test' // jpa test
 	implementation 'org.postgresql:postgresql:42.7.3' // postgresql
 
+	// Flyway
+	implementation 'org.flywaydb:flyway-core'
+	implementation 'org.flywaydb:flyway-database-postgresql'
+
 	// Redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
