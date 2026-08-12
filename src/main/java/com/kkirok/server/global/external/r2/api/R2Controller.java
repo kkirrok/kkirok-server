@@ -9,8 +9,8 @@ import com.kkirok.server.global.external.r2.application.service.PresignedUrlServ
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URL;
@@ -24,8 +24,8 @@ public class R2Controller implements R2Api {
     private final PresignedUrlService presignedUrlService;
 
     @Override
-    @GetMapping("/{key}/download")
-    public ResponseEntity<SuccessResponse<PresignedResponse>> download(@PathVariable String key) {
+    @GetMapping("/download")
+    public ResponseEntity<SuccessResponse<PresignedResponse>> download(@RequestParam String key) {
         URL result = presignedUrlService.getPresignedUrl(key);
         PresignedResponse response = PresignedResponse.from(key, result.toString());
 
