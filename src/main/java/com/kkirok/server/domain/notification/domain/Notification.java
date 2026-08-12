@@ -60,6 +60,9 @@ public class Notification extends BaseTimeEntity {
     @Column(name = "failure_reason", length = 255)
     private String failureReason;
 
+    @Column(name = "retry_count", nullable = false)
+    private int retryCount;
+
     @Column(name = "image", length = 255)
     private String image;
 
@@ -93,5 +96,6 @@ public class Notification extends BaseTimeEntity {
     public void markFailed(LocalDateTime now, String reason) {
         this.failedAt = now;
         this.failureReason = reason;
+        this.retryCount++;
     }
 }
