@@ -3,8 +3,12 @@ package com.kkirok.server.domain.notification.application.service;
 import com.kkirok.server.domain.kkinipop.dao.KkinipopGroupMemberRepository;
 import com.kkirok.server.domain.kkinipop.domain.KkinipopGroupMember;
 import com.kkirok.server.domain.kkinipop.domain.KkinipopMission;
+import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopMissionResponse;
 import com.kkirok.server.domain.member.domain.Member;
 import com.kkirok.server.domain.notification.domain.NotificationType;
+import com.kkirok.server.domain.sse.application.dto.payload.SseMissionStartedPayload;
+import com.kkirok.server.domain.sse.application.service.SseEventPublisher;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +29,7 @@ public class MissionStartNotificationWorker {
     private final KkinipopGroupMemberRepository groupMemberRepository;
     private final NotificationDispatchLogService notificationDispatchLogService;
     private final NotificationDispatcher notificationDispatcher;
+    private final SseEventPublisher sseEventPublisher;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW) // 알림 발송 중 예외 발생 시 상위 트랜잭션에 영향이 가지 않도록 함
     public void dispatchMission(KkinipopMission mission) {
@@ -53,5 +58,12 @@ public class MissionStartNotificationWorker {
                 mission.getTitle(),
                 data
         );
+
+        sseEventPublisher.publish(mission.getGroup().getId(), "mission-started",
+                new SseMissionStartedPayload(mission.getGroup().getId(), toMissionResponse(mission)));
+    }
+
+    private KkinipopMissionResponse toMissionResponse(KkinipopMission mission) {
+        return KkinipopMissionResponse.from(mission, LocalDateTime.now(), List.of());
     }
 }

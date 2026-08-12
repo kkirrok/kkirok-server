@@ -8,6 +8,8 @@ import com.kkirok.server.domain.kkinipop.domain.KkinipopMission;
 import com.kkirok.server.domain.member.domain.Member;
 import com.kkirok.server.domain.notification.application.service.NotificationDispatchLogService;
 import com.kkirok.server.domain.notification.domain.NotificationType;
+import com.kkirok.server.domain.sse.application.dto.payload.SseMissionStartedPayload;
+import com.kkirok.server.domain.sse.application.service.SseEventPublisher;
 import com.kkirok.server.support.fixture.MemberFixture;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -33,6 +36,9 @@ class MissionStartNotificationWorkerTest {
 
     @Mock
     private NotificationDispatcher notificationDispatcher;
+
+    @Mock
+    private SseEventPublisher sseEventPublisher;
 
     @InjectMocks
     private MissionStartNotificationWorker missionStartNotificationWorker;
@@ -84,6 +90,9 @@ class MissionStartNotificationWorkerTest {
                         "missionId", "100"
                 )
         );
+        ArgumentCaptor<SseMissionStartedPayload> payloadCaptor = ArgumentCaptor.forClass(SseMissionStartedPayload.class);
+        then(sseEventPublisher).should().publish(org.mockito.ArgumentMatchers.eq(10L), org.mockito.ArgumentMatchers.eq("mission-started"), payloadCaptor.capture());
+        org.assertj.core.api.Assertions.assertThat(payloadCaptor.getValue().mission().missionId()).isEqualTo(100L);
     }
 
     private KkinipopGroup createGroup(Long groupId) {
