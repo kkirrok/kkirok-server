@@ -43,7 +43,7 @@ public class TxAspect {
 		}
 
 		// 트랜잭션 시작 로깅 (옵션 포함)
-		log.info("[트랜잭션 시작] {}.{}() | readOnly={} | propagation={} | isolation={}",
+		log.debug("[트랜잭션 시작] {}.{}() | readOnly={} | propagation={} | isolation={}",
 			joinPoint.getSignature().getDeclaringType().getSimpleName(),
 			method.getName(), readOnly, propagation, isolation);
 
@@ -53,7 +53,7 @@ public class TxAspect {
 			// 실제 비즈니스 로직 실행
 			Object result = joinPoint.proceed();
 			long elapsed = System.currentTimeMillis() - start;
-			log.info("[트랜잭션 커밋] {}.{}() | 소요 시간: {}ms",
+			log.debug("[트랜잭션 커밋] {}.{}() | 소요 시간: {}ms",
 				joinPoint.getSignature().getDeclaringType().getSimpleName(),
 				method.getName(), elapsed);
 			return result;
@@ -65,7 +65,7 @@ public class TxAspect {
 			throw e;
 		} finally {
 			// 리소스 릴리즈 로깅
-			log.info("[리소스 릴리즈] {}.{}()",
+			log.debug("[리소스 릴리즈] {}.{}()",
 				joinPoint.getSignature().getDeclaringType().getSimpleName(),
 				method.getName());
 		}

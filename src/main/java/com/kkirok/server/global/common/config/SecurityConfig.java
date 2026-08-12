@@ -3,6 +3,7 @@ package com.kkirok.server.global.common.config;
 import com.kkirok.server.global.auth.jwt.filter.JwtAuthenticationFilter;
 import com.kkirok.server.global.auth.security.CustomAccessDeniedHandler;
 import com.kkirok.server.global.auth.security.CustomJwtAuthenticationEntryPoint;
+import com.kkirok.server.global.common.filter.TraceIdFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -22,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final TraceIdFilter traceIdFilter;
     private final CustomJwtAuthenticationEntryPoint customJwtAuthenticationEntryPoint;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
@@ -68,7 +70,8 @@ public class SecurityConfig {
                                 .requestMatchers("/api-specs/**").denyAll()
                                 .requestMatchers(getAuthWhitelist()).permitAll()
                                 .anyRequest().authenticated())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(traceIdFilter, JwtAuthenticationFilter.class);
 
         return http.build();
     }

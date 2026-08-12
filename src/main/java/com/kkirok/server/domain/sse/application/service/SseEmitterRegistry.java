@@ -21,9 +21,19 @@ public class SseEmitterRegistry {
         SseEmitter emitter = new SseEmitter(TIMEOUT);
         emitters.computeIfAbsent(memberId, id -> new CopyOnWriteArrayList<>()).add(emitter);
 
-        emitter.onCompletion(() -> remove(memberId, emitter));
-        emitter.onTimeout(() -> remove(memberId, emitter));
-        emitter.onError(e -> remove(memberId, emitter));
+        log.info("SSE connection opened: memberId={}", memberId);
+        emitter.onCompletion(() -> {
+            log.debug("SSE connection completed: memberId={}", memberId);
+            remove(memberId, emitter);
+        });
+        emitter.onTimeout(() -> {
+            log.info("SSE connection timed out: memberId={}", memberId);
+            remove(memberId, emitter);
+        });
+        emitter.onError(e -> {
+            log.warn("SSE connection error: memberId={}", memberId, e);
+            remove(memberId, emitter);
+        });
 
         return emitter;
     }
@@ -50,7 +60,7 @@ public class SseEmitterRegistry {
         try {
             emitter.send(SseEmitter.event().name(eventName).data(payload));
         } catch (IOException e) {
-            log.debug("Failed to send SSE event to memberId {}, removing emitter", memberId, e);
+            log.warn("Failed to send SSE event to memberId {}, removing emitter", memberId, e);
             remove(memberId, emitter);
         }
     }

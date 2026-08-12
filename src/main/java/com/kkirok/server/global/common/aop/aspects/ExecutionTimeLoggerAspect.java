@@ -22,7 +22,7 @@ public class ExecutionTimeLoggerAspect {
 	@Component
 	@Profile("prod")
 	public static class ExecutionTimeLoggerForProd {
-		@Around("com.beat.global.common.aop.Pointcuts.allService()")
+		@Around("com.kkirok.server.global.common.aop.Pointcuts.allService()")
 		public Object logServiceExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
 			return measureExecutionTime(joinPoint);
 		}
@@ -33,7 +33,7 @@ public class ExecutionTimeLoggerAspect {
 	@Component
 	@Profile({"local", "dev"})
 	public static class ExecutionTimeLoggerForLocalDev {
-		@Around("com.beat.global.common.aop.Pointcuts.allApplicationLogic()")
+		@Around("com.kkirok.server.global.common.aop.Pointcuts.allApplicationLogic()")
 		public Object logApplicationExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
 			return measureExecutionTime(joinPoint);
 		}
@@ -46,7 +46,7 @@ public class ExecutionTimeLoggerAspect {
 			return joinPoint.proceed();
 		} finally {
 			long timeInMs = System.currentTimeMillis() - start;
-			log.info("[실행 시간] {}.{}() | time = {}ms",
+			log.debug("[실행 시간] {}.{}() | time = {}ms",
 				joinPoint.getSignature().getDeclaringType().getSimpleName(),
 				joinPoint.getSignature().getName(),
 				timeInMs);

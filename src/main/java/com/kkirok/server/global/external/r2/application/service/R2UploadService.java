@@ -25,9 +25,9 @@ public class R2UploadService {
     @Value("${cloudflare.r2.bucket-name}")
     private String bucketName;
 
-    public String upload(final MultipartFile file) {
+    public String upload(final MultipartFile file, final R2UploadType uploadType) {
         validateFile(file);
-        String key = createKey(file.getOriginalFilename());
+        String key = createKey(uploadType, file.getOriginalFilename());
 
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
@@ -54,9 +54,9 @@ public class R2UploadService {
         }
     }
 
-    private String createKey(final String originalFilename) {
+    private String createKey(final R2UploadType uploadType, final String originalFilename) {
         String extension = extractExtension(originalFilename);
-        return UUID.randomUUID() + extension;
+        return uploadType.getPrefix() + "/" + UUID.randomUUID() + extension;
     }
 
     private String extractExtension(final String filename) {

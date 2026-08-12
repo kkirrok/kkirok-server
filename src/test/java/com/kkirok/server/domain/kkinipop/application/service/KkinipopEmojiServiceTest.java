@@ -14,6 +14,7 @@ import com.kkirok.server.global.common.exception.ConflictException;
 import com.kkirok.server.global.common.exception.ForbiddenException;
 import com.kkirok.server.global.common.util.DateTimeProvider;
 import com.kkirok.server.global.external.r2.application.service.R2UploadService;
+import com.kkirok.server.global.external.r2.application.service.R2UploadType;
 import com.kkirok.server.support.fixture.MemberFixture;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -90,7 +91,7 @@ class KkinipopEmojiServiceTest {
 
         given(kkinipopUseCase.findGroupMember(10L, 1L)).willReturn(groupMember);
         given(customEmojiRepository.countActiveGroupEmojis(10L)).willReturn(1L);
-        given(r2UploadService.upload(image)).willReturn("uuid_kkinipopEmojiImage");
+        given(r2UploadService.upload(image, R2UploadType.KKINIPOP_EMOJI)).willReturn("uuid_kkinipopEmojiImage");
         given(customEmojiRepository.save(any(KkinipopCustomEmoji.class))).willAnswer(invocation -> {
             KkinipopCustomEmoji emoji = invocation.getArgument(0);
             ReflectionTestUtils.setField(emoji, "id", 5L);

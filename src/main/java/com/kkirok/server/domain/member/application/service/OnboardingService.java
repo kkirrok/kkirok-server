@@ -11,6 +11,7 @@ import com.kkirok.server.domain.user.application.service.UserRoleService;
 import com.kkirok.server.global.auth.jwt.application.RoleCacheService;
 import com.kkirok.server.global.common.exception.BadRequestException;
 import com.kkirok.server.global.external.r2.application.service.R2UploadService;
+import com.kkirok.server.global.external.r2.application.service.R2UploadType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -80,7 +81,7 @@ public class OnboardingService {
             return null;
         }
 
-        return r2UploadService.upload(profileImage);
+        return r2UploadService.upload(profileImage, R2UploadType.PROFILE);
     }
 
     // 휴대전화 번호 규격에 맞는지

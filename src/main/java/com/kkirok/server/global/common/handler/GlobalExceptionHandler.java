@@ -140,7 +140,7 @@ public class GlobalExceptionHandler {
 	 */
 	@ExceptionHandler(OpenAiException.class)
 	public ResponseEntity<ErrorResponse> handleOpenAiClientException(final OpenAiException e) {
-		log.warn("OpenAiClientException occurred: ", e);
+		logByStatus("OpenAiClientException occurred", e);
 		return ResponseEntity.status(e.getBaseErrorCode().getStatus()).body(ErrorResponse.from(e.getBaseErrorCode()));
 	}
 
@@ -159,7 +159,15 @@ public class GlobalExceptionHandler {
 	 */
 	@ExceptionHandler(KkirokException.class)
 	public ResponseEntity<ErrorResponse> handleBeatException(final KkirokException e) {
-		log.warn("BeatException occurred: ", e);
+		logByStatus("BeatException occurred", e);
 		return ResponseEntity.status(e.getBaseErrorCode().getStatus()).body(ErrorResponse.from(e));
+	}
+
+	private void logByStatus(final String message, final KkirokException e) {
+		if (e.getBaseErrorCode().getStatus() >= 500) {
+			log.error("{}: ", message, e);
+		} else {
+			log.warn("{}: {}", message, e.getMessage());
+		}
 	}
 }

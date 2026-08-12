@@ -24,6 +24,7 @@ import com.kkirok.server.global.common.exception.ForbiddenException;
 import com.kkirok.server.global.common.exception.NotFoundException;
 import com.kkirok.server.global.common.util.DateTimeProvider;
 import com.kkirok.server.global.external.r2.application.service.R2UploadService;
+import com.kkirok.server.global.external.r2.application.service.R2UploadType;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -106,7 +107,7 @@ public class KkinipopPostService {
         validateMyKkirokLimit(groupId, memberId, recordDate, saveToPersonalLog);
 
         // 사진 업로드
-        String imageKey = r2UploadService.upload(image);
+        String imageKey = r2UploadService.upload(image, R2UploadType.KKINIPOP_POST);
         KkinipopPost post = postRepository.save(
                 KkinipopPost.create(groupMember, mission, imageKey, recordDate, saveToPersonalLog)
         );
