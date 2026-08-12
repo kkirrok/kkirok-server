@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import com.kkirok.server.global.external.r2.application.service.PresignedUrlService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +37,7 @@ public class NotificationDeliveryService {
     private final PresignedUrlService presignedUrlService;
     private final ObjectMapper objectMapper;
 
+    @Async // 요청/스케줄러 스레드가 FCM 네트워크 호출 때문에 지연되지 않도록 별도 스레드에서 실행
     @Transactional(propagation = Propagation.REQUIRES_NEW) // 알림 발송 중 예외 발생 시 상위 트랜잭션에 영향이 가지 않도록 함
     public void deliver(Map<Long, Long> notificationMemberIds, Collection<Notification> notifications) {
         if (notificationMemberIds.isEmpty() || notifications == null || notifications.isEmpty()) {

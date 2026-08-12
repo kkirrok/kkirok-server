@@ -72,13 +72,8 @@ public class NotificationDispatcher {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                try {
-                    notificationDeliveryService.deliver(notificationMemberIds, List.copyOf(notificationsById.values()));
-                } catch (RuntimeException e) {
-                    log.error("Notification delivery failed after commit: type={}, notificationIds={}",
-                            type, notificationMemberIds.keySet(), e);
-                    throw e;
-                }
+                // deliver()는 @Async라 이 스레드로 예외가 전파되지 않는다. 실패 로깅은 AsyncConfig의 AsyncUncaughtExceptionHandler가 담당한다.
+                notificationDeliveryService.deliver(notificationMemberIds, List.copyOf(notificationsById.values()));
             }
         });
     }
