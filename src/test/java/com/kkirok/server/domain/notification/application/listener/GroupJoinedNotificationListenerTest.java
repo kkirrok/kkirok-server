@@ -63,7 +63,7 @@ class GroupJoinedNotificationListenerTest {
         groupJoinedNotificationListener.handle(new KkinipopGroupJoinedEvent(10L, 1L));
 
         // Then
-        then(notificationDispatcher).should().dispatchToMembers(
+        then(notificationDispatcher).should().dispatchBatched(
                 List.of(first, second),
                 NotificationType.GROUP_JOIN,
                 "아침 챌린저스",

@@ -20,7 +20,7 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 /**
- * 그룹 가입 이벤트 발생 시 알림을 전송합니다. -> NotificationDispatcher.dispatchToMembers() 호출
+ * 그룹 가입 이벤트 발생 시 알림을 전송합니다. -> NotificationDispatcher.dispatchBatched() 호출 (배치 트랙)
  */
 @Component
 @RequiredArgsConstructor
@@ -32,7 +32,7 @@ public class GroupJoinedNotificationListener {
     private final NotificationDispatcher notificationDispatcher;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT) // 트랜잭션 성공한 뒤에만 알림 보내도록 함
-    @Transactional(propagation = Propagation.REQUIRES_NEW) // dispatchToMembers()가 새 트랜잭션을 열지 않고 이 트랜잭션에 합류하도록 함 (MISSION_START와 동일 패턴). REQUIRED는 Spring이 TransactionalEventListener에서 허용하지 않음
+    @Transactional(propagation = Propagation.REQUIRES_NEW) // dispatchBatched()가 새 트랜잭션을 열지 않고 이 트랜잭션에 합류하도록 함 (MISSION_START와 동일 패턴). REQUIRED는 Spring이 TransactionalEventListener에서 허용하지 않음
     public void handle(KkinipopGroupJoinedEvent event) {
 
         List<Member> recipients = groupMemberRepository.findActiveGroupMembers(event.groupId()).stream()
@@ -54,7 +54,7 @@ public class GroupJoinedNotificationListener {
         data.put("groupId", String.valueOf(event.groupId()));
         data.put("joinedMemberId", String.valueOf(event.joinedMemberId()));
 
-        notificationDispatcher.dispatchToMembers(
+        notificationDispatcher.dispatchBatched(
                 recipients,
                 NotificationType.GROUP_JOIN,
                 groupName,

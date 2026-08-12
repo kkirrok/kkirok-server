@@ -5,4 +5,6 @@ import java.util.List;
 public interface PushSender {
 
     PushResult sendMulticast(List<String> tokens, PushPayload payload);
+
+    List<PushBatchItemResult> sendEach(List<PushBatchMessage> messages);
 }

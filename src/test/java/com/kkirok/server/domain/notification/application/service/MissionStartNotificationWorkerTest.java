@@ -1,5 +1,6 @@
 package com.kkirok.server.domain.notification.application.service;
 
+import com.kkirok.server.domain.kkinipop.application.dto.event.KkinipopMissionStartedEvent;
 import com.kkirok.server.domain.kkinipop.application.dto.request.KkinipopGroupCreateRequest;
 import com.kkirok.server.domain.kkinipop.dao.KkinipopGroupMemberRepository;
 import com.kkirok.server.domain.kkinipop.domain.KkinipopGroup;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.mockito.BDDMockito.given;
@@ -33,6 +35,9 @@ class MissionStartNotificationWorkerTest {
 
     @Mock
     private NotificationDispatcher notificationDispatcher;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private MissionStartNotificationWorker missionStartNotificationWorker;
@@ -73,7 +78,7 @@ class MissionStartNotificationWorkerTest {
         missionStartNotificationWorker.dispatchMission(mission);
 
         // Then
-        then(notificationDispatcher).should().dispatchToMembers(
+        then(notificationDispatcher).should().dispatchInstant(
                 List.of(first, second),
                 NotificationType.MISSION_START,
                 "끼니팝",
@@ -84,6 +89,7 @@ class MissionStartNotificationWorkerTest {
                         "missionId", "100"
                 )
         );
+        then(eventPublisher).should().publishEvent(new KkinipopMissionStartedEvent(10L, 100L));
     }
 
     private KkinipopGroup createGroup(Long groupId) {

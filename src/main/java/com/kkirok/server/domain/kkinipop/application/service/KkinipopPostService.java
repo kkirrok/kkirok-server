@@ -2,6 +2,7 @@ package com.kkirok.server.domain.kkinipop.application.service;
 
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopDailyPostResponse;
 import com.kkirok.server.domain.kkinipop.application.dto.event.KkinipopReactionAddedEvent;
+import com.kkirok.server.domain.kkinipop.application.dto.event.KkinipopReactionChangedEvent;
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopMyKkirokStatusResponse;
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopPostResponse;
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopReactionSummaryResponse;
@@ -178,6 +179,7 @@ public class KkinipopPostService {
         if (existingReaction.isPresent()) {
             reactionRepository.delete(existingReaction.get());
             long count = reactionRepository.countByPostAndEmojiCode(post.getId(), emojiCode);
+            eventPublisher.publishEvent(new KkinipopReactionChangedEvent(post.getId(), groupId, emojiCode, count, false));
             return new KkinipopReactionSummaryResponse(emojiCode, customEmoji.getLabel(), count, "CUSTOM_EMOJI", false);
         }
 
@@ -185,6 +187,7 @@ public class KkinipopPostService {
                 KkinipopReaction.createCustom(post, groupMember.getMember(), customEmoji)
         );
         long count = reactionRepository.countByPostAndEmojiCode(post.getId(), emojiCode);
+        eventPublisher.publishEvent(new KkinipopReactionChangedEvent(post.getId(), groupId, emojiCode, count, true));
 
         if (!groupMember.getMember().getId().equals(post.getMember().getId())) {
             eventPublisher.publishEvent(new KkinipopReactionAddedEvent(
@@ -217,6 +220,7 @@ public class KkinipopPostService {
             if (existingReaction.isPresent()) {
                 reactionRepository.delete(existingReaction.get());
                 long count = reactionRepository.countByPostAndEmojiCode(post.getId(), emojiCode);
+                eventPublisher.publishEvent(new KkinipopReactionChangedEvent(post.getId(), post.getGroup().getId(), emojiCode, count, false));
                 return new KkinipopReactionSummaryResponse(emojiCode, emoji.getLabel(), count, "SYSTEM_EMOJI", false);
             }
 
@@ -224,6 +228,7 @@ public class KkinipopPostService {
                     KkinipopReaction.createDefault(post, groupMember.getMember(), emoji)
             );
             long count = reactionRepository.countByPostAndEmojiCode(post.getId(), emojiCode);
+            eventPublisher.publishEvent(new KkinipopReactionChangedEvent(post.getId(), post.getGroup().getId(), emojiCode, count, true));
 
             if (!groupMember.getMember().getId().equals(post.getMember().getId())) {
                 eventPublisher.publishEvent(new KkinipopReactionAddedEvent(

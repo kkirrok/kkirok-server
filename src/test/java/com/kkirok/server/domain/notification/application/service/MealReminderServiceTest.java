@@ -116,22 +116,22 @@ class MealReminderServiceTest {
 
         mealReminderService.runReminderCycle();
 
-        then(notificationDispatcher).should(times(3)).dispatchToMembers(any(), any(), any(), any(), any());
-        then(notificationDispatcher).should().dispatchToMembers(
+        then(notificationDispatcher).should(times(3)).dispatchBatched(any(), any(), any(), any(), any());
+        then(notificationDispatcher).should().dispatchBatched(
                 List.of(member1),
                 NotificationType.MEAL_REMINDER_OVERDUE,
                 "overdue-title",
                 "overdue-body",
                 Map.of("type", "MEAL_REMINDER_OVERDUE", "lastMealId", "100")
         );
-        then(notificationDispatcher).should().dispatchToMembers(
+        then(notificationDispatcher).should().dispatchBatched(
                 List.of(member2),
                 NotificationType.MEAL_REMINDER_OVERDUE,
                 "overdue-title",
                 "overdue-body",
                 Map.of("type", "MEAL_REMINDER_OVERDUE", "lastMealId", "101")
         );
-        then(notificationDispatcher).should().dispatchToMembers(
+        then(notificationDispatcher).should().dispatchBatched(
                 List.of(member3),
                 NotificationType.MEAL_REMINDER_NO_TODAY,
                 "today-title",
@@ -163,7 +163,7 @@ class MealReminderServiceTest {
 
         mealReminderService.runReminderCycle();
 
-        then(notificationDispatcher).should(never()).dispatchToMembers(any(), any(), any(), any(), any());
+        then(notificationDispatcher).should(never()).dispatchBatched(any(), any(), any(), any(), any());
     }
 
     private Member createMember(Long memberId, String nickname) {
