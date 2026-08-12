@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
- * 배치 트랙(GROUP_JOIN, MEAL_REMINDER_*)의 미발송/재시도 대상 알림을 10분 주기로 모아서 발송한다.
+ * 배치 트랙(GROUP_JOIN, MEAL_REMINDER_*)의 미발송/재시도 대상 알림을 5분 주기로 모아서 발송한다.
  */
 @Slf4j
 @Component
@@ -28,7 +28,7 @@ public class NotificationDeliveryScheduler {
     private final NotificationRepository notificationRepository;
     private final NotificationDeliveryService notificationDeliveryService;
 
-    @Scheduled(cron = "0 */10 * * * *", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 */5 * * * *", zone = "Asia/Seoul")
     public void deliverPendingNotifications() {
         List<Notification> pending = notificationRepository.findPendingForDelivery(BATCH_TYPES, MAX_RETRY_COUNT);
         if (pending.isEmpty()) {
