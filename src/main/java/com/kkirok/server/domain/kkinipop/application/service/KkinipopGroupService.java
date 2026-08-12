@@ -1,6 +1,7 @@
 package com.kkirok.server.domain.kkinipop.application.service;
 
 import com.kkirok.server.domain.kkinipop.application.dto.event.KkinipopGroupJoinedEvent;
+import com.kkirok.server.domain.kkinipop.application.dto.event.KkinipopGroupMemberLeftEvent;
 import com.kkirok.server.domain.kkinipop.application.dto.request.KkinipopGroupCreateRequest;
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopGroupResponse;
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopMemberSummaryResponse;
@@ -96,6 +97,7 @@ public class KkinipopGroupService {
         }
 
         groupMember.leave(dateTimeProvider.now());
+        eventPublisher.publishEvent(new KkinipopGroupMemberLeftEvent(groupId, memberId));
     }
 
     // 그룹 삭제
@@ -120,6 +122,7 @@ public class KkinipopGroupService {
         }
 
         targetGroupMember.ban(dateTimeProvider.now());
+        eventPublisher.publishEvent(new KkinipopGroupMemberLeftEvent(groupId, targetMemberId));
     }
 
     // 그룹 응답 생성 - 그룹조회 stream에서 호출
