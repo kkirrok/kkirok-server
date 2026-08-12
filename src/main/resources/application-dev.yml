@@ -7,6 +7,8 @@ spring:
     import: optional:classpath:application-secret.properties
     activate:
       on-profile: dev
+  flyway:
+    locations: classpath:db/migration,classpath:db/migration-postgresql
   jackson:
     time-zone: Asia/Seoul
     property-naming-strategy: SNAKE_CASE
@@ -27,7 +29,7 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
