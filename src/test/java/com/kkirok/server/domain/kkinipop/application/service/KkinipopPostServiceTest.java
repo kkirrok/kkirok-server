@@ -24,6 +24,7 @@ import com.kkirok.server.global.common.exception.ForbiddenException;
 import com.kkirok.server.global.common.exception.NotFoundException;
 import com.kkirok.server.global.common.util.DateTimeProvider;
 import com.kkirok.server.global.external.r2.application.service.R2UploadService;
+import com.kkirok.server.global.external.r2.application.service.R2UploadType;
 import com.kkirok.server.support.fixture.MemberFixture;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -100,7 +101,7 @@ class KkinipopPostServiceTest {
         given(dateTimeProvider.now()).willReturn(now);
         given(missionRepository.findLiveMissions(10L, now)).willReturn(List.of(mission));
         given(postRepository.countMyKkirokSavedPosts(10L, 1L, today)).willReturn(0L);
-        given(r2UploadService.upload(image)).willReturn("uuid_kkinipopPostImage");
+        given(r2UploadService.upload(image, R2UploadType.KKINIPOP_POST)).willReturn("uuid_kkinipopPostImage");
         willDoNothing().given(personalLogService).recordPersonalLog(1L, image, ScanType.CAMERA);
         given(postRepository.save(any(KkinipopPost.class))).willAnswer(invocation -> {
             KkinipopPost post = invocation.getArgument(0);
@@ -139,7 +140,7 @@ class KkinipopPostServiceTest {
         given(dateTimeProvider.now()).willReturn(now);
         given(missionRepository.findLiveMissions(10L, now)).willReturn(List.of(mission));
         given(postRepository.countMyKkirokSavedPosts(10L, 1L, today)).willReturn(0L);
-        given(r2UploadService.upload(image)).willReturn("uuid_kkinipopPostImage");
+        given(r2UploadService.upload(image, R2UploadType.KKINIPOP_POST)).willReturn("uuid_kkinipopPostImage");
         willThrow(new MealException(MealErrorCode.NOT_FOOD_IMAGE))
                 .given(personalLogService).recordPersonalLog(1L, image, ScanType.CAMERA);
 

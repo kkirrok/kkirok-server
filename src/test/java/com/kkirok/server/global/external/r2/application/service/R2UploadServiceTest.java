@@ -49,10 +49,10 @@ class R2UploadServiceTest {
         );
 
         // When
-        String key = r2UploadService.upload(file);
+        String key = r2UploadService.upload(file, R2UploadType.PROFILE);
 
         // Then
-        assertThat(key).matches(UUID_PATTERN + "\\.png");
+        assertThat(key).matches("profile/" + UUID_PATTERN + "\\.png");
 
         ArgumentCaptor<PutObjectRequest> requestCaptor = ArgumentCaptor.forClass(PutObjectRequest.class);
         then(r2Client).should().putObject(requestCaptor.capture(), any(RequestBody.class));
@@ -77,10 +77,10 @@ class R2UploadServiceTest {
         );
 
         // When
-        String key = r2UploadService.upload(file);
+        String key = r2UploadService.upload(file, R2UploadType.PROFILE);
 
         // Then
-        assertThat(key).matches(UUID_PATTERN + "\\.webp");
+        assertThat(key).matches("profile/" + UUID_PATTERN + "\\.webp");
     }
 
     @Test
@@ -96,10 +96,10 @@ class R2UploadServiceTest {
         );
 
         // When
-        String key = r2UploadService.upload(file);
+        String key = r2UploadService.upload(file, R2UploadType.PROFILE);
 
         // Then
-        assertThat(key).matches(UUID_PATTERN);
+        assertThat(key).matches("profile/" + UUID_PATTERN);
     }
 
     @Test
@@ -115,10 +115,10 @@ class R2UploadServiceTest {
         );
 
         // When
-        String key = r2UploadService.upload(file);
+        String key = r2UploadService.upload(file, R2UploadType.PROFILE);
 
         // Then
-        assertThat(key).matches(UUID_PATTERN);
+        assertThat(key).matches("profile/" + UUID_PATTERN);
     }
 
     @Test
@@ -134,7 +134,7 @@ class R2UploadServiceTest {
         );
 
         // When, Then
-        assertThatThrownBy(() -> r2UploadService.upload(emptyFile))
+        assertThatThrownBy(() -> r2UploadService.upload(emptyFile, R2UploadType.PROFILE))
                 .isInstanceOf(R2Exception.class)
                 .extracting("baseErrorCode")
                 .isEqualTo(ExternalErrorCode.R2_INVALID_FILE_REQUEST);
@@ -153,7 +153,7 @@ class R2UploadServiceTest {
         org.mockito.BDDMockito.given(file.getInputStream()).willThrow(new IOException("stream read failed"));
 
         // When, Then
-        assertThatThrownBy(() -> r2UploadService.upload(file))
+        assertThatThrownBy(() -> r2UploadService.upload(file, R2UploadType.PROFILE))
                 .isInstanceOf(R2Exception.class)
                 .extracting("baseErrorCode")
                 .isEqualTo(ExternalErrorCode.R2_FILE_STREAM_READ_FAILED);
@@ -175,7 +175,7 @@ class R2UploadServiceTest {
                 .putObject(any(PutObjectRequest.class), any(RequestBody.class));
 
         // When, Then
-        assertThatThrownBy(() -> r2UploadService.upload(file))
+        assertThatThrownBy(() -> r2UploadService.upload(file, R2UploadType.PROFILE))
                 .isInstanceOf(R2Exception.class)
                 .extracting("baseErrorCode")
                 .isEqualTo(ExternalErrorCode.R2_FILE_UPLOAD_FAILED);

@@ -27,6 +27,7 @@ import com.kkirok.server.global.external.openai.dto.response.OpenAiFoodAnalysisR
 import com.kkirok.server.global.external.openai.prompt.PromptType;
 import com.kkirok.server.global.external.r2.application.service.PresignedUrlService;
 import com.kkirok.server.global.external.r2.application.service.R2UploadService;
+import com.kkirok.server.global.external.r2.application.service.R2UploadType;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -136,7 +137,7 @@ public class MealRecordService implements MealRecordUseCase {
 
         String imageKey;
         try {
-            imageKey = r2UploadService.upload(file);
+            imageKey = r2UploadService.upload(file, R2UploadType.MEAL);
         } catch (RuntimeException exception) {
             throw new MealException(
                     MealErrorCode.MEAL_ANALYSIS_FAILED,
@@ -180,7 +181,7 @@ public class MealRecordService implements MealRecordUseCase {
 
         mealImageValidator.validate(file);
 
-        String imageKey = r2UploadService.upload(file);
+        String imageKey = r2UploadService.upload(file, R2UploadType.MEAL);
 
         String imageUrl =
                 presignedUrlService

@@ -12,6 +12,7 @@ import com.kkirok.server.domain.user.application.service.UserRoleService;
 import com.kkirok.server.global.auth.jwt.application.RoleCacheService;
 import com.kkirok.server.global.common.exception.BadRequestException;
 import com.kkirok.server.global.external.r2.application.service.R2UploadService;
+import com.kkirok.server.global.external.r2.application.service.R2UploadType;
 import com.kkirok.server.support.fixture.MemberFixture;
 import com.kkirok.server.support.fixture.ProfileSettingRequestFixture;
 import org.junit.jupiter.api.DisplayName;
@@ -61,7 +62,7 @@ class OnboardingServiceTest {
         MultipartFile profileImage = createProfileImage();
 
         given(memberUseCase.findMemberByMemberId(memberId)).willReturn(member);
-        given(r2UploadService.upload(profileImage)).willReturn("profile-key");
+        given(r2UploadService.upload(profileImage, R2UploadType.PROFILE)).willReturn("profile-key");
 
         // When
         onboardingService.updateProfile(memberId, request, profileImage);
@@ -81,7 +82,7 @@ class OnboardingServiceTest {
         assertThat(member.getMealStyle()).isNull();
 
         then(memberUseCase).should().findMemberByMemberId(memberId);
-        then(r2UploadService).should().upload(profileImage);
+        then(r2UploadService).should().upload(profileImage, R2UploadType.PROFILE);
         then(userRoleService).should().promoteToUser(member.getUser());
         then(roleCacheService).should().evictRole(member.getId());
         then(memberUseCase).should().updateMember(member);

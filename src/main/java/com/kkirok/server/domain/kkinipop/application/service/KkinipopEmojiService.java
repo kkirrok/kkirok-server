@@ -16,6 +16,7 @@ import com.kkirok.server.global.common.exception.ForbiddenException;
 import com.kkirok.server.global.common.exception.NotFoundException;
 import com.kkirok.server.global.common.util.DateTimeProvider;
 import com.kkirok.server.global.external.r2.application.service.R2UploadService;
+import com.kkirok.server.global.external.r2.application.service.R2UploadType;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
@@ -103,7 +104,7 @@ public class KkinipopEmojiService {
         if (image == null || image.isEmpty()) {
             throw new BadRequestException(KkinipopErrorCode.PHOTO_REQUIRED);
         }
-        return r2UploadService.upload(image);
+        return r2UploadService.upload(image, R2UploadType.KKINIPOP_EMOJI);
     }
 
     // 이미지 원본 이름으로부터 Label 추출
