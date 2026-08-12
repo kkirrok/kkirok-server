@@ -142,6 +142,14 @@ public interface MealApi {
             @ApiErrorCodeExample(
                     codeType = MealErrorCode.class,
                     code = "UNRECOGNIZABLE_MEAL_IMAGE"
+            ),
+            @ApiErrorCodeExample(
+                    codeType = MealErrorCode.class,
+                    code = "NOT_FOOD_IMAGE"
+            ),
+            @ApiErrorCodeExample(
+                    codeType = MealErrorCode.class,
+                    code = "MEAL_ANALYSIS_FAILED"
             )
     })
     @ApiSuccessCodeExample(

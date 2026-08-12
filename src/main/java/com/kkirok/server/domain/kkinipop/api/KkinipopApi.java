@@ -13,6 +13,7 @@ import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopPostRe
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopReactionSummaryResponse;
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopSystemEmojiResponse;
 import com.kkirok.server.domain.meal.domain.ScanType;
+import com.kkirok.server.domain.meal.exception.MealErrorCode;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
 import com.kkirok.server.global.common.dto.SuccessResponse;
 import com.kkirok.server.domain.kkinipop.exception.KkinipopErrorCode;
@@ -260,6 +261,7 @@ public interface KkinipopApi {
                     - 'scanType': 이미지 업로드 수단
                     - 현재 시간에 해당하는 실시간 미션이 없으면 실패합니다.
                     - `saveToPersonalLog=true`인 끼니팝 게시글은 하루 최대 3회까지 저장할 수 있습니다.
+                    - `saveToPersonalLog=true`인 경우에만 이미지가 나의 식사기록 저장 로직(음식 인식/이미지 품질 검증)을 거치며, 이때 관련 에러가 발생할 수 있습니다.
                     """,
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     content = @Content(
@@ -277,7 +279,10 @@ public interface KkinipopApi {
             @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GENERAL_POST_LIMIT_EXCEEDED"),
             @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "MISSION_POST_LIMIT_EXCEEDED"),
             @ApiErrorCodeExample(codeType = ExternalErrorCode.class, code = "R2_FILE_STREAM_READ_FAILED"),
-            @ApiErrorCodeExample(codeType = ExternalErrorCode.class, code = "R2_FILE_UPLOAD_FAILED")
+            @ApiErrorCodeExample(codeType = ExternalErrorCode.class, code = "R2_FILE_UPLOAD_FAILED"),
+            @ApiErrorCodeExample(codeType = MealErrorCode.class, code = "NOT_FOOD_IMAGE"),
+            @ApiErrorCodeExample(codeType = MealErrorCode.class, code = "UNRECOGNIZABLE_MEAL_IMAGE"),
+            @ApiErrorCodeExample(codeType = MealErrorCode.class, code = "MEAL_ANALYSIS_FAILED")
     })
     @ApiSuccessCodeExample(codeType = KkinipopSuccessCode.class, code = "POST_CREATE_SUCCESS")
     ResponseEntity<SuccessResponse<KkinipopPostResponse>> createPost(
