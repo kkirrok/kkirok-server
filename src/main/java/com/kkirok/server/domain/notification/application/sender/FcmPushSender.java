@@ -11,12 +11,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 /**
  * 실제로 알림을 발송하는 역할
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FcmPushSender implements PushSender {
@@ -52,7 +54,7 @@ public class FcmPushSender implements PushSender {
                 successCount += response.getSuccessCount();
                 collectInvalidTokens(chunk, response, invalidTokens);
             } catch (FirebaseMessagingException e) {
-                throw new IllegalStateException("FCM send failed", e);
+                log.warn("FCM multicast chunk failed: chunkSize={}", chunk.size(), e);
             }
         }
 
@@ -107,7 +109,10 @@ public class FcmPushSender implements PushSender {
                     results.add(toItemResult(chunk.get(index).token(), sendResponses.get(index)));
                 }
             } catch (FirebaseMessagingException e) {
-                throw new IllegalStateException("FCM batch send failed", e);
+                log.warn("FCM batch chunk failed: chunkSize={}", chunk.size(), e);
+                for (PushBatchMessage message : chunk) {
+                    results.add(new PushBatchItemResult(message.token(), false, false));
+                }
             }
         }
 
