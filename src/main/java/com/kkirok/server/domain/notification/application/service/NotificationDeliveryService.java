@@ -3,6 +3,8 @@ package com.kkirok.server.domain.notification.application.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kkirok.server.domain.notification.application.sender.PushBatchItemResult;
+import com.kkirok.server.domain.notification.application.sender.PushBatchMessage;
 import com.kkirok.server.domain.notification.application.sender.PushPayload;
 import com.kkirok.server.domain.notification.application.sender.PushResult;
 import com.kkirok.server.domain.notification.application.sender.PushSender;
@@ -11,6 +13,7 @@ import com.kkirok.server.domain.notification.dao.NotificationRepository;
 import com.kkirok.server.domain.notification.domain.Device;
 import com.kkirok.server.domain.notification.domain.Notification;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -110,6 +113,98 @@ public class NotificationDeliveryService {
 
         log.info("Notification delivery finished: total={}, sent={}, failed={}",
                 notifications.size(), sentCount, failedCount);
+    }
+
+    /**
+     * 배치 트랙(GROUP_JOIN, MEAL_REMINDER_*)의 미발송/재시도 대상 알림을 모아서 sendEach()로 배치 발송한다.
+     * 넘겨받은 notifications는 스케줄러 자신의 트랜잭션에서 조회된 detached 엔티티이므로,
+     * 이 메서드의 REQUIRES_NEW 트랜잭션 안에서 findAllById()로 다시 조회해 managed 상태로 만든 뒤 수정한다.
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void deliverPendingBatch(List<Notification> notifications) {
+        if (notifications == null || notifications.isEmpty()) {
+            return;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        List<Long> notificationIds = notifications.stream().map(Notification::getId).toList();
+        Map<Long, Notification> managedNotificationsById = notificationRepository.findAllById(notificationIds).stream()
+                .collect(Collectors.toMap(Notification::getId, notification -> notification, (left, right) -> left, LinkedHashMap::new));
+
+        Set<Long> memberIds = notifications.stream()
+                .map(notification -> notification.getMember().getId())
+                .collect(Collectors.toSet());
+        Map<Long, List<String>> tokensByMemberId = deviceRepository.findAllByMember_IdIn(memberIds).stream()
+                .collect(Collectors.groupingBy(
+                        device -> device.getMember().getId(),
+                        Collectors.mapping(Device::getToken, Collectors.toList())
+                ));
+
+        List<PushBatchMessage> messages = new ArrayList<>();
+        List<Notification> messageOwners = new ArrayList<>();
+        int noDeviceCount = 0;
+
+        for (Notification notification : notifications) {
+            Notification managedNotification = managedNotificationsById.get(notification.getId());
+            if (managedNotification == null) {
+                log.warn("Notification not found for pending delivery, skipping: notificationId={}", notification.getId());
+                continue;
+            }
+
+            List<String> tokens = tokensByMemberId.getOrDefault(notification.getMember().getId(), List.of());
+            if (tokens.isEmpty()) {
+                managedNotification.markFailed(now, "NO_DEVICE");
+                noDeviceCount++;
+                continue;
+            }
+
+            Map<String, String> payloadData = new LinkedHashMap<>(parseData(notification.getDataJson()));
+            payloadData.put("notificationId", String.valueOf(notification.getId()));
+
+            String imageUrl = null;
+            if (StringUtils.hasText(notification.getImage())) {
+                imageUrl = presignedUrlService.getPresignedUrl(notification.getImage()).toString();
+            }
+
+            PushPayload payload = new PushPayload(notification.getTitle(), notification.getBody(), imageUrl, payloadData);
+            for (String token : tokens) {
+                messages.add(new PushBatchMessage(token, payload));
+                messageOwners.add(managedNotification);
+            }
+        }
+
+        int sentCount = 0;
+        int failedCount = 0;
+
+        if (!messages.isEmpty()) {
+            List<PushBatchItemResult> results = pushSender.sendEach(messages);
+
+            Map<Notification, Boolean> successByNotification = new LinkedHashMap<>();
+            List<String> invalidTokens = new ArrayList<>();
+            for (int index = 0; index < results.size(); index++) {
+                PushBatchItemResult result = results.get(index);
+                Notification owner = messageOwners.get(index);
+                successByNotification.merge(owner, result.success(), (existing, current) -> existing || current);
+                if (result.invalidToken()) {
+                    invalidTokens.add(result.token());
+                }
+            }
+
+            for (Map.Entry<Notification, Boolean> entry : successByNotification.entrySet()) {
+                if (entry.getValue()) {
+                    entry.getKey().markSent(now);
+                    sentCount++;
+                } else {
+                    entry.getKey().markFailed(now, "FCM_NO_SUCCESS");
+                    failedCount++;
+                }
+            }
+            deleteInvalidTokens(invalidTokens);
+        }
+
+        log.info("Pending notification batch finished: total={}, sent={}, failed={}",
+                notifications.size(), sentCount, failedCount + noDeviceCount);
     }
 
     private Map<String, String> parseData(String dataJson) {

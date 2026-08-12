@@ -1,7 +1,10 @@
 package com.kkirok.server.domain.notification.dao;
 
 import com.kkirok.server.domain.notification.domain.Notification;
+import com.kkirok.server.domain.notification.domain.NotificationType;
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,4 +37,17 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             where notification.member.id = :memberId
             """)
     int markAllRead(@Param("memberId") Long memberId, @Param("now") LocalDateTime now);
+
+    @Query("""
+            select n
+            from Notification n
+            where n.type in :types
+              and n.sentAt is null
+              and n.retryCount < :maxRetryCount
+            order by n.createdAt asc
+            """)
+    List<Notification> findPendingForDelivery(
+            @Param("types") Collection<NotificationType> types,
+            @Param("maxRetryCount") int maxRetryCount
+    );
 }
