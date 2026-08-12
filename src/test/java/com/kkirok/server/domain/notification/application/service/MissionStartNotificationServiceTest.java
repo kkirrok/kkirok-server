@@ -46,7 +46,7 @@ class MissionStartNotificationServiceTest {
         KkinipopMission second = createMission(101L, group, "점심 미션", windowStart.plusSeconds(40));
 
         given(dateTimeProvider.now()).willReturn(now);
-        given(missionRepository.findStartingBetween(windowStart, windowStart.plusMinutes(1)))
+        given(missionRepository.findStartingBetween(windowStart.minusMinutes(4), windowStart.plusMinutes(1)))
                 .willReturn(List.of(first, second));
 
         // When
