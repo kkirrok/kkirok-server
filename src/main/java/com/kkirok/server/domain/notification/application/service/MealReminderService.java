@@ -59,7 +59,7 @@ public class MealReminderService {
                 }
 
                 alreadyNotifiedMemberIds.add(member.getId());
-                notificationDispatcher.dispatchToMembers(
+                notificationDispatcher.dispatchBatched(
                         List.of(member),
                         policy.type(),
                         policy.title(),

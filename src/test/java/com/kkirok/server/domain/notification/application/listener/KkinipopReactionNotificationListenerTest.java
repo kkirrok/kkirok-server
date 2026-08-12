@@ -63,7 +63,7 @@ class KkinipopReactionNotificationListenerTest {
         kkinipopReactionNotificationListener.handle(event);
 
         // Then
-        then(notificationDispatcher).should().dispatchToMembers(
+        then(notificationDispatcher).should().dispatchInstant(
                 eq(java.util.List.of(postAuthor)),
                 eq(NotificationType.KKINIPOP_REACTION),
                 eq("아침 챌린저스"),

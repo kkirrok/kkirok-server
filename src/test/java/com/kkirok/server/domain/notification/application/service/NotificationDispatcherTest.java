@@ -82,7 +82,7 @@ class NotificationDispatcherTest {
         TransactionSynchronizationManager.initSynchronization();
 
         // When
-        notificationDispatcher.dispatchToMembers(
+        notificationDispatcher.dispatchInstant(
                 List.of(first, second),
                 NotificationType.GROUP_JOIN,
                 "제목",
@@ -111,6 +111,39 @@ class NotificationDispatcherTest {
         then(notificationDeliveryService).should().deliver(targetCaptor.capture(), notificationCaptorForDelivery.capture());
         assertThat(targetCaptor.getValue()).containsEntry(10L, 1L).containsEntry(11L, 2L);
         assertThat(notificationCaptorForDelivery.getValue()).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("배치 트랙은 스케줄러 도입 전까지 저장 후 커밋 시 즉시 발송한다")
+    void shouldDispatchBatchedLikeInstantUntilSchedulerIsIntroduced() {
+        // Given
+        Member member = createMember(1L, "첫번째");
+        given(notificationAgreeService.findOptedOutMemberIds(Set.of(1L), NotificationType.GROUP_JOIN.getAgreeType()))
+                .willReturn(Set.of());
+        given(notificationRepository.save(any(Notification.class))).willAnswer(invocation -> {
+            Notification notification = invocation.getArgument(0);
+            ReflectionTestUtils.setField(notification, "id", 10L);
+            return notification;
+        });
+        TransactionSynchronizationManager.initSynchronization();
+
+        // When
+        notificationDispatcher.dispatchBatched(
+                List.of(member),
+                NotificationType.GROUP_JOIN,
+                "제목",
+                "본문",
+                Map.of("type", "GROUP_JOIN", "groupId", "1")
+        );
+
+        // Then
+        then(notificationRepository).should().save(any(Notification.class));
+        List<TransactionSynchronization> synchronizations = TransactionSynchronizationManager.getSynchronizations();
+        assertThat(synchronizations).hasSize(1);
+
+        synchronizations.get(0).afterCommit();
+
+        then(notificationDeliveryService).should().deliver(eq(Map.of(10L, 1L)), any(Collection.class));
     }
 
     private Member createMember(Long memberId, String nickname) {
