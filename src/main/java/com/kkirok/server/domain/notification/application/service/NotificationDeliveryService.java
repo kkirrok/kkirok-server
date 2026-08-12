@@ -48,6 +48,8 @@ public class NotificationDeliveryService {
             return;
         }
 
+        long start = System.currentTimeMillis();
+        long fcmElapsedMs = 0;
         LocalDateTime now = LocalDateTime.now();
         // 발송 대상 Notification을 다시 읽어와 상태 변경을 영속화할 준비를 함.
         Map<Long, Notification> notificationsById = notificationRepository.findAllById(notificationMemberIds.keySet()).stream()
@@ -91,6 +93,7 @@ public class NotificationDeliveryService {
                 imageUrl = presignedUrlService.getPresignedUrl(notification.getImage()).toString();
             }
 
+            long fcmCallStart = System.currentTimeMillis();
             try {
                 // FCM 발송 결과를 기준으로 sentAt / failedAt 과 invalid 토큰 삭제를 반영한다.
                 PushResult result = pushSender.sendMulticast(
@@ -109,11 +112,14 @@ public class NotificationDeliveryService {
                 log.warn("Failed to send notification {} to member {}", notification.getId(), memberId, e);
                 managedNotification.markFailed(now, e.getMessage());
                 failedCount++;
+            } finally {
+                fcmElapsedMs += System.currentTimeMillis() - fcmCallStart;
             }
         }
 
-        log.info("Notification delivery finished: total={}, sent={}, failed={}",
-                notifications.size(), sentCount, failedCount);
+        long elapsedMs = System.currentTimeMillis() - start;
+        log.info("Notification delivery finished: total={}, sent={}, failed={}, recipients={}, elapsedMs={}, fcmElapsedMs={}",
+                notifications.size(), sentCount, failedCount, memberIds.size(), elapsedMs, fcmElapsedMs);
     }
 
     /**
@@ -127,6 +133,7 @@ public class NotificationDeliveryService {
             return;
         }
 
+        long start = System.currentTimeMillis();
         LocalDateTime now = LocalDateTime.now();
 
         List<Long> notificationIds = notifications.stream().map(Notification::getId).toList();
@@ -177,9 +184,11 @@ public class NotificationDeliveryService {
 
         int sentCount = 0;
         int failedCount = 0;
+        long fcmElapsedMs = 0;
 
         if (!messages.isEmpty()) {
             List<PushBatchItemResult> results;
+            long fcmCallStart = System.currentTimeMillis();
             try {
                 results = pushSender.sendEach(messages);
             } catch (RuntimeException e) {
@@ -191,6 +200,8 @@ public class NotificationDeliveryService {
                     failedCount++;
                 }
                 results = null;
+            } finally {
+                fcmElapsedMs = System.currentTimeMillis() - fcmCallStart;
             }
 
             if (results != null) {
@@ -218,8 +229,9 @@ public class NotificationDeliveryService {
             }
         }
 
-        log.info("Pending notification batch finished: total={}, sent={}, failed={}",
-                notifications.size(), sentCount, failedCount + noDeviceCount);
+        long elapsedMs = System.currentTimeMillis() - start;
+        log.info("Pending notification batch finished: total={}, sent={}, failed={}, recipients={}, elapsedMs={}, fcmElapsedMs={}",
+                notifications.size(), sentCount, failedCount + noDeviceCount, memberIds.size(), elapsedMs, fcmElapsedMs);
     }
 
     private Map<String, String> parseData(String dataJson) {
