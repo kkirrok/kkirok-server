@@ -40,3 +40,6 @@ out/
 ### firebase
 src/main/resources/firebase/firebase-key.json
 src/main/resources/firebases/firebase-key.json
+
+### logs
+logs/

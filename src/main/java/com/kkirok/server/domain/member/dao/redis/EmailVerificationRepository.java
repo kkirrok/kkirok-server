@@ -32,7 +32,7 @@ public class EmailVerificationRepository {
         try {
             redisTemplate.opsForValue().set(codeKey(email), code, VERIFICATION_CODE_TTL);
         } catch (DataAccessException exception) {
-            log.error("Failed to save email verification code. email={}", email, exception);
+            log.error("Failed to save email verification code. email={}", maskEmail(email), exception);
             throw new RedisException(RedisErrorCode.REDIS_SAVE_FAILED, exception);
         }
     }
@@ -42,7 +42,7 @@ public class EmailVerificationRepository {
         try {
             return Optional.ofNullable(redisTemplate.opsForValue().get(codeKey(email)));
         } catch (DataAccessException exception) {
-            log.error("Failed to read email verification code. email={}", email, exception);
+            log.error("Failed to read email verification code. email={}", maskEmail(email), exception);
             throw new RedisException(RedisErrorCode.REDIS_READ_FAILED, exception);
         }
     }
@@ -57,7 +57,7 @@ public class EmailVerificationRepository {
         try {
             redisTemplate.opsForValue().set(verifiedKey(email), VERIFIED_VALUE, VERIFIED_EMAIL_TTL);
         } catch (DataAccessException exception) {
-            log.error("Failed to save verified email marker. email={}", email, exception);
+            log.error("Failed to save verified email marker. email={}", maskEmail(email), exception);
             throw new RedisException(RedisErrorCode.REDIS_SAVE_FAILED, exception);
         }
     }
@@ -67,7 +67,7 @@ public class EmailVerificationRepository {
         try {
             return redisTemplate.hasKey(verifiedKey(email));
         } catch (DataAccessException exception) {
-            log.error("Failed to read verified email marker. email={}", email, exception);
+            log.error("Failed to read verified email marker. email={}", maskEmail(email), exception);
             throw new RedisException(RedisErrorCode.REDIS_READ_FAILED, exception);
         }
     }
@@ -93,8 +93,19 @@ public class EmailVerificationRepository {
         try {
             redisTemplate.delete(key);
         } catch (DataAccessException exception) {
-            log.error("Failed to delete redis data. email={}, key={}", email, key, exception);
+            log.error("Failed to delete redis data. email={}", maskEmail(email), exception);
             throw new RedisException(RedisErrorCode.REDIS_DELETE_FAILED, exception);
         }
+    }
+
+    private static String maskEmail(String email) {
+        if (email == null) {
+            return null;
+        }
+        int atIndex = email.indexOf('@');
+        if (atIndex <= 1) {
+            return "***" + email.substring(atIndex == -1 ? email.length() : atIndex);
+        }
+        return email.charAt(0) + "***" + email.substring(atIndex);
     }
 }

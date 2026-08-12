@@ -40,16 +40,13 @@ public class AuthenticationService {
         Role role = member.getUser().getRole();
         Collection<GrantedAuthority> authorities = List.of(role.toGrantedAuthority());
 
-        log.info("Starting login success response generation for memberId: {}, nickname: {}, role: {}", member.getId(),
-                member.getNickname(), role.getRoleName());
+        log.info("Starting login success response generation for memberId: {}, role: {}", member.getId(),
+                role.getRoleName());
 
         UsernamePasswordAuthenticationToken authenticationToken = createAuthenticationToken(member.getId(), role,
                 authorities);
         String refreshToken = issueAndSaveRefreshToken(member.getId(), authenticationToken);
         String accessToken = jwtTokenProvider.issueAccessToken(authenticationToken);
-
-        log.info("Login success for authorities: {}, accessToken: {}, refreshToken: {}", authorities, accessToken,
-                refreshToken);
 
         return LoginSuccessResponse.of(
                 accessToken,
