@@ -57,9 +57,8 @@ public class NotificationDispatcher {
 
     /**
      * 배치 트랙: 지연되거나 여러 건이 묶여 처리돼도 무방한 타입(GROUP_JOIN, MEAL_REMINDER_*)에 사용한다.
-     * TODO: NotificationDeliveryScheduler 도입 시 afterCommit에서 즉시 deliver() 호출을 제거하고
-     *       저장만 한 뒤 스케줄러가 주기적으로 모아서 발송하도록 변경해야 한다.
-     *       그 전까지는 dispatchInstant()와 동일하게 즉시 발송한다.
+     * 저장만 하고 즉시 발송하지 않는다 - 실제 발송은 NotificationDeliveryScheduler가 주기적으로
+     * 미발송 알림을 모아서 처리한다.
      */
     @Transactional
     public void dispatchBatched(
@@ -69,7 +68,7 @@ public class NotificationDispatcher {
             String body,
             Map<String, String> data
     ) {
-        dispatchInstant(targets, type, title, body, data);
+        saveNotifications(targets, type, title, body, data);
     }
 
     private DispatchResult saveNotifications(

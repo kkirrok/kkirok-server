@@ -27,7 +27,6 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
@@ -114,8 +113,8 @@ class NotificationDispatcherTest {
     }
 
     @Test
-    @DisplayName("배치 트랙은 스케줄러 도입 전까지 저장 후 커밋 시 즉시 발송한다")
-    void shouldDispatchBatchedLikeInstantUntilSchedulerIsIntroduced() {
+    @DisplayName("배치 트랙은 알림 row만 저장하고, 즉시 발송하지 않는다 (NotificationDeliveryScheduler가 나중에 모아서 처리)")
+    void shouldDispatchBatchedSaveOnlyWithoutImmediateDelivery() {
         // Given
         Member member = createMember(1L, "첫번째");
         given(notificationAgreeService.findOptedOutMemberIds(Set.of(1L), NotificationType.GROUP_JOIN.getAgreeType()))
@@ -138,12 +137,8 @@ class NotificationDispatcherTest {
 
         // Then
         then(notificationRepository).should().save(any(Notification.class));
-        List<TransactionSynchronization> synchronizations = TransactionSynchronizationManager.getSynchronizations();
-        assertThat(synchronizations).hasSize(1);
-
-        synchronizations.get(0).afterCommit();
-
-        then(notificationDeliveryService).should().deliver(eq(Map.of(10L, 1L)), any(Collection.class));
+        assertThat(TransactionSynchronizationManager.getSynchronizations()).isEmpty();
+        then(notificationDeliveryService).shouldHaveNoInteractions();
     }
 
     private Member createMember(Long memberId, String nickname) {
