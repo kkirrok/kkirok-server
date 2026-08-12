@@ -5,11 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import net.minidev.json.JSONObject;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
-import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -33,6 +33,7 @@ public class ControllerLoggingAspect {
 	private static final String HTTP_METHOD = "httpMethod";
 	private static final String LOG_TIME = "logTime";
 	private static final String PARAMS = "params";
+	private static final String START_TIME_ATTRIBUTE = "controllerLoggingStartTime";
 
 	/** Controller 요청 로깅 */
 	@Before("com.kkirok.server.global.common.aop.Pointcuts.allController()")
@@ -48,6 +49,7 @@ public class ControllerLoggingAspect {
 		logInfo.put(PARAMS, getParams(request));
 		logInfo.put(LOG_TIME, System.currentTimeMillis());
 		logInfo.put(HTTP_METHOD, request.getMethod());
+		request.setAttribute(START_TIME_ATTRIBUTE, System.currentTimeMillis());
 
 		try {
 			logInfo.put(REQUEST_URI, URLDecoder.decode(request.getRequestURI(), StandardCharsets.UTF_8));
@@ -62,22 +64,36 @@ public class ControllerLoggingAspect {
 			logInfo.get(PARAMS));
 	}
 
-	/** Controller 정상 반환 로깅 */
+	/** Controller 정상 반환 로깅 - 응답 본문은 민감정보 재노출 방지를 위해 찍지 않고 status/소요시간만 남긴다 */
 	@AfterReturning(value = "com.kkirok.server.global.common.aop.Pointcuts.allController()", returning = "result")
 	public void logControllerResponse(JoinPoint joinPoint, Object result) {
-		log.debug("[Controller 정상 반환] {}.{}() | 반환 값: {}",
+		ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+		if (attributes == null) return;
+
+		HttpServletRequest request = attributes.getRequest();
+		long elapsed = resolveElapsedMillis(request);
+		String status = resolveStatus(result);
+
+		log.info("[HTTP {}] {} {} | {}.{}() | {}ms",
+			status, request.getMethod(), request.getRequestURI(),
 			joinPoint.getSignature().getDeclaringType().getSimpleName(),
 			joinPoint.getSignature().getName(),
-			result);
+			elapsed);
 	}
 
-	/** Controller 예외 발생 시 로깅 */
-	@AfterThrowing(value = "com.kkirok.server.global.common.aop.Pointcuts.allController()", throwing = "ex")
-	public void logControllerException(JoinPoint joinPoint, Exception ex) {
-		log.error("[Controller 예외 발생] {}.{}() | 예외 메시지: {}",
-			joinPoint.getSignature().getDeclaringType().getSimpleName(),
-			joinPoint.getSignature().getName(),
-			ex.getMessage(), ex);
+	private long resolveElapsedMillis(HttpServletRequest request) {
+		Object startTime = request.getAttribute(START_TIME_ATTRIBUTE);
+		if (!(startTime instanceof Long start)) {
+			return -1;
+		}
+		return System.currentTimeMillis() - start;
+	}
+
+	private String resolveStatus(Object result) {
+		if (result instanceof ResponseEntity<?> responseEntity) {
+			return String.valueOf(responseEntity.getStatusCode().value());
+		}
+		return "200";
 	}
 
 	/** HTTP 요청 파라미터를 JSON 형태로 변환 */
