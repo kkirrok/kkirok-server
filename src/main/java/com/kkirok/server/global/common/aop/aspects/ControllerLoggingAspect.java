@@ -10,7 +10,11 @@ import org.aspectj.lang.annotation.Before;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -19,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Aspect
@@ -34,6 +39,12 @@ public class ControllerLoggingAspect {
 	private static final String LOG_TIME = "logTime";
 	private static final String PARAMS = "params";
 	private static final String START_TIME_ATTRIBUTE = "controllerLoggingStartTime";
+	private static final String FORWARDED_FOR_HEADER = "X-Forwarded-For";
+	private static final String USER_AGENT_HEADER = "User-Agent";
+	private static final String ANONYMOUS_MEMBER_ID = "anonymous";
+	private static final String UNKNOWN_USER_AGENT = "unknown";
+	private static final Pattern CONTROL_CHARACTERS = Pattern.compile("[\\r\\n\\t]");
+	private static final int MAX_LOG_FIELD_LENGTH = 200;
 
 	/** Controller 요청 로깅 */
 	@Before("com.kkirok.server.global.common.aop.Pointcuts.allController()")
@@ -58,9 +69,10 @@ public class ControllerLoggingAspect {
 			log.error("[로깅 에러] URL 디코딩 실패", e);
 		}
 
-		log.info("[HTTP {}] {} | {}.{}() | Params: {}",
+		log.info("[HTTP {}] {} | {}.{}() | memberId={} | clientIp={} | userAgent={} | Params: {}",
 			logInfo.get(HTTP_METHOD), logInfo.get(REQUEST_URI),
 			logInfo.get(CONTROLLER), logInfo.get(METHOD),
+			resolveMemberId(), resolveClientIp(request), resolveUserAgent(request),
 			logInfo.get(PARAMS));
 	}
 
@@ -74,11 +86,11 @@ public class ControllerLoggingAspect {
 		long elapsed = resolveElapsedMillis(request);
 		String status = resolveStatus(result);
 
-		log.info("[HTTP {}] {} {} | {}.{}() | {}ms",
+		log.info("[HTTP {}] {} {} | {}.{}() | memberId={} | {}ms",
 			status, request.getMethod(), request.getRequestURI(),
 			joinPoint.getSignature().getDeclaringType().getSimpleName(),
 			joinPoint.getSignature().getName(),
-			elapsed);
+			resolveMemberId(), elapsed);
 	}
 
 	private long resolveElapsedMillis(HttpServletRequest request) {
@@ -94,6 +106,36 @@ public class ControllerLoggingAspect {
 			return String.valueOf(responseEntity.getStatusCode().value());
 		}
 		return "200";
+	}
+
+	/** 인증된 요청이면 memberId(principal), 아니면 anonymous를 반환 */
+	private String resolveMemberId() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if (authentication == null || !authentication.isAuthenticated()
+				|| authentication instanceof AnonymousAuthenticationToken) {
+			return ANONYMOUS_MEMBER_ID;
+		}
+		return String.valueOf(authentication.getPrincipal());
+	}
+
+	/** 프록시를 거치면 X-Forwarded-For의 첫 값을, 없으면 소켓 레벨 remoteAddr를 사용 */
+	private String resolveClientIp(HttpServletRequest request) {
+		String forwardedFor = request.getHeader(FORWARDED_FOR_HEADER);
+		if (StringUtils.hasText(forwardedFor)) {
+			return sanitizeForLog(forwardedFor.split(",")[0].trim());
+		}
+		return request.getRemoteAddr();
+	}
+
+	private String resolveUserAgent(HttpServletRequest request) {
+		String userAgent = request.getHeader(USER_AGENT_HEADER);
+		return StringUtils.hasText(userAgent) ? sanitizeForLog(userAgent) : UNKNOWN_USER_AGENT;
+	}
+
+	/** 클라이언트가 보낸 값을 그대로 로그에 넣기 전에 개행/제어문자를 제거하고 길이를 제한해 로그 위조를 방지한다 */
+	private String sanitizeForLog(String value) {
+		String sanitized = CONTROL_CHARACTERS.matcher(value).replaceAll(" ").trim();
+		return sanitized.length() > MAX_LOG_FIELD_LENGTH ? sanitized.substring(0, MAX_LOG_FIELD_LENGTH) : sanitized;
 	}
 
 	/** HTTP 요청 파라미터를 JSON 형태로 변환 */
