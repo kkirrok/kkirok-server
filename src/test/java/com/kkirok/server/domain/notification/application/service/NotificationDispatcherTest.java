@@ -27,7 +27,6 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
@@ -82,7 +81,7 @@ class NotificationDispatcherTest {
         TransactionSynchronizationManager.initSynchronization();
 
         // When
-        notificationDispatcher.dispatchToMembers(
+        notificationDispatcher.dispatchInstant(
                 List.of(first, second),
                 NotificationType.GROUP_JOIN,
                 "제목",
@@ -111,6 +110,35 @@ class NotificationDispatcherTest {
         then(notificationDeliveryService).should().deliver(targetCaptor.capture(), notificationCaptorForDelivery.capture());
         assertThat(targetCaptor.getValue()).containsEntry(10L, 1L).containsEntry(11L, 2L);
         assertThat(notificationCaptorForDelivery.getValue()).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("배치 트랙은 알림 row만 저장하고, 즉시 발송하지 않는다 (NotificationDeliveryScheduler가 나중에 모아서 처리)")
+    void shouldDispatchBatchedSaveOnlyWithoutImmediateDelivery() {
+        // Given
+        Member member = createMember(1L, "첫번째");
+        given(notificationAgreeService.findOptedOutMemberIds(Set.of(1L), NotificationType.GROUP_JOIN.getAgreeType()))
+                .willReturn(Set.of());
+        given(notificationRepository.save(any(Notification.class))).willAnswer(invocation -> {
+            Notification notification = invocation.getArgument(0);
+            ReflectionTestUtils.setField(notification, "id", 10L);
+            return notification;
+        });
+        TransactionSynchronizationManager.initSynchronization();
+
+        // When
+        notificationDispatcher.dispatchBatched(
+                List.of(member),
+                NotificationType.GROUP_JOIN,
+                "제목",
+                "본문",
+                Map.of("type", "GROUP_JOIN", "groupId", "1")
+        );
+
+        // Then
+        then(notificationRepository).should().save(any(Notification.class));
+        assertThat(TransactionSynchronizationManager.getSynchronizations()).isEmpty();
+        then(notificationDeliveryService).shouldHaveNoInteractions();
     }
 
     private Member createMember(Long memberId, String nickname) {

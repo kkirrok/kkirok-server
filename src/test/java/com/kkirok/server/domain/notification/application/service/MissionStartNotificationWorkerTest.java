@@ -73,7 +73,7 @@ class MissionStartNotificationWorkerTest {
         missionStartNotificationWorker.dispatchMission(mission);
 
         // Then
-        then(notificationDispatcher).should().dispatchToMembers(
+        then(notificationDispatcher).should().dispatchInstant(
                 List.of(first, second),
                 NotificationType.MISSION_START,
                 "끼니팝",

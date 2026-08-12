@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 실시간 미션이 있으면 알림을 발송합니다. -> NotificationDispatcher.dispatchToMembers() 호출
+ * 실시간 미션이 있으면 알림을 발송합니다. -> NotificationDispatcher.dispatchInstant() 호출 (즉시 트랙)
  */
 @Slf4j
 @Service
@@ -46,7 +46,7 @@ public class MissionStartNotificationWorker {
         data.put("groupId", String.valueOf(mission.getGroup().getId()));
         data.put("missionId", String.valueOf(mission.getId()));
 
-        notificationDispatcher.dispatchToMembers(
+        notificationDispatcher.dispatchInstant(
                 recipients,
                 NotificationType.MISSION_START,
                 "끼니팝",

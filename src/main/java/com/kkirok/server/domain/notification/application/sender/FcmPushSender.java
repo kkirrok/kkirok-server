@@ -3,6 +3,7 @@ package com.kkirok.server.domain.notification.application.sender;
 import com.google.firebase.messaging.BatchResponse;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
+import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.MessagingErrorCode;
 import com.google.firebase.messaging.MulticastMessage;
 import com.google.firebase.messaging.SendResponse;
@@ -73,16 +74,70 @@ public class FcmPushSender implements PushSender {
         }
     }
 
-    private List<List<String>> partition(List<String> tokens, int chunkSize) {
-        if (tokens.size() <= chunkSize) {
-            return List.of(tokens);
+    private <T> List<List<T>> partition(List<T> items, int chunkSize) {
+        if (items.size() <= chunkSize) {
+            return List.of(items);
         }
 
-        List<List<String>> chunks = new ArrayList<>();
-        for (int start = 0; start < tokens.size(); start += chunkSize) {
-            int end = Math.min(start + chunkSize, tokens.size());
-            chunks.add(tokens.subList(start, end));
+        List<List<T>> chunks = new ArrayList<>();
+        for (int start = 0; start < items.size(); start += chunkSize) {
+            int end = Math.min(start + chunkSize, items.size());
+            chunks.add(items.subList(start, end));
         }
         return chunks;
+    }
+
+    @Override
+    public List<PushBatchItemResult> sendEach(List<PushBatchMessage> messages) {
+        if (CollectionUtils.isEmpty(messages)) {
+            return List.of();
+        }
+
+        List<PushBatchItemResult> results = new ArrayList<>();
+
+        for (List<PushBatchMessage> chunk : partition(messages, FCM_MAX_TOKENS)) {
+            List<Message> fcmMessages = chunk.stream()
+                    .map(this::toMessage)
+                    .toList();
+
+            try {
+                BatchResponse response = firebaseMessaging.sendEach(fcmMessages);
+                List<SendResponse> sendResponses = response.getResponses();
+                for (int index = 0; index < chunk.size(); index++) {
+                    results.add(toItemResult(chunk.get(index).token(), sendResponses.get(index)));
+                }
+            } catch (FirebaseMessagingException e) {
+                throw new IllegalStateException("FCM batch send failed", e);
+            }
+        }
+
+        return results;
+    }
+
+    private Message toMessage(PushBatchMessage batchMessage) {
+        PushPayload payload = batchMessage.payload();
+        return Message.builder()
+                .setToken(batchMessage.token())
+                .setNotification(
+                        com.google.firebase.messaging.Notification.builder()
+                                .setTitle(payload.title())
+                                .setBody(payload.body())
+                                .setImage(payload.imageUrl())
+                                .build()
+                )
+                .putAllData(payload.data())
+                .build();
+    }
+
+    private PushBatchItemResult toItemResult(String token, SendResponse sendResponse) {
+        if (sendResponse.isSuccessful()) {
+            return new PushBatchItemResult(token, true, false);
+        }
+
+        MessagingErrorCode errorCode = sendResponse.getException() == null
+                ? null
+                : sendResponse.getException().getMessagingErrorCode();
+        boolean invalidToken = errorCode == MessagingErrorCode.UNREGISTERED || errorCode == MessagingErrorCode.INVALID_ARGUMENT;
+        return new PushBatchItemResult(token, false, invalidToken);
     }
 }
