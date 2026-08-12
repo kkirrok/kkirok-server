@@ -1,5 +1,6 @@
 package com.kkirok.server.domain.kkinipop.application.service;
 
+import com.kkirok.server.domain.kkinipop.application.dto.event.KkinipopGroupMemberLeftEvent;
 import com.kkirok.server.domain.kkinipop.application.dto.request.KkinipopGroupCreateRequest;
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopGroupResponse;
 import com.kkirok.server.domain.kkinipop.application.usecase.KkinipopUseCase;
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,6 +50,9 @@ class KkinipopGroupServiceTest {
 
     @Mock
     private DateTimeProvider dateTimeProvider;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private KkinipopGroupService kkinipopGroupService;
@@ -116,6 +121,7 @@ class KkinipopGroupServiceTest {
 
         // Then
         then(groupRepository).should().delete(group);
+        then(eventPublisher).shouldHaveNoInteractions();
     }
 
     @Test
@@ -136,6 +142,7 @@ class KkinipopGroupServiceTest {
         // Then
         assertThat(groupMember.getLeftAt()).isEqualTo(now);
         assertThat(groupMember.isBanned()).isFalse();
+        then(eventPublisher).should().publishEvent(new KkinipopGroupMemberLeftEvent(10L, 1L));
     }
 
     @Test
@@ -159,6 +166,7 @@ class KkinipopGroupServiceTest {
         // Then
         assertThat(targetGroupMember.getLeftAt()).isEqualTo(now);
         assertThat(targetGroupMember.isBanned()).isTrue();
+        then(eventPublisher).should().publishEvent(new KkinipopGroupMemberLeftEvent(10L, 2L));
     }
 
     @Test
