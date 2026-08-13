@@ -136,6 +136,30 @@ class KkinipopMissionGenerateServiceTest {
     }
 
     @Test
+    @DisplayName("미션 제목이 최대 길이를 넘으면 미션 생성 예외가 발생한다")
+    void shouldThrowInternalServerException_whenMissionTitleExceedsMaxLength() {
+        KkinipopMissionGenerateService missionGenerateService =
+                new KkinipopMissionGenerateService(kkinipopMissionInsertService, dateTimeProvider, openAiService, kkinipopUseCase, missionRepository, groupRepository);
+        LocalDate today = LocalDate.of(2026, 4, 24);
+        KkinipopGroup group = createGroup(10L, "아침 챌린저스");
+        List<MissionCandidate> candidates = new ArrayList<>(createMissionCandidates());
+        candidates.set(0, new MissionCandidate("가".repeat(KkinipopMissionPolicy.MISSION_TITLE_MAX_LENGTH + 1), LocalTime.of(8, 0), 10));
+
+        given(dateTimeProvider.today()).willReturn(today);
+        given(kkinipopUseCase.findAllGroup()).willReturn(List.of(group));
+        given(openAiService.createObjectResponse(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.eq(KkinipopMissionGenerateResponse.class)
+        )).willReturn(new KkinipopMissionGenerateResponse(candidates));
+
+        assertThatThrownBy(missionGenerateService::generateNextDayMissions)
+                .isInstanceOf(InternalServerException.class)
+                .extracting("baseErrorCode")
+                .isEqualTo(KkinipopErrorCode.MISSION_GENERATION_FAILED);
+    }
+
+    @Test
     @DisplayName("SNAKE_CASE ObjectMapper 환경에서도 미션 응답의 startTime과 durationMinutes를 읽는다")
     void shouldDeserializeMissionCandidatesWithSnakeCaseObjectMapper() throws Exception {
         ObjectMapper objectMapper = new ObjectMapper()

@@ -257,6 +257,7 @@ public class KkinipopMissionGenerateService {
      * - 시작 시각의 분은 30분 단위
      *   예: 09:00, 09:30 가능 / 09:10, 09:45 불가
      * - 모든 시작 시각은 서로 달라야 한다.
+     * - 제목은 공백·문장부호 포함 {@value KkinipopMissionPolicy#MISSION_TITLE_MAX_LENGTH}자를 넘지 않는다.
      */
     private void validateMissionPool(KkinipopMissionGenerateResponse response) {
 
@@ -282,6 +283,11 @@ public class KkinipopMissionGenerateService {
 
             // 모든 미션은 10분짜리 동일 규칙으로 생성되어야 한다.
             if (mission.durationMinutes() != KkinipopMissionPolicy.REALTIME_DURATION_MINUTES) {
+                throw new InternalServerException(KkinipopErrorCode.MISSION_GENERATION_FAILED);
+            }
+
+            // 제목이 최대 길이를 넘으면 실패한다.
+            if (mission.title().length() > KkinipopMissionPolicy.MISSION_TITLE_MAX_LENGTH) {
                 throw new InternalServerException(KkinipopErrorCode.MISSION_GENERATION_FAILED);
             }
         }
