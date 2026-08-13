@@ -1,0 +1,2 @@
+alter table notification_dispatch_log
+    rename constraint notification_dispatch_log_dispatch_key_key to uk_notification_dispatch_log_key;

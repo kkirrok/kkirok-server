@@ -44,17 +44,30 @@ public class MealReminderService {
                 continue;
             }
 
+            // 대상별 claim suffix를 미리 계산해, 이미 발송된 건을 한 번의 IN 조회로 걸러낸다.
+            // 정책이 동일한 target을 중복 반환하더라도(현재는 발생하지 않지만) 예외 없이 하나만 남긴다.
+            Map<MealReminderTarget, String> suffixByTarget = targets.stream()
+                    .collect(java.util.stream.Collectors.toMap(t -> t, t -> claimSuffix(policy.type(), t), (a, b) -> a));
+            Set<String> alreadyDispatchedSuffixes = notificationDispatchLogService.findAlreadyDispatchedSuffixes(
+                    policy.type(), suffixByTarget.values());
+            List<MealReminderTarget> pendingTargets = targets.stream()
+                    .filter(target -> !alreadyDispatchedSuffixes.contains(suffixByTarget.get(target)))
+                    .toList();
+
+            if (pendingTargets.isEmpty()) {
+                continue;
+            }
+
             // 멤버 엔티티는 한 번에 읽어 N+1 조회를 피한다.
-            Map<Long, Member> membersById = loadMembers(targets);
-            for (MealReminderTarget target : targets) {
+            Map<Long, Member> membersById = loadMembers(pendingTargets);
+            for (MealReminderTarget target : pendingTargets) {
                 Member member = membersById.get(target.memberId());
                 if (member == null) {
                     continue;
                 }
 
                 // dispatch log를 먼저 선점해 같은 키의 재폴링을 막는다.
-                String claimSuffix = claimSuffix(policy.type(), target);
-                if (!notificationDispatchLogService.claim(policy.type(), claimSuffix)) {
+                if (!notificationDispatchLogService.claim(policy.type(), suffixByTarget.get(target))) {
                     continue;
                 }
 
