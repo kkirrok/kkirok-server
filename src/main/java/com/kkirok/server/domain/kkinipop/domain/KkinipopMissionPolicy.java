@@ -8,6 +8,7 @@ public final class KkinipopMissionPolicy {
 
     public static final int DAILY_MISSION_COUNT = 5;
     public static final int DAILY_MISSION_CANDIDATE_COUNT = 20;
+    public static final int MISSION_TITLE_MAX_LENGTH = 26;
     public static final int MISSION_GENERATION_LEAD_MINUTES = 5;
     public static final int REALTIME_DURATION_MINUTES = 10;
     public static final int REALTIME_SLOT_INTERVAL_MINUTES = 30;

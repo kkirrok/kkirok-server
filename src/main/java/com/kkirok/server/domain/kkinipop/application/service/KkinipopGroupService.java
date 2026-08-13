@@ -1,5 +1,6 @@
 package com.kkirok.server.domain.kkinipop.application.service;
 
+import com.kkirok.server.domain.kkinipop.application.dto.event.KkinipopGroupCreatedEvent;
 import com.kkirok.server.domain.kkinipop.application.dto.event.KkinipopGroupJoinedEvent;
 import com.kkirok.server.domain.kkinipop.application.dto.event.KkinipopGroupMemberLeftEvent;
 import com.kkirok.server.domain.kkinipop.application.dto.request.KkinipopGroupCreateRequest;
@@ -66,6 +67,7 @@ public class KkinipopGroupService {
         Member member = memberUseCase.findMemberByMemberId(memberId);
         KkinipopGroup group = groupRepository.save(KkinipopGroup.create(request, generateInviteCode()));
         KkinipopGroupMember groupMember = groupMemberRepository.save(KkinipopGroupMember.createLeader(group, member));
+        eventPublisher.publishEvent(new KkinipopGroupCreatedEvent(group.getId()));
         return KkinipopGroupResponse.from(groupMember, 1);
     }
 
