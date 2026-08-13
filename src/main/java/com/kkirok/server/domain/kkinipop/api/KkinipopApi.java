@@ -14,6 +14,7 @@ import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopReacti
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopSystemEmojiResponse;
 import com.kkirok.server.domain.meal.domain.ScanType;
 import com.kkirok.server.domain.meal.exception.MealErrorCode;
+import com.kkirok.server.domain.terms.exception.TermsErrorCode;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
 import com.kkirok.server.global.common.dto.SuccessResponse;
 import com.kkirok.server.domain.kkinipop.exception.KkinipopErrorCode;
@@ -48,7 +49,10 @@ public interface KkinipopApi {
                     현재 사용자가 속한 끼니팝 그룹 목록을 조회합니다.
                     """
     )
-    @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED")
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
+    })
     @ApiSuccessCodeExample(codeType = KkinipopSuccessCode.class, code = "GROUP_LIST_SUCCESS")
     ResponseEntity<SuccessResponse<List<KkinipopGroupResponse>>> getGroups(
             @CurrentMember Long memberId
@@ -63,7 +67,10 @@ public interface KkinipopApi {
                     
                     """
     )
-    @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED")
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
+    })
     @ApiSuccessCodeExample(codeType = KkinipopSuccessCode.class, code = "SYSTEM_EMOJI_LIST_SUCCESS")
     ResponseEntity<SuccessResponse<List<KkinipopSystemEmojiResponse>>> getSystemEmojis(
             @CurrentMember Long memberId
@@ -81,7 +88,8 @@ public interface KkinipopApi {
     )
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
-            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_MEMBER_NOT_FOUND")
+            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_MEMBER_NOT_FOUND"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = KkinipopSuccessCode.class, code = "GROUP_MEMBER_LIST_SUCCESS")
     ResponseEntity<SuccessResponse<List<KkinipopMemberSummaryResponse>>> getGroupMembers(
@@ -103,7 +111,8 @@ public interface KkinipopApi {
     @ApiResponse(responseCode = "201", useReturnTypeSchema = true)
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
-            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "INVALID_GROUP_NAME")
+            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "INVALID_GROUP_NAME"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = KkinipopSuccessCode.class, code = "GROUP_CREATE_SUCCESS")
     ResponseEntity<SuccessResponse<KkinipopGroupResponse>> createGroup(
@@ -125,7 +134,8 @@ public interface KkinipopApi {
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
             @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_NOT_FOUND"),
-            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_JOIN_CONFLICT")
+            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_JOIN_CONFLICT"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = KkinipopSuccessCode.class, code = "GROUP_JOIN_SUCCESS")
     ResponseEntity<SuccessResponse<KkinipopGroupResponse>> joinGroup(
@@ -146,7 +156,8 @@ public interface KkinipopApi {
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
             @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_MEMBER_NOT_FOUND"),
-            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_NOT_FOUND")
+            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_NOT_FOUND"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = KkinipopSuccessCode.class, code = "GROUP_LEAVE_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> quitGroup(
@@ -168,7 +179,8 @@ public interface KkinipopApi {
             @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
             @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_MEMBER_NOT_FOUND"),
             @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_NOT_FOUND"),
-            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_MANAGEMENT_FORBIDDEN")
+            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_MANAGEMENT_FORBIDDEN"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = KkinipopSuccessCode.class, code = "GROUP_DELETE_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> deleteGroup(
@@ -189,7 +201,8 @@ public interface KkinipopApi {
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
             @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_MEMBER_NOT_FOUND"),
-            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_MANAGEMENT_FORBIDDEN")
+            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_MANAGEMENT_FORBIDDEN"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = KkinipopSuccessCode.class, code = "GROUP_MEMBER_DELETE_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> removeGroupMember(
@@ -216,7 +229,8 @@ public interface KkinipopApi {
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
             @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_MEMBER_NOT_FOUND"),
-            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "MISSION_NOT_FOUND")
+            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "MISSION_NOT_FOUND"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = KkinipopSuccessCode.class, code = "POST_LIST_SUCCESS")
     ResponseEntity<SuccessResponse<List<KkinipopDailyPostResponse>>> getPosts(
@@ -241,7 +255,8 @@ public interface KkinipopApi {
     )
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
-            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_MEMBER_NOT_FOUND")
+            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_MEMBER_NOT_FOUND"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = KkinipopSuccessCode.class, code = "MY_KKIROK_STATUS_SUCCESS")
     ResponseEntity<SuccessResponse<KkinipopMyKkirokStatusResponse>> getMyKkirokStatus(
@@ -282,7 +297,8 @@ public interface KkinipopApi {
             @ApiErrorCodeExample(codeType = ExternalErrorCode.class, code = "R2_FILE_UPLOAD_FAILED"),
             @ApiErrorCodeExample(codeType = MealErrorCode.class, code = "NOT_FOOD_IMAGE"),
             @ApiErrorCodeExample(codeType = MealErrorCode.class, code = "UNRECOGNIZABLE_MEAL_IMAGE"),
-            @ApiErrorCodeExample(codeType = MealErrorCode.class, code = "MEAL_ANALYSIS_FAILED")
+            @ApiErrorCodeExample(codeType = MealErrorCode.class, code = "MEAL_ANALYSIS_FAILED"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = KkinipopSuccessCode.class, code = "POST_CREATE_SUCCESS")
     ResponseEntity<SuccessResponse<KkinipopPostResponse>> createPost(
@@ -311,7 +327,8 @@ public interface KkinipopApi {
             @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_MEMBER_NOT_FOUND"),
             @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "POST_NOT_FOUND"),
             @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_ACCESS_FORBIDDEN"),
-            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "POST_DELETE_FORBIDDEN")
+            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "POST_DELETE_FORBIDDEN"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = KkinipopSuccessCode.class, code = "POST_DELETE_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> deletePost(
@@ -336,7 +353,8 @@ public interface KkinipopApi {
     )
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
-            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_MEMBER_NOT_FOUND")
+            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_MEMBER_NOT_FOUND"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = KkinipopSuccessCode.class, code = "EMOJI_LIST_SUCCESS")
     ResponseEntity<SuccessResponse<KkinipopEmojiListResponse>> getEmojis(
@@ -366,7 +384,8 @@ public interface KkinipopApi {
             @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "CUSTOM_EMOJI_LIMIT_EXCEEDED"),
             @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "PHOTO_REQUIRED"),
             @ApiErrorCodeExample(codeType = ExternalErrorCode.class, code = "R2_FILE_STREAM_READ_FAILED"),
-            @ApiErrorCodeExample(codeType = ExternalErrorCode.class, code = "R2_FILE_UPLOAD_FAILED")
+            @ApiErrorCodeExample(codeType = ExternalErrorCode.class, code = "R2_FILE_UPLOAD_FAILED"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = KkinipopSuccessCode.class, code = "CUSTOM_EMOJI_CREATE_SUCCESS")
     ResponseEntity<SuccessResponse<KkinipopCustomEmojiResponse>> createCustomEmoji(
@@ -391,7 +410,8 @@ public interface KkinipopApi {
             @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_MEMBER_NOT_FOUND"),
             @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "CUSTOM_EMOJI_NOT_FOUND"),
             @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_ACCESS_FORBIDDEN"),
-            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "CUSTOM_EMOJI_DELETE_FORBIDDEN")
+            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "CUSTOM_EMOJI_DELETE_FORBIDDEN"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = KkinipopSuccessCode.class, code = "CUSTOM_EMOJI_DELETE_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> deleteCustomEmoji(
@@ -422,7 +442,8 @@ public interface KkinipopApi {
             @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "POST_NOT_FOUND"),
             @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "CUSTOM_EMOJI_NOT_FOUND"),
             @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_ACCESS_FORBIDDEN"),
-            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "INVALID_REACTION_REQUEST")
+            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "INVALID_REACTION_REQUEST"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = KkinipopSuccessCode.class, code = "REACTION_CREATE_SUCCESS")
     ResponseEntity<SuccessResponse<KkinipopReactionSummaryResponse>> reactToPost(
@@ -451,7 +472,8 @@ public interface KkinipopApi {
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
             @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "GROUP_MEMBER_NOT_FOUND"),
-            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "INVALID_MISSION_REQUEST")
+            @ApiErrorCodeExample(codeType = KkinipopErrorCode.class, code = "INVALID_MISSION_REQUEST"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = KkinipopSuccessCode.class, code = "MISSION_LIST_SUCCESS")
     ResponseEntity<SuccessResponse<KkinipopMissionDateResponse>> getTodayMissions(

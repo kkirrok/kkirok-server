@@ -4,6 +4,8 @@ import com.kkirok.server.domain.meal.exception.MealSuccessCode;
 import com.kkirok.server.domain.report.application.dto.response.ReportResponse;
 import com.kkirok.server.domain.report.application.dto.response.WeeklyReportResponse;
 import com.kkirok.server.domain.report.exception.ReportSuccessCode;
+import com.kkirok.server.domain.terms.exception.TermsErrorCode;
+import com.kkirok.server.global.swagger.annotation.ApiErrorCodeExample;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
 import com.kkirok.server.global.common.dto.SuccessResponse;
 import com.kkirok.server.global.swagger.annotation.ApiErrorCodeExamples;
@@ -31,7 +33,9 @@ public interface ReportApi {
                     - 응답: 평균 칼로리/영양소, 식사 패턴, 다음 주 제안 2개
                     """
     )
-    @ApiErrorCodeExamples({})
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
+    })
     @ApiSuccessCodeExample(codeType = MealSuccessCode.class, code = "WEEKLY_REPORT_GET_SUCCESS")
     ResponseEntity<SuccessResponse<WeeklyReportResponse>> getWeeklyReport(
             @Parameter(hidden = true) @CurrentMember Long memberId,

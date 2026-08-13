@@ -14,6 +14,7 @@ import com.kkirok.server.domain.member.application.dto.response.OnboardingProfil
 import com.kkirok.server.domain.member.exception.EmailErrorCode;
 import com.kkirok.server.domain.member.exception.MemberErrorCode;
 import com.kkirok.server.domain.member.exception.MemberSuccessCode;
+import com.kkirok.server.domain.terms.exception.TermsErrorCode;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
 import com.kkirok.server.global.common.dto.SuccessResponse;
 import com.kkirok.server.global.common.redis.exception.RedisErrorCode;
@@ -83,7 +84,8 @@ public interface MemberApi {
             """)
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
-            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "MEMBER_NOT_FOUND")
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "MEMBER_NOT_FOUND"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     ResponseEntity<OnboardingProfileResponse> getOnboardingProfile(
             @CurrentMember final Long memberId
@@ -93,6 +95,9 @@ public interface MemberApi {
             프로필 설정에서 선택할 수 있는 온보딩 목표 목록을 조회합니다.
             응답은 `value`, `label` 리스트입니다.
             """)
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
+    })
     @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "ONBOARDING_PURPOSE_LIST_SUCCESS")
     ResponseEntity<SuccessResponse<List<OnboardingOptionResponse>>> getOnboardingPurposes();
 
@@ -100,6 +105,9 @@ public interface MemberApi {
             프로필 설정에서 선택할 수 있는 식습관 유형 목록을 조회합니다.
             응답은 `value`, `label` 리스트입니다.
             """)
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
+    })
     @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "ONBOARDING_HABIT_LIST_SUCCESS")
     ResponseEntity<SuccessResponse<List<OnboardingOptionResponse>>> getOnboardingHabits();
 
@@ -157,7 +165,8 @@ public interface MemberApi {
             @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "ONBOARDING_HABIT_MAX_COUNT"),
             @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "MEMBER_NOT_FOUND"),
             @ApiErrorCodeExample(codeType = ExternalErrorCode.class, code = "R2_FILE_STREAM_READ_FAILED"),
-            @ApiErrorCodeExample(codeType = ExternalErrorCode.class, code = "R2_FILE_UPLOAD_FAILED")
+            @ApiErrorCodeExample(codeType = ExternalErrorCode.class, code = "R2_FILE_UPLOAD_FAILED"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "PROFILE_SETTING_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> updateProfile(
@@ -169,6 +178,9 @@ public interface MemberApi {
     @Operation(summary = "회원 탈퇴 [USER]", description = """
             회원탈퇴입니다. 복구 정책을 대비하여 완전 삭제하지 않습니다.
             """)
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
+    })
     ResponseEntity<SuccessResponse<Void>> quitMember(
             @CurrentMember Long memberId
     );
@@ -176,7 +188,8 @@ public interface MemberApi {
     @Operation(summary = "마이페이지 조회", description = "마이페이지 조회입니다.")
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
-            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "MEMBER_NOT_FOUND")
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "MEMBER_NOT_FOUND"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "MYPAGE_GET_SUCCESS")
     ResponseEntity<SuccessResponse<MyPageResponse>> myPage(
@@ -186,7 +199,8 @@ public interface MemberApi {
     @Operation(summary = "알림 허용 설정 조회 [USER]", description = "내 알림 허용 설정 전체 목록을 조회합니다.")
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
-            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "MEMBER_NOT_FOUND")
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "MEMBER_NOT_FOUND"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "NOTIFICATION_AGREE_LIST_SUCCESS")
     ResponseEntity<SuccessResponse<NotificationAgreeResponse>> getNotificationAgrees(
@@ -232,7 +246,8 @@ public interface MemberApi {
             @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "NOTIFICATION_AGREE_NOT_FOUND"),
             @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "NOTIFICATION_ALL_AGREE_TYPE_MISMATCH"),
             @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "NOTIFICATION_ALL_AGREE_VALUE_MISMATCH"),
-            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "NOTIFICATION_AGREE_DUPLICATE_TYPE")
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "NOTIFICATION_AGREE_DUPLICATE_TYPE"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "NOTIFICATION_AGREE_UPDATE_SUCCESS")
     ResponseEntity<SuccessResponse<NotificationAgreeResponse>> updateNotificationAgree(
@@ -245,7 +260,8 @@ public interface MemberApi {
             """)
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
-            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "MEMBER_NOT_FOUND")
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "MEMBER_NOT_FOUND"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "KCAL_UPDATE_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> updateKcal(
@@ -258,7 +274,8 @@ public interface MemberApi {
             """)
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
-            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "MEMBER_NOT_FOUND")
+            @ApiErrorCodeExample(codeType = MemberErrorCode.class, code = "MEMBER_NOT_FOUND"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = MemberSuccessCode.class, code = "KCAL_GET_SUCCESS")
     ResponseEntity<SuccessResponse<KcalResponse>> getKcal(

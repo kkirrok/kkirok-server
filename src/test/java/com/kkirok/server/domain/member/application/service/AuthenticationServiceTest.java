@@ -3,6 +3,9 @@ package com.kkirok.server.domain.member.application.service;
 import com.kkirok.server.domain.member.application.dto.response.AccessTokenGenerateResponse;
 import com.kkirok.server.domain.member.application.dto.response.LoginSuccessResponse;
 import com.kkirok.server.domain.member.domain.Member;
+import com.kkirok.server.domain.terms.application.dto.response.TermsResponse;
+import com.kkirok.server.domain.terms.application.service.TermsService;
+import com.kkirok.server.domain.terms.domain.TermsType;
 import com.kkirok.server.domain.user.domain.Role;
 import com.kkirok.server.domain.user.domain.Users;
 import com.kkirok.server.global.auth.jwt.application.RoleCacheService;
@@ -25,11 +28,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
 class AuthenticationServiceTest {
@@ -42,6 +48,9 @@ class AuthenticationServiceTest {
 
     @Mock
     private RoleCacheService roleCacheService;
+
+    @Mock
+    private TermsService termsService;
 
     @InjectMocks
     private AuthenticationService authenticationService;
@@ -61,6 +70,7 @@ class AuthenticationServiceTest {
                 .willReturn("refresh-token");
         given(jwtTokenProvider.issueAccessToken(any(UsernamePasswordAuthenticationToken.class)))
                 .willReturn("access-token");
+        given(termsService.getPendingRequiredTerms(member)).willReturn(List.of());
 
         // When
         LoginSuccessResponse response = authenticationService.generateLoginSuccessResponse(member);
@@ -98,10 +108,35 @@ class AuthenticationServiceTest {
 
         // Then
         assertThat(response.role()).isEqualTo(Role.ADMIN.getRoleName());
+        assertThat(response.pendingTermsAgree()).isEmpty();
 
         then(jwtTokenProvider).should().issueRefreshToken(authCaptor.capture());
         assertThat(authCaptor.getValue()).isInstanceOf(AdminAuthentication.class);
         assertThat(authCaptor.getValue().getPrincipal()).isEqualTo(99L);
+        then(termsService).should(never()).getPendingRequiredTerms(any());
+    }
+
+    @Test
+    @DisplayName("재동의가 필요한 필수 약관이 있으면 로그인 응답에 포함된다")
+    void shouldIncludePendingRequiredTerms_whenMemberHasPendingTerms() {
+        // Given
+        Users user = UserFixture.create(Role.USER);
+        Member member = MemberFixture.createLocalMember("kkirok", "kkirok@test.com", user);
+        org.springframework.test.util.ReflectionTestUtils.setField(member, "id", 1L);
+        List<TermsResponse> pendingTermsAgree = List.of(
+                new TermsResponse(TermsType.TERMS_OF_SERVICE, true, 2, "https://cdn.test/terms")
+        );
+        given(jwtTokenProvider.issueRefreshToken(any(UsernamePasswordAuthenticationToken.class)))
+                .willReturn("refresh-token");
+        given(jwtTokenProvider.issueAccessToken(any(UsernamePasswordAuthenticationToken.class)))
+                .willReturn("access-token");
+        given(termsService.getPendingRequiredTerms(member)).willReturn(pendingTermsAgree);
+
+        // When
+        LoginSuccessResponse response = authenticationService.generateLoginSuccessResponse(member);
+
+        // Then
+        assertThat(response.pendingTermsAgree()).isEqualTo(pendingTermsAgree);
     }
 
     @Test

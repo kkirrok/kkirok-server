@@ -42,6 +42,7 @@ public interface AuthApi {
                     - 요청 바디: `socialType`, `accessToken`
                     - 응답: accessToken + 사용자 정보
                     - refreshToken은 HttpOnly 쿠키로 내려갑니다.
+                    - 응답의 `pending_terms_agree`에 재동의가 필요한 필수 약관 목록이 함께 내려갑니다. 비어있지 않다면 약관 동의 화면을 띄우고 `POST /v1/terms/agree`로 동의를 받아야 합니다. (약관 목록/본문은 `GET /v1/terms`)
                     """
     )
     @ApiErrorCodeExamples({
@@ -105,6 +106,7 @@ public interface AuthApi {
                     - 요청 바디: `email`, `password`
                     - 응답: accessToken + 사용자 정보
                     - refreshToken은 HttpOnly 쿠키로 내려갑니다.
+                    - 응답의 `pending_terms_agree`에 아직 동의하지 않은 필수 약관 목록이 내려갑니다. 가입 직후에는 필수 약관 전체가 포함되므로, PENDING 권한 상태에서 바로 `POST /v1/terms/agree`로 동의를 받아야 합니다. (약관 목록/본문은 `GET /v1/terms`)
                     """
     )
     @ApiErrorCodeExamples({
@@ -127,6 +129,7 @@ public interface AuthApi {
                     - 요청 바디: `email`, `password`
                     - 응답: accessToken + 사용자 정보
                     - refreshToken은 HttpOnly 쿠키로 내려갑니다.
+                    - 응답의 `pending_terms_agree`에 재동의가 필요한 필수 약관 목록이 함께 내려갑니다. 약관이 개정되어 기존 회원이 아직 최신 버전에 동의하지 않았다면 이 목록에 포함됩니다. 비어있지 않다면 약관 동의 화면을 띄우고 `POST /v1/terms/agree`로 동의를 받아야 합니다.
                     """
     )
     @ApiErrorCodeExamples({

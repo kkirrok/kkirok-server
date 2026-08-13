@@ -4,6 +4,7 @@ import com.kkirok.server.domain.meal.application.dto.response.CalendarMonthRespo
 import com.kkirok.server.domain.meal.application.dto.response.DailyMealResponse;
 import com.kkirok.server.domain.meal.exception.CalendarErrorCode;
 import com.kkirok.server.domain.meal.exception.CalendarSuccessCode;
+import com.kkirok.server.domain.terms.exception.TermsErrorCode;
 import com.kkirok.server.global.common.dto.SuccessResponse;
 import com.kkirok.server.global.swagger.annotation.ApiErrorCodeExample;
 import com.kkirok.server.global.swagger.annotation.ApiErrorCodeExamples;
@@ -31,7 +32,8 @@ public interface CalendarApi {
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(codeType = CalendarErrorCode.class, code = "INVALID_YEAR"),
             @ApiErrorCodeExample(codeType = CalendarErrorCode.class, code = "INVALID_MONTH"),
-            @ApiErrorCodeExample(codeType = CalendarErrorCode.class, code = "INVALID_START_DAY_OF_WEEK")
+            @ApiErrorCodeExample(codeType = CalendarErrorCode.class, code = "INVALID_START_DAY_OF_WEEK"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = CalendarSuccessCode.class, code = "CALENDAR_SUCCESS_CODE")
     ResponseEntity<SuccessResponse<CalendarMonthResponse>> calendarInfo(
@@ -56,7 +58,8 @@ public interface CalendarApi {
                     """
     )
     @ApiErrorCodeExamples({
-            @ApiErrorCodeExample(codeType = CalendarErrorCode.class, code = "INVALID_DATE")
+            @ApiErrorCodeExample(codeType = CalendarErrorCode.class, code = "INVALID_DATE"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = CalendarSuccessCode.class, code = "CALENDAR_DAILY_SUCCESS_CODE")
     ResponseEntity<SuccessResponse<DailyMealResponse>> dailyMealInfo(

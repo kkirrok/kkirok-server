@@ -1,7 +1,10 @@
 package com.kkirok.server.domain.home.api;
 
 import com.kkirok.server.domain.home.application.dto.response.HomeResponse;
+import com.kkirok.server.domain.terms.exception.TermsErrorCode;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
+import com.kkirok.server.global.swagger.annotation.ApiErrorCodeExample;
+import com.kkirok.server.global.swagger.annotation.ApiErrorCodeExamples;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -14,6 +17,9 @@ public interface HomeApi {
             summary = "홈 조회 [USER]",
             description = "현재 로그인한 사용자의 홈 정보를 조회합니다."
     )
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
+    })
     ResponseEntity<HomeResponse> getHome(
             @CurrentMember Long memberId
     );

@@ -2,9 +2,12 @@ package com.kkirok.server.global.auth.interceptor;
 
 import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
 import com.kkirok.server.domain.member.exception.MemberErrorCode;
+import com.kkirok.server.domain.terms.application.service.TermsService;
+import com.kkirok.server.domain.terms.exception.TermsErrorCode;
 import com.kkirok.server.domain.user.domain.Role;
 import com.kkirok.server.global.auth.annotation.RoleAuth;
 import com.kkirok.server.global.auth.annotation.RoleUserAuth;
+import com.kkirok.server.global.auth.annotation.TermsCheckExempt;
 import com.kkirok.server.global.common.exception.ForbiddenException;
 import com.kkirok.server.global.common.exception.UnauthorizedException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,6 +30,7 @@ import java.util.stream.Collectors;
 public class AuthInterceptor implements HandlerInterceptor {
 
     private final MemberUseCase memberUseCase;
+    private final TermsService termsService;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -49,6 +53,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         validateAuthentication(authentication);
         validateRoles(roleAuth.role(), resolveCurrentRole(authentication));
         validateActiveMember(handlerMethod, authentication);
+        validateTermsAgreement(handlerMethod, authentication);
         return true;
     }
 
@@ -72,6 +77,26 @@ public class AuthInterceptor implements HandlerInterceptor {
             return true;
         }
         return AnnotatedElementUtils.findMergedAnnotation(handlerMethod.getBeanType(), RoleUserAuth.class) != null;
+    }
+
+    private void validateTermsAgreement(HandlerMethod handlerMethod, Authentication authentication) {
+        if (isTermsCheckExempt(handlerMethod)) {
+            return;
+        }
+        if (resolveCurrentRole(authentication) == Role.ADMIN) {
+            return;
+        }
+        Long memberId = Long.valueOf(authentication.getPrincipal().toString());
+        if (termsService.hasPendingRequiredTerms(memberId)) {
+            throw new ForbiddenException(TermsErrorCode.TERMS_AGREEMENT_REQUIRED);
+        }
+    }
+
+    private boolean isTermsCheckExempt(HandlerMethod handlerMethod) {
+        if (AnnotatedElementUtils.findMergedAnnotation(handlerMethod.getMethod(), TermsCheckExempt.class) != null) {
+            return true;
+        }
+        return AnnotatedElementUtils.findMergedAnnotation(handlerMethod.getBeanType(), TermsCheckExempt.class) != null;
     }
 
     // 인증정보 검증
