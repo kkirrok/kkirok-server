@@ -4,6 +4,7 @@ import com.kkirok.server.domain.character.application.dto.res.CharacterDefaultIn
 import com.kkirok.server.domain.character.application.dto.res.PossessingItemsResponse;
 import com.kkirok.server.domain.character.exception.CharacterErrorCode;
 import com.kkirok.server.domain.character.exception.CharacterSuccessCode;
+import com.kkirok.server.domain.terms.exception.TermsErrorCode;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
 import com.kkirok.server.global.common.dto.SuccessResponse;
 import com.kkirok.server.global.swagger.annotation.ApiErrorCodeExample;
@@ -30,7 +31,8 @@ public interface CharacterApi {
             hidden = true
     )
     @ApiErrorCodeExamples({
-            @ApiErrorCodeExample(codeType = CharacterErrorCode.class, code = "CHARACTER_NOT_FOUND")
+            @ApiErrorCodeExample(codeType = CharacterErrorCode.class, code = "CHARACTER_NOT_FOUND"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = CharacterSuccessCode.class, code = "CHARACTER_DEFAULT_INFO_GET_SUCCESS")
     ResponseEntity<SuccessResponse<CharacterDefaultInfoResponse>> characterDefaultInfo(
@@ -49,6 +51,7 @@ public interface CharacterApi {
             hidden = true
     )
     @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = CharacterSuccessCode.class, code = "POSSESSING_ITEMS_GET_SUCCESS")
     ResponseEntity<SuccessResponse<PossessingItemsResponse>> possessingItems(
@@ -72,7 +75,8 @@ public interface CharacterApi {
             @ApiErrorCodeExample(codeType = CharacterErrorCode.class, code = "ITEM_INFO_REQUIRED"),
             @ApiErrorCodeExample(codeType = CharacterErrorCode.class, code = "CHARACTER_NOT_FOUND"),
             @ApiErrorCodeExample(codeType = CharacterErrorCode.class, code = "NOT_POSSESSING"),
-            @ApiErrorCodeExample(codeType = CharacterErrorCode.class, code = "ALREADY_WEARING_TYPE")
+            @ApiErrorCodeExample(codeType = CharacterErrorCode.class, code = "ALREADY_WEARING_TYPE"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = CharacterSuccessCode.class, code = "ITEM_WEAR_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> wearItem(
@@ -97,7 +101,8 @@ public interface CharacterApi {
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(codeType = CharacterErrorCode.class, code = "ITEM_INFO_REQUIRED"),
             @ApiErrorCodeExample(codeType = CharacterErrorCode.class, code = "NOT_POSSESSING"),
-            @ApiErrorCodeExample(codeType = CharacterErrorCode.class, code = "ALREADY_UNWEARING_ITEM")
+            @ApiErrorCodeExample(codeType = CharacterErrorCode.class, code = "ALREADY_UNWEARING_ITEM"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = CharacterSuccessCode.class, code = "ITEM_UNWEAR_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> unWearItem(

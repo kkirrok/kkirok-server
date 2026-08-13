@@ -6,6 +6,7 @@ import com.kkirok.server.domain.notification.application.dto.response.Notificati
 import com.kkirok.server.domain.notification.application.dto.response.UnreadCountResponse;
 import com.kkirok.server.domain.notification.exception.NotificationErrorCode;
 import com.kkirok.server.domain.notification.exception.NotificationSuccessCode;
+import com.kkirok.server.domain.terms.exception.TermsErrorCode;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
 import com.kkirok.server.global.common.dto.SuccessResponse;
 import com.kkirok.server.global.swagger.annotation.ApiErrorCodeExample;
@@ -27,7 +28,8 @@ public interface NotificationApi {
     )
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
-            @ApiErrorCodeExample(status = 400, message = "요청이 유효하지 않습니다.", exampleName = "BAD_REQUEST")
+            @ApiErrorCodeExample(status = 400, message = "요청이 유효하지 않습니다.", exampleName = "BAD_REQUEST"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = NotificationSuccessCode.class, code = "DEVICE_REGISTER_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> registerDevice(
@@ -42,7 +44,8 @@ public interface NotificationApi {
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
             @ApiErrorCodeExample(status = 400, message = "요청이 유효하지 않습니다.", exampleName = "BAD_REQUEST"),
-            @ApiErrorCodeExample(codeType = NotificationErrorCode.class, code = "DEVICE_NOT_FOUND")
+            @ApiErrorCodeExample(codeType = NotificationErrorCode.class, code = "DEVICE_NOT_FOUND"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = NotificationSuccessCode.class, code = "DEVICE_UNREGISTER_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> unregisterDevice(
@@ -58,7 +61,10 @@ public interface NotificationApi {
                     + "MISSION_START는 groupId/missionId, KKINIPOP_REACTION은 postId/groupId/reactorMemberId/emojiCode/isCustom/customEmojiImageKey를 담습니다. "
                     + "page는 0 이상, size는 1 이상 50 이하로 요청할 수 있습니다."
     )
-    @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED")
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
+    })
     @ApiSuccessCodeExample(codeType = NotificationSuccessCode.class, code = "NOTIFICATION_LIST_GET_SUCCESS")
     ResponseEntity<SuccessResponse<NotificationListResponse>> getNotifications(
             @CurrentMember Long memberId,
@@ -72,7 +78,10 @@ public interface NotificationApi {
             summary = "읽지 않은 알림 수 조회 [USER]",
             description = "현재 로그인한 회원의 읽지 않은 알림 수를 반환합니다."
     )
-    @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED")
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
+    })
     @ApiSuccessCodeExample(codeType = NotificationSuccessCode.class, code = "UNREAD_COUNT_GET_SUCCESS")
     ResponseEntity<SuccessResponse<UnreadCountResponse>> getUnreadCount(
             @Parameter(description = "현재 로그인한 회원 ID", hidden = true)
@@ -85,7 +94,8 @@ public interface NotificationApi {
     )
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
-            @ApiErrorCodeExample(codeType = NotificationErrorCode.class, code = "NOTIFICATION_NOT_FOUND")
+            @ApiErrorCodeExample(codeType = NotificationErrorCode.class, code = "NOTIFICATION_NOT_FOUND"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = NotificationSuccessCode.class, code = "NOTIFICATION_READ_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> readNotification(
@@ -98,7 +108,10 @@ public interface NotificationApi {
             summary = "전체 읽음 처리 [USER]",
             description = "현재 로그인한 회원의 읽지 않은 알림을 모두 읽음 처리합니다."
     )
-    @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED")
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(status = 401, message = "인증이 필요합니다.", exampleName = "UNAUTHORIZED"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
+    })
     @ApiSuccessCodeExample(codeType = NotificationSuccessCode.class, code = "NOTIFICATION_READ_ALL_SUCCESS")
     ResponseEntity<SuccessResponse<Void>> readAll(
             @CurrentMember Long memberId

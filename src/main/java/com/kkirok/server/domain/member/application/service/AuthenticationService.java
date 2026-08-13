@@ -3,6 +3,8 @@ package com.kkirok.server.domain.member.application.service;
 import com.kkirok.server.domain.member.application.dto.response.AccessTokenGenerateResponse;
 import com.kkirok.server.domain.member.application.dto.response.LoginSuccessResponse;
 import com.kkirok.server.domain.member.domain.Member;
+import com.kkirok.server.domain.terms.application.dto.response.TermsResponse;
+import com.kkirok.server.domain.terms.application.service.TermsService;
 import com.kkirok.server.domain.user.domain.Role;
 import com.kkirok.server.global.auth.jwt.application.RoleCacheService;
 import com.kkirok.server.global.auth.jwt.application.TokenService;
@@ -31,6 +33,7 @@ public class AuthenticationService {
     private final JwtTokenProvider jwtTokenProvider;
     private final TokenService tokenService;
     private final RoleCacheService roleCacheService;
+    private final TermsService termsService;
 
     /**
      * 사용자의 로그인 성공 시 Access Token과 Refresh Token을 생성하고,
@@ -48,12 +51,17 @@ public class AuthenticationService {
         String refreshToken = issueAndSaveRefreshToken(member.getId(), authenticationToken);
         String accessToken = jwtTokenProvider.issueAccessToken(authenticationToken);
 
+        List<TermsResponse> pendingTermsAgree = role == Role.ADMIN
+                ? List.of()
+                : termsService.getPendingRequiredTerms(member);
+
         return LoginSuccessResponse.of(
                 accessToken,
                 refreshToken,
                 member.getNickname(),
                 role.getRoleName(),
-                member.isOnboardingCompleted()
+                member.isOnboardingCompleted(),
+                pendingTermsAgree
         );
     }
 

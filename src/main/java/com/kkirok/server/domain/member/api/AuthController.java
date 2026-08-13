@@ -18,6 +18,7 @@ import com.kkirok.server.domain.member.exception.MemberSuccessCode;
 import com.kkirok.server.domain.user.domain.Role;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
 import com.kkirok.server.global.auth.annotation.RoleAuth;
+import com.kkirok.server.global.auth.annotation.TermsCheckExempt;
 import com.kkirok.server.global.auth.client.dto.MemberLoginRequest;
 import com.kkirok.server.global.auth.jwt.application.TokenService;
 import com.kkirok.server.global.common.dto.SuccessResponse;
@@ -38,6 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/v1/users")
 @RequiredArgsConstructor
+@TermsCheckExempt
 public class AuthController implements AuthApi {
 
     private final TokenService tokenService;
@@ -151,7 +153,8 @@ public class AuthController implements AuthApi {
                 loginSuccessResponse.accessToken(),
                 loginSuccessResponse.nickname(),
                 loginSuccessResponse.role(),
-                loginSuccessResponse.onboardingCompleted()
+                loginSuccessResponse.onboardingCompleted(),
+                loginSuccessResponse.pendingTermsAgree()
         );
     }
 

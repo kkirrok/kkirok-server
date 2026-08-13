@@ -1,5 +1,6 @@
 package com.kkirok.server.global.external.r2.api;
 
+import com.kkirok.server.domain.terms.exception.TermsErrorCode;
 import com.kkirok.server.global.common.dto.SuccessResponse;
 import com.kkirok.server.global.external.exception.ExternalErrorCode;
 import com.kkirok.server.global.external.exception.ExternalSuccessCode;
@@ -32,7 +33,8 @@ public interface R2Api {
     )
     @ApiErrorCodeExamples({
             @ApiErrorCodeExample(codeType = ExternalErrorCode.class, code = "R2_INVALID_OBJECT_KEY"),
-            @ApiErrorCodeExample(codeType = ExternalErrorCode.class, code = "R2_PRESIGNED_URL_GENERATION_FAILED")
+            @ApiErrorCodeExample(codeType = ExternalErrorCode.class, code = "R2_PRESIGNED_URL_GENERATION_FAILED"),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(codeType = ExternalSuccessCode.class, code = "R2_DOWNLOAD_PRESIGNED_URL_SUCCESS")
     ResponseEntity<SuccessResponse<PresignedResponse>> download(

@@ -12,6 +12,7 @@ import com.kkirok.server.domain.meal.application.dto.response.YesterdayPickRespo
 import com.kkirok.server.domain.meal.domain.ScanType;
 import com.kkirok.server.domain.meal.exception.MealErrorCode;
 import com.kkirok.server.domain.meal.exception.MealSuccessCode;
+import com.kkirok.server.domain.terms.exception.TermsErrorCode;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
 import com.kkirok.server.global.common.dto.SuccessResponse;
 import com.kkirok.server.global.external.publicdata.dto.FoodNutritionSearchResult;
@@ -45,7 +46,9 @@ public interface MealApi {
                 - 응답: 오늘 식사 기록 목록
                 """
     )
-    @ApiErrorCodeExamples({})
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
+    })
     @ApiSuccessCodeExample(
             codeType = MealSuccessCode.class,
             code = "MEAL_GET_SUCCESS"
@@ -63,7 +66,9 @@ public interface MealApi {
                 - 응답: 추천 운동 및 식단 정보
                 """
     )
-    @ApiErrorCodeExamples({})
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
+    })
     @ApiSuccessCodeExample(
             codeType = MealSuccessCode.class,
             code = "MEAL_RECOMMENDATION_GET_SUCCESS"
@@ -83,6 +88,9 @@ public interface MealApi {
                 - 칼로리, 탄수화물, 단백질, 지방, 당, 나트륨 총합을 반환합니다.
                 """
     )
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
+    })
     @ApiSuccessCodeExample(
             codeType = MealSuccessCode.class,
             code = "TODAY_NUTRITION_SUMMARY_GET_SUCCESS"
@@ -105,7 +113,9 @@ public interface MealApi {
                 - 응답: 기록된 식단 정보
                 """
     )
-    @ApiErrorCodeExamples({})
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
+    })
     @ApiSuccessCodeExample(
             codeType = MealSuccessCode.class,
             code = "MEAL_RECORD_SUCCESS"
@@ -150,7 +160,8 @@ public interface MealApi {
             @ApiErrorCodeExample(
                     codeType = MealErrorCode.class,
                     code = "MEAL_ANALYSIS_FAILED"
-            )
+            ),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(
             codeType = MealSuccessCode.class,
@@ -182,6 +193,9 @@ public interface MealApi {
                 - 응답: 저장된 식사 정보
                 """
     )
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
+    })
     @ApiSuccessCodeExample(
             codeType = MealSuccessCode.class,
             code = "MEAL_RECORD_SUCCESS"
@@ -214,7 +228,8 @@ public interface MealApi {
             @ApiErrorCodeExample(
                     codeType = MealErrorCode.class,
                     code = "MEAL_NOT_FOUND"
-            )
+            ),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(
             codeType = MealSuccessCode.class,
@@ -255,7 +270,8 @@ public interface MealApi {
             @ApiErrorCodeExample(
                     codeType = MealErrorCode.class,
                     code = "MEAL_NOT_FOUND"
-            )
+            ),
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
     })
     @ApiSuccessCodeExample(
             codeType = MealSuccessCode.class,
@@ -278,6 +294,9 @@ public interface MealApi {
             summary = "음식명 검색",
             description = "음식명으로 영양정보 검색"
     )
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
+    })
     ResponseEntity<SuccessResponse<List<FoodNutritionSearchResult>>>
     searchFood(
             @Parameter(
@@ -303,6 +322,9 @@ public interface MealApi {
                 - 결과가 없으면 빈 목록을 반환합니다.
                 """
     )
+    @ApiErrorCodeExamples({
+            @ApiErrorCodeExample(codeType = TermsErrorCode.class, code = "TERMS_AGREEMENT_REQUIRED")
+    })
     @ApiSuccessCodeExample(
             codeType = MealSuccessCode.class,
             code = "YESTERDAY_PICKS_GET_SUCCESS"

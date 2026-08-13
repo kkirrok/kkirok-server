@@ -2,10 +2,14 @@ package com.kkirok.server.global.auth.interceptor;
 
 import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
 import com.kkirok.server.domain.member.exception.MemberErrorCode;
+import com.kkirok.server.domain.terms.application.service.TermsService;
+import com.kkirok.server.domain.terms.exception.TermsErrorCode;
 import com.kkirok.server.domain.user.domain.Role;
 import com.kkirok.server.global.auth.annotation.RoleAdminAuth;
 import com.kkirok.server.global.auth.annotation.RoleAuth;
 import com.kkirok.server.global.auth.annotation.RoleUserAuth;
+import com.kkirok.server.global.auth.annotation.TermsCheckExempt;
+import com.kkirok.server.global.common.exception.ForbiddenException;
 import com.kkirok.server.global.common.exception.NotFoundException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,6 +35,9 @@ class AuthInterceptorTest {
 
     @Mock
     private MemberUseCase memberUseCase;
+
+    @Mock
+    private TermsService termsService;
 
     @InjectMocks
     private AuthInterceptor authInterceptor;
@@ -64,11 +71,66 @@ class AuthInterceptorTest {
         Long memberId = 1L;
         setAuthentication(memberId, Role.USER);
         HandlerMethod handlerMethod = handlerMethod("userApi");
+        given(termsService.hasPendingRequiredTerms(memberId)).willReturn(false);
 
         // When, Then
         assertThatCode(() -> authInterceptor.preHandle(null, null, handlerMethod))
                 .doesNotThrowAnyException();
         then(memberUseCase).should().findMemberByMemberId(memberId);
+    }
+
+    @Test
+    @DisplayName("필수 약관에 동의하지 않은 회원이 일반 API를 호출하면 ForbiddenException이 발생한다")
+    void shouldThrowForbiddenException_whenMemberHasPendingRequiredTerms() throws Exception {
+        // Given
+        setAuthentication(1L, Role.USER);
+        HandlerMethod handlerMethod = handlerMethod("userApi");
+        given(termsService.hasPendingRequiredTerms(1L)).willReturn(true);
+
+        // When, Then
+        assertThatThrownBy(() -> authInterceptor.preHandle(null, null, handlerMethod))
+                .isInstanceOf(ForbiddenException.class)
+                .extracting("baseErrorCode")
+                .isEqualTo(TermsErrorCode.TERMS_AGREEMENT_REQUIRED);
+    }
+
+    @Test
+    @DisplayName("필수 약관에 모두 동의한 회원은 통과한다")
+    void shouldPass_whenMemberHasNoPendingRequiredTerms() throws Exception {
+        // Given
+        setAuthentication(1L, Role.USER);
+        HandlerMethod handlerMethod = handlerMethod("userApi");
+        given(termsService.hasPendingRequiredTerms(1L)).willReturn(false);
+
+        // When, Then
+        assertThatCode(() -> authInterceptor.preHandle(null, null, handlerMethod))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("@TermsCheckExempt API는 약관 미동의 상태여도 통과한다")
+    void shouldPassWithoutTermsCheck_whenTermsCheckExemptApiIsRequested() throws Exception {
+        // Given
+        setAuthentication(1L, Role.USER);
+        HandlerMethod handlerMethod = handlerMethod("termsCheckExemptApi");
+
+        // When, Then
+        assertThatCode(() -> authInterceptor.preHandle(null, null, handlerMethod))
+                .doesNotThrowAnyException();
+        then(termsService).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("ADMIN 역할은 약관 미동의 상태여도 통과한다")
+    void shouldPassWithoutTermsCheck_whenAdminRequestsApi() throws Exception {
+        // Given
+        setAuthentication(1L, Role.ADMIN);
+        HandlerMethod handlerMethod = handlerMethod("adminApi");
+
+        // When, Then
+        assertThatCode(() -> authInterceptor.preHandle(null, null, handlerMethod))
+                .doesNotThrowAnyException();
+        then(termsService).shouldHaveNoInteractions();
     }
 
     @Test
@@ -124,6 +186,11 @@ class AuthInterceptorTest {
 
         @RoleAuth(role = Role.USER)
         public void directRoleAuthApi() {
+        }
+
+        @RoleUserAuth
+        @TermsCheckExempt
+        public void termsCheckExemptApi() {
         }
     }
 }
