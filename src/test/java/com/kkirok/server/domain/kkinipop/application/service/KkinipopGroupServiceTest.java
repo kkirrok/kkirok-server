@@ -1,5 +1,6 @@
 package com.kkirok.server.domain.kkinipop.application.service;
 
+import com.kkirok.server.domain.kkinipop.application.dto.event.KkinipopGroupCreatedEvent;
 import com.kkirok.server.domain.kkinipop.application.dto.event.KkinipopGroupMemberLeftEvent;
 import com.kkirok.server.domain.kkinipop.application.dto.request.KkinipopGroupCreateRequest;
 import com.kkirok.server.domain.kkinipop.application.dto.response.KkinipopGroupResponse;
@@ -85,6 +86,7 @@ class KkinipopGroupServiceTest {
         assertThat(response.name()).isEqualTo("아침 챌린저스");
         assertThat(response.memberCount()).isEqualTo(1);
         assertThat(response.isLeader()).isTrue();
+        then(eventPublisher).should().publishEvent(new KkinipopGroupCreatedEvent(10L));
     }
 
     @Test
