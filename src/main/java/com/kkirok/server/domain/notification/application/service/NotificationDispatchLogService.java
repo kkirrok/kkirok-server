@@ -24,11 +24,16 @@ public class NotificationDispatchLogService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW) // 내부 실패가 상위에 영향이 가지 않도록 함
     public boolean claim(NotificationType type, String suffix) {
+        String dispatchKey = NotificationDispatchLog.createDispatchKey(type, suffix);
+        if (dispatchLogRepository.existsByDispatchKey(dispatchKey)) {
+            log.debug("Skipping duplicated notification dispatch for {}:{}", type, suffix);
+            return false;
+        }
         try {
             dispatchLogRepository.saveAndFlush(NotificationDispatchLog.of(type, suffix));
             return true;
         } catch (DataIntegrityViolationException e) {
-            log.debug("Skipping duplicated notification dispatch for {}:{}", type, suffix);
+            log.debug("Skipping duplicated notification dispatch for {}:{} (race)", type, suffix);
             return false;
         }
     }
