@@ -5,6 +5,7 @@ public record KkinipopReactionChangedEvent(
         Long groupId,
         String emojiCode,
         long count,
-        boolean reacted
+        boolean reacted,
+        Long reactorMemberId
 ) {
 }

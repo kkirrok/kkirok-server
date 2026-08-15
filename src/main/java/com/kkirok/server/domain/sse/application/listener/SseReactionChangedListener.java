@@ -17,6 +17,7 @@ public class SseReactionChangedListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handle(KkinipopReactionChangedEvent event) {
         sseEventPublisher.publish(event.groupId(), "reaction-updated",
-                new SseReactionUpdatedPayload(event.groupId(), event.postId(), event.emojiCode(), event.count(), event.reacted()));
+                new SseReactionUpdatedPayload(event.groupId(), event.postId(), event.emojiCode(), event.count(), event.reacted(),
+                        event.reactorMemberId()));
     }
 }

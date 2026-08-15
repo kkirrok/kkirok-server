@@ -245,7 +245,7 @@ class KkinipopPostServiceTest {
         assertThat(response.count()).isEqualTo(1L);
         assertThat(response.emojiType()).isEqualTo("CUSTOM_EMOJI");
         assertThat(response.reacted()).isTrue();
-        then(eventPublisher).should().publishEvent(new KkinipopReactionChangedEvent(30L, 10L, "CUSTOM_5", 1L, true));
+        then(eventPublisher).should().publishEvent(new KkinipopReactionChangedEvent(30L, 10L, "CUSTOM_5", 1L, true, 1L));
     }
 
     @Test
@@ -266,7 +266,7 @@ class KkinipopPostServiceTest {
 
         kkinipopPostService.reactToPost(1L, 10L, 30L, "CUSTOM_5");
 
-        then(eventPublisher).should().publishEvent(new KkinipopReactionChangedEvent(30L, 10L, "CUSTOM_5", 0L, false));
+        then(eventPublisher).should().publishEvent(new KkinipopReactionChangedEvent(30L, 10L, "CUSTOM_5", 0L, false, 1L));
         then(eventPublisher).should(never()).publishEvent(any(KkinipopReactionAddedEvent.class));
     }
 
@@ -302,7 +302,7 @@ class KkinipopPostServiceTest {
         assertThat(event.emojiCode()).isEqualTo("SYSTEM_HEART");
         assertThat(event.customEmoji()).isFalse();
         assertThat(event.customEmojiImageKey()).isNull();
-        then(eventPublisher).should().publishEvent(new KkinipopReactionChangedEvent(30L, 10L, "SYSTEM_HEART", 1L, true));
+        then(eventPublisher).should().publishEvent(new KkinipopReactionChangedEvent(30L, 10L, "SYSTEM_HEART", 1L, true, 2L));
     }
 
     @Test
@@ -333,7 +333,38 @@ class KkinipopPostServiceTest {
         assertThat(response.reacted()).isFalse();
         then(reactionRepository).should().delete(existingReaction);
         then(reactionRepository).should(never()).save(any(KkinipopReaction.class));
-        then(eventPublisher).should().publishEvent(new KkinipopReactionChangedEvent(30L, 10L, "SYSTEM_HEART", 1L, false));
+        then(eventPublisher).should().publishEvent(new KkinipopReactionChangedEvent(30L, 10L, "SYSTEM_HEART", 1L, false, 2L));
+    }
+
+    @Test
+    @DisplayName("다른 이모지로 반응을 변경하면 기존 이모지 감소 이벤트와 새 이모지 증가 이벤트를 모두 발행한다")
+    void shouldReplacePreviousReaction_whenReactingWithDifferentEmoji() {
+        // Given
+        KkinipopGroup group = createGroup(10L, "아침 챌린저스");
+        Member writer = createMember(1L, "작성자");
+        Member reactor = createMember(2L, "반응자");
+        KkinipopGroupMember groupMember = createGroupMember(100L, group, reactor);
+        KkinipopPost post = createPost(30L, group, writer, null, LocalDate.of(2026, 4, 24), "uuid_post");
+        KkinipopReaction previousReaction = createDefaultReaction(post, reactor, KkinipopReactionEmoji.HEART);
+
+        given(kkinipopUseCase.findGroupMember(10L, 2L)).willReturn(groupMember);
+        given(kkinipopUseCase.findPostById(30L)).willReturn(post);
+        given(reactionRepository.findByPostAndMemberAndEmojiCode(30L, 2L, "SYSTEM_FIRE")).willReturn(Optional.empty());
+        given(reactionRepository.findByPostAndMemberExcludingEmojiCode(30L, 2L, "SYSTEM_FIRE"))
+                .willReturn(List.of(previousReaction));
+        given(reactionRepository.countByPostAndEmojiCode(30L, "SYSTEM_HEART")).willReturn(0L);
+        given(reactionRepository.save(any(KkinipopReaction.class))).willAnswer(invocation -> invocation.getArgument(0));
+        given(reactionRepository.countByPostAndEmojiCode(30L, "SYSTEM_FIRE")).willReturn(1L);
+
+        // When
+        KkinipopReactionSummaryResponse response = kkinipopPostService.reactToPost(2L, 10L, 30L, "SYSTEM_FIRE");
+
+        // Then
+        assertThat(response.emojiCode()).isEqualTo("SYSTEM_FIRE");
+        assertThat(response.reacted()).isTrue();
+        then(reactionRepository).should().delete(previousReaction);
+        then(eventPublisher).should().publishEvent(new KkinipopReactionChangedEvent(30L, 10L, "SYSTEM_HEART", 0L, false, 2L));
+        then(eventPublisher).should().publishEvent(new KkinipopReactionChangedEvent(30L, 10L, "SYSTEM_FIRE", 1L, true, 2L));
     }
 
     @Test
@@ -357,7 +388,7 @@ class KkinipopPostServiceTest {
         kkinipopPostService.reactToPost(2L, 10L, 30L, "SYSTEM_HEART");
 
         // Then
-        then(eventPublisher).should().publishEvent(new KkinipopReactionChangedEvent(30L, 10L, "SYSTEM_HEART", 0L, false));
+        then(eventPublisher).should().publishEvent(new KkinipopReactionChangedEvent(30L, 10L, "SYSTEM_HEART", 0L, false, 2L));
         then(eventPublisher).should(never()).publishEvent(any(KkinipopReactionAddedEvent.class));
     }
 
@@ -380,7 +411,7 @@ class KkinipopPostServiceTest {
         kkinipopPostService.reactToPost(1L, 10L, 30L, "SYSTEM_HEART");
 
         // Then
-        then(eventPublisher).should().publishEvent(new KkinipopReactionChangedEvent(30L, 10L, "SYSTEM_HEART", 1L, true));
+        then(eventPublisher).should().publishEvent(new KkinipopReactionChangedEvent(30L, 10L, "SYSTEM_HEART", 1L, true, 1L));
         then(eventPublisher).should(never()).publishEvent(any(KkinipopReactionAddedEvent.class));
     }
 
