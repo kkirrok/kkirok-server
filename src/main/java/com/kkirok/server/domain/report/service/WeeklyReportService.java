@@ -3,6 +3,8 @@ package com.kkirok.server.domain.report.service;
 import com.kkirok.server.domain.report.application.dao.WeeklyReportRepository;
 import com.kkirok.server.domain.report.application.dto.request.WeeklyReportRequest;
 import com.kkirok.server.domain.report.application.dto.response.WeeklyReportResponse;
+import com.kkirok.server.domain.report.exception.ReportErrorCode;
+import com.kkirok.server.domain.report.exception.ReportException;
 import com.kkirok.server.domain.meal.domain.MealNutrition;
 import com.kkirok.server.domain.meal.domain.MealRecord;
 import com.kkirok.server.domain.meal.domain.MealTimeSlot;
@@ -28,29 +30,55 @@ public class WeeklyReportService {
     private final OpenAiService openAiService;
 
     public WeeklyReportResponse getWeeklyReport(Long memberId, LocalDate weekStart) {
-        // 1. 월~일 범위
-        LocalDate monday = (weekStart != null) ? weekStart : getThisMonday();
+        // 1. 조회 대상 주의 월요일 결정 (미입력 시 지난주 월요일)
+        LocalDate monday = resolveTargetMonday(weekStart);
+
+        // 2. 종료된 주(지난주 이전)만 조회 가능 - 진행 중인 이번 주/미래 주는 차단
+        //    (일주일이 끝나야 평균 칼로리 계산이 가능하므로)
+        validateEndedWeek(monday);
+
         LocalDate sunday = monday.plusDays(6);
 
-        // 2. 주간 식단 조회
+        // 3. 주간 식단 조회
         List<MealRecord> weeklyMeals = weeklyReportRepository.getWeeklyMealRecords(memberId, monday, sunday);  // 수정
 
-        // 3. 집계
+        // 4. 집계
         WeeklyReportRequest input = buildInput(weeklyMeals);
 
-        // 4. OpenAI 분석
+        // 5. OpenAI 분석
         OpenAiWeeklyReportResult result = openAiService.createObjectResponse(
                 PromptType.MEAL_WEEKLY_REPORT,
                 input,
                 OpenAiWeeklyReportResult.class
         );
 
-        // 5. 응답 조립
+        // 6. 응답 조립
         return toResponse(input, result);
+    }
+
+    // 조회 대상 주의 월요일을 결정
+    // weekStart 미입력 시: 지난주 월요일 (가장 최근에 종료된 주)
+    // weekStart 입력 시: 월요일이 아닌 날짜가 들어와도 해당 주의 월요일로 정규화
+    private LocalDate resolveTargetMonday(LocalDate weekStart) {
+        if (weekStart != null) {
+            return weekStart.with(DayOfWeek.MONDAY);
+        }
+        return getLastMonday();
+    }
+
+    // 종료된 주만 조회 가능하도록 검증합니다.
+    private void validateEndedWeek(LocalDate targetMonday) {
+        if (!targetMonday.isBefore(getThisMonday())) {
+            throw new ReportException(ReportErrorCode.WEEKLY_REPORT_NOT_ENDED);
+        }
     }
 
     private LocalDate getThisMonday() {
         return LocalDate.now().with(DayOfWeek.MONDAY);
+    }
+
+    private LocalDate getLastMonday() {
+        return getThisMonday().minusWeeks(1);
     }
 
     private WeeklyReportRequest buildInput(List<MealRecord> meals) {
