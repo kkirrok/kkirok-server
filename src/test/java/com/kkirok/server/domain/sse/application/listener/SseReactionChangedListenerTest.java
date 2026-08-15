@@ -18,9 +18,9 @@ class SseReactionChangedListenerTest {
 
     @Test
     void handle_publishesReactionPayload() {
-        listener.handle(new KkinipopReactionChangedEvent(3L, 1L, "SYSTEM_HEART", 2L, true));
+        listener.handle(new KkinipopReactionChangedEvent(3L, 1L, "SYSTEM_HEART", 2L, true, 5L));
 
         then(sseEventPublisher).should().publish(1L, "reaction-updated",
-                new SseReactionUpdatedPayload(1L, 3L, "SYSTEM_HEART", 2L, true));
+                new SseReactionUpdatedPayload(1L, 3L, "SYSTEM_HEART", 2L, true, 5L));
     }
 }

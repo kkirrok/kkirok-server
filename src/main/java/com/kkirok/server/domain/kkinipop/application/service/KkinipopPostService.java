@@ -171,25 +171,28 @@ public class KkinipopPostService {
             throw new ForbiddenException(KkinipopErrorCode.GROUP_ACCESS_FORBIDDEN);
         }
 
+        Long memberId = groupMember.getMember().getId();
         Optional<KkinipopReaction> existingReaction = reactionRepository.findByPostAndMemberAndEmojiCode(
                 post.getId(),
-                groupMember.getMember().getId(),
+                memberId,
                 emojiCode
         );
         if (existingReaction.isPresent()) {
             reactionRepository.delete(existingReaction.get());
             long count = reactionRepository.countByPostAndEmojiCode(post.getId(), emojiCode);
-            eventPublisher.publishEvent(new KkinipopReactionChangedEvent(post.getId(), groupId, emojiCode, count, false));
+            eventPublisher.publishEvent(new KkinipopReactionChangedEvent(post.getId(), groupId, emojiCode, count, false, memberId));
             return new KkinipopReactionSummaryResponse(emojiCode, customEmoji.getLabel(), count, "CUSTOM_EMOJI", false);
         }
+
+        replaceOtherReactions(post, groupId, memberId, emojiCode);
 
         KkinipopReaction reaction = reactionRepository.save(
                 KkinipopReaction.createCustom(post, groupMember.getMember(), customEmoji)
         );
         long count = reactionRepository.countByPostAndEmojiCode(post.getId(), emojiCode);
-        eventPublisher.publishEvent(new KkinipopReactionChangedEvent(post.getId(), groupId, emojiCode, count, true));
+        eventPublisher.publishEvent(new KkinipopReactionChangedEvent(post.getId(), groupId, emojiCode, count, true, memberId));
 
-        if (!groupMember.getMember().getId().equals(post.getMember().getId())) {
+        if (!memberId.equals(post.getMember().getId())) {
             eventPublisher.publishEvent(new KkinipopReactionAddedEvent(
                     post.getId(),
                     groupId,
@@ -212,30 +215,34 @@ public class KkinipopPostService {
     ) {
         try {
             KkinipopReactionEmoji emoji = KkinipopReactionEmoji.fromCode(emojiCode);
+            Long memberId = groupMember.getMember().getId();
+            Long groupId = post.getGroup().getId();
             Optional<KkinipopReaction> existingReaction = reactionRepository.findByPostAndMemberAndEmojiCode(
                     post.getId(),
-                    groupMember.getMember().getId(),
+                    memberId,
                     emojiCode
             );
             if (existingReaction.isPresent()) {
                 reactionRepository.delete(existingReaction.get());
                 long count = reactionRepository.countByPostAndEmojiCode(post.getId(), emojiCode);
-                eventPublisher.publishEvent(new KkinipopReactionChangedEvent(post.getId(), post.getGroup().getId(), emojiCode, count, false));
+                eventPublisher.publishEvent(new KkinipopReactionChangedEvent(post.getId(), groupId, emojiCode, count, false, memberId));
                 return new KkinipopReactionSummaryResponse(emojiCode, emoji.getLabel(), count, "SYSTEM_EMOJI", false);
             }
+
+            replaceOtherReactions(post, groupId, memberId, emojiCode);
 
             KkinipopReaction reaction = reactionRepository.save(
                     KkinipopReaction.createDefault(post, groupMember.getMember(), emoji)
             );
             long count = reactionRepository.countByPostAndEmojiCode(post.getId(), emojiCode);
-            eventPublisher.publishEvent(new KkinipopReactionChangedEvent(post.getId(), post.getGroup().getId(), emojiCode, count, true));
+            eventPublisher.publishEvent(new KkinipopReactionChangedEvent(post.getId(), groupId, emojiCode, count, true, memberId));
 
-            if (!groupMember.getMember().getId().equals(post.getMember().getId())) {
+            if (!memberId.equals(post.getMember().getId())) {
                 eventPublisher.publishEvent(new KkinipopReactionAddedEvent(
                         post.getId(),
-                        post.getGroup().getId(),
+                        groupId,
                         post.getMember().getId(),
-                        groupMember.getMember().getId(),
+                        memberId,
                         emojiCode,
                         false,
                         null
@@ -245,6 +252,19 @@ public class KkinipopPostService {
             return KkinipopReactionSummaryResponse.from(reaction, count, true);
         } catch (IllegalArgumentException exception) {
             throw new BadRequestException(KkinipopErrorCode.INVALID_REACTION_REQUEST, exception);
+        }
+    }
+
+    // 같은 멤버가 같은 게시글에 남긴 다른 이모지 반응을 새 반응으로 교체한다
+    private void replaceOtherReactions(KkinipopPost post, Long groupId, Long memberId, String newEmojiCode) {
+        List<KkinipopReaction> otherReactions = reactionRepository.findByPostAndMemberExcludingEmojiCode(
+                post.getId(), memberId, newEmojiCode
+        );
+        for (KkinipopReaction otherReaction : otherReactions) {
+            String oldEmojiCode = otherReaction.getEmojiCode();
+            reactionRepository.delete(otherReaction);
+            long count = reactionRepository.countByPostAndEmojiCode(post.getId(), oldEmojiCode);
+            eventPublisher.publishEvent(new KkinipopReactionChangedEvent(post.getId(), groupId, oldEmojiCode, count, false, memberId));
         }
     }
 
