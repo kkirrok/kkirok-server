@@ -4,6 +4,7 @@ import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
 import com.kkirok.server.domain.user.domain.Role;
 import com.kkirok.server.global.auth.jwt.dao.redis.RoleCacheRepository;
 import com.kkirok.server.global.common.redis.exception.RedisException;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,16 +17,22 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class RoleCacheService {
 
+    private static final String CACHE_LOOKUP_METRIC = "cache.lookup";
+    private static final String CACHE_NAME = "role_cache";
+
     private final RoleCacheRepository roleCacheRepository;
     private final MemberUseCase memberUseCase;
+    private final MeterRegistry meterRegistry;
 
     @Transactional(readOnly = true)
     public Role getRole(Long memberId) {
         Optional<Role> cached = readCache(memberId);
         if (cached.isPresent()) {
+            meterRegistry.counter(CACHE_LOOKUP_METRIC, "cache", CACHE_NAME, "result", "hit").increment();
             return cached.get();
         }
 
+        meterRegistry.counter(CACHE_LOOKUP_METRIC, "cache", CACHE_NAME, "result", "miss").increment();
         Role role = memberUseCase.findMemberByMemberId(memberId).getUser().getRole();
         writeCache(memberId, role);
         return role;
