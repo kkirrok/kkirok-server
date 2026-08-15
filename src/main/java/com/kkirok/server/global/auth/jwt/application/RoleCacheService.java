@@ -2,7 +2,7 @@ package com.kkirok.server.global.auth.jwt.application;
 
 import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
 import com.kkirok.server.domain.user.domain.Role;
-import com.kkirok.server.global.auth.jwt.dao.redis.RoleCacheRepository;
+import com.kkirok.server.global.common.redis.CacheRepository;
 import com.kkirok.server.global.common.redis.exception.RedisException;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.Optional;
 
 @Slf4j
@@ -19,8 +20,10 @@ public class RoleCacheService {
 
     private static final String CACHE_LOOKUP_METRIC = "cache.lookup";
     private static final String CACHE_NAME = "role_cache";
+    private static final String ROLE_KEY_PREFIX = "auth:role:";
+    private static final Duration ROLE_TTL = Duration.ofMinutes(1);
 
-    private final RoleCacheRepository roleCacheRepository;
+    private final CacheRepository cacheRepository;
     private final MemberUseCase memberUseCase;
     private final MeterRegistry meterRegistry;
 
@@ -40,7 +43,7 @@ public class RoleCacheService {
 
     public void evictRole(Long memberId) {
         try {
-            roleCacheRepository.deleteRole(memberId);
+            cacheRepository.delete(roleKey(memberId));
         } catch (RedisException exception) {
             log.warn("Failed to evict role cache, stale role may be served until TTL expires. memberId={}", memberId, exception);
         }
@@ -48,7 +51,7 @@ public class RoleCacheService {
 
     private Optional<Role> readCache(Long memberId) {
         try {
-            return roleCacheRepository.findRole(memberId);
+            return cacheRepository.get(roleKey(memberId)).map(Role::valueOf);
         } catch (RedisException exception) {
             log.warn("Failed to read role cache, falling back to DB. memberId={}", memberId, exception);
             return Optional.empty();
@@ -57,9 +60,13 @@ public class RoleCacheService {
 
     private void writeCache(Long memberId, Role role) {
         try {
-            roleCacheRepository.saveRole(memberId, role);
+            cacheRepository.set(roleKey(memberId), role.name(), ROLE_TTL);
         } catch (RedisException exception) {
             log.warn("Failed to write role cache, ignoring. memberId={}", memberId, exception);
         }
+    }
+
+    private String roleKey(Long memberId) {
+        return ROLE_KEY_PREFIX + memberId;
     }
 }

@@ -2,8 +2,7 @@ package com.kkirok.server.global.auth.jwt.application;
 
 import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
 import com.kkirok.server.domain.member.domain.Member;
-import com.kkirok.server.domain.user.domain.Role;
-import com.kkirok.server.global.auth.jwt.dao.redis.RoleCacheRepository;
+import com.kkirok.server.global.common.redis.CacheRepository;
 import com.kkirok.server.support.fixture.MemberFixture;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,7 +21,7 @@ import static org.mockito.BDDMockito.given;
 class RoleCacheServiceTest {
 
     @Mock
-    private RoleCacheRepository roleCacheRepository;
+    private CacheRepository cacheRepository;
 
     @Mock
     private MemberUseCase memberUseCase;
@@ -33,14 +32,14 @@ class RoleCacheServiceTest {
     @BeforeEach
     void setUp() {
         meterRegistry = new SimpleMeterRegistry();
-        roleCacheService = new RoleCacheService(roleCacheRepository, memberUseCase, meterRegistry);
+        roleCacheService = new RoleCacheService(cacheRepository, memberUseCase, meterRegistry);
     }
 
     @Test
     @DisplayName("캐시 히트 시 cache.lookup 카운터의 result=hit 태그가 증가한다")
     void shouldIncrementHitCounter_whenCacheHit() {
         // Given
-        given(roleCacheRepository.findRole(1L)).willReturn(Optional.of(Role.USER));
+        given(cacheRepository.get("auth:role:1")).willReturn(Optional.of("USER"));
 
         // When
         roleCacheService.getRole(1L);
@@ -59,7 +58,7 @@ class RoleCacheServiceTest {
     void shouldIncrementMissCounter_whenCacheMiss() {
         // Given
         Member member = MemberFixture.createLocalMember();
-        given(roleCacheRepository.findRole(1L)).willReturn(Optional.empty());
+        given(cacheRepository.get("auth:role:1")).willReturn(Optional.empty());
         given(memberUseCase.findMemberByMemberId(1L)).willReturn(member);
 
         // When
