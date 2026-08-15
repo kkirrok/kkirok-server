@@ -1,6 +1,5 @@
 package com.kkirok.server.global.auth.interceptor;
 
-import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
 import com.kkirok.server.domain.member.exception.MemberErrorCode;
 import com.kkirok.server.domain.terms.application.service.TermsService;
 import com.kkirok.server.domain.terms.exception.TermsErrorCode;
@@ -9,6 +8,7 @@ import com.kkirok.server.global.auth.annotation.RoleAdminAuth;
 import com.kkirok.server.global.auth.annotation.RoleAuth;
 import com.kkirok.server.global.auth.annotation.RoleUserAuth;
 import com.kkirok.server.global.auth.annotation.TermsCheckExempt;
+import com.kkirok.server.global.auth.jwt.application.RoleCacheService;
 import com.kkirok.server.global.common.exception.ForbiddenException;
 import com.kkirok.server.global.common.exception.NotFoundException;
 import org.junit.jupiter.api.AfterEach;
@@ -34,7 +34,7 @@ import static org.mockito.BDDMockito.then;
 class AuthInterceptorTest {
 
     @Mock
-    private MemberUseCase memberUseCase;
+    private RoleCacheService roleCacheService;
 
     @Mock
     private TermsService termsService;
@@ -54,7 +54,7 @@ class AuthInterceptorTest {
         Long memberId = 1L;
         setAuthentication(memberId, Role.USER);
         HandlerMethod handlerMethod = handlerMethod("userApi");
-        given(memberUseCase.findMemberByMemberId(memberId))
+        given(roleCacheService.getRole(memberId))
                 .willThrow(new NotFoundException(MemberErrorCode.DELETED_MEMBER));
 
         // When, Then
@@ -71,12 +71,13 @@ class AuthInterceptorTest {
         Long memberId = 1L;
         setAuthentication(memberId, Role.USER);
         HandlerMethod handlerMethod = handlerMethod("userApi");
+        given(roleCacheService.getRole(memberId)).willReturn(Role.USER);
         given(termsService.hasPendingRequiredTerms(memberId)).willReturn(false);
 
         // When, Then
         assertThatCode(() -> authInterceptor.preHandle(null, null, handlerMethod))
                 .doesNotThrowAnyException();
-        then(memberUseCase).should().findMemberByMemberId(memberId);
+        then(roleCacheService).should().getRole(memberId);
     }
 
     @Test
@@ -143,7 +144,7 @@ class AuthInterceptorTest {
         // When, Then
         assertThatCode(() -> authInterceptor.preHandle(null, null, handlerMethod))
                 .doesNotThrowAnyException();
-        then(memberUseCase).shouldHaveNoInteractions();
+        then(roleCacheService).shouldHaveNoInteractions();
     }
 
     @Test
@@ -156,7 +157,7 @@ class AuthInterceptorTest {
         // When, Then
         assertThatCode(() -> authInterceptor.preHandle(null, null, handlerMethod))
                 .doesNotThrowAnyException();
-        then(memberUseCase).shouldHaveNoInteractions();
+        then(roleCacheService).shouldHaveNoInteractions();
     }
 
     private void setAuthentication(Long memberId, Role role) {
