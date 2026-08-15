@@ -1,6 +1,5 @@
 package com.kkirok.server.global.auth.interceptor;
 
-import com.kkirok.server.domain.member.application.usecase.MemberUseCase;
 import com.kkirok.server.domain.member.exception.MemberErrorCode;
 import com.kkirok.server.domain.terms.application.service.TermsService;
 import com.kkirok.server.domain.terms.exception.TermsErrorCode;
@@ -8,6 +7,7 @@ import com.kkirok.server.domain.user.domain.Role;
 import com.kkirok.server.global.auth.annotation.RoleAuth;
 import com.kkirok.server.global.auth.annotation.RoleUserAuth;
 import com.kkirok.server.global.auth.annotation.TermsCheckExempt;
+import com.kkirok.server.global.auth.jwt.application.ActiveCheckCacheService;
 import com.kkirok.server.global.common.exception.ForbiddenException;
 import com.kkirok.server.global.common.exception.UnauthorizedException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AuthInterceptor implements HandlerInterceptor {
 
-    private final MemberUseCase memberUseCase;
+    private final ActiveCheckCacheService activeCheckCacheService;
     private final TermsService termsService;
 
     @Override
@@ -68,7 +68,7 @@ public class AuthInterceptor implements HandlerInterceptor {
     private void validateActiveMember(HandlerMethod handlerMethod, Authentication authentication) {
         if (hasRoleUserAuth(handlerMethod)) {
             Long memberId = Long.valueOf(authentication.getPrincipal().toString());
-            memberUseCase.findMemberByMemberId(memberId); // findMemberByMemberId에서 예외 발생시킴
+            activeCheckCacheService.checkActive(memberId); // 캐시 히트 시 DB 조회 없이 활성 회원 여부 확인, 캐시 미스 시 내부적으로 findMemberByMemberId를 호출해 탈퇴 회원이면 예외 발생
         }
     }
 

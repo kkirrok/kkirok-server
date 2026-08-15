@@ -23,6 +23,8 @@ import com.kkirok.server.domain.user.domain.Role;
 import com.kkirok.server.global.auth.annotation.CurrentMember;
 import com.kkirok.server.global.auth.annotation.RoleAuth;
 import com.kkirok.server.global.auth.annotation.RoleUserAuth;
+import com.kkirok.server.global.auth.jwt.application.ActiveCheckCacheService;
+import com.kkirok.server.global.auth.jwt.application.RoleCacheService;
 import com.kkirok.server.global.common.dto.SuccessResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +45,8 @@ public class MemberController implements MemberApi {
     private final MemberService memberService;
     private final MyPageService myPageService;
     private final NotificationAgreeService notificationAgreeService;
+    private final RoleCacheService roleCacheService;
+    private final ActiveCheckCacheService activeCheckCacheService;
 
     @Override
     @PostMapping("/recovery/email")
@@ -114,6 +118,8 @@ public class MemberController implements MemberApi {
     public ResponseEntity<SuccessResponse<Void>> quitMember(
             @CurrentMember Long memberId){
         memberService.quit(memberId);
+        roleCacheService.evictRole(memberId);
+        activeCheckCacheService.evictActive(memberId);
         return ResponseEntity.ok()
                 .body(SuccessResponse.from(MemberSuccessCode.USER_DELETE_SUCCESS));
     }
