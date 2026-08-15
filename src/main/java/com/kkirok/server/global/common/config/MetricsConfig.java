@@ -1,6 +1,7 @@
 package com.kkirok.server.global.common.config;
 
 import io.micrometer.core.instrument.Clock;
+import io.micrometer.core.instrument.config.MeterFilter;
 import io.micrometer.core.instrument.logging.LoggingMeterRegistry;
 import io.micrometer.core.instrument.logging.LoggingRegistryConfig;
 import org.springframework.context.annotation.Bean;
@@ -10,6 +11,8 @@ import java.time.Duration;
 
 @Configuration
 public class MetricsConfig {
+
+    private static final String CACHE_LOOKUP_METRIC = "cache.lookup";
 
     @Bean
     public LoggingMeterRegistry loggingMeterRegistry() {
@@ -24,6 +27,10 @@ public class MetricsConfig {
                 return Duration.ofHours(1);
             }
         };
-        return new LoggingMeterRegistry(config, Clock.SYSTEM);
+        LoggingMeterRegistry registry = new LoggingMeterRegistry(config, Clock.SYSTEM);
+        registry.config().meterFilter(
+                MeterFilter.denyUnless(id -> id.getName().equals(CACHE_LOOKUP_METRIC))
+        );
+        return registry;
     }
 }
