@@ -5,6 +5,7 @@ import com.kkirok.server.domain.member.application.service.MemberService;
 import com.kkirok.server.domain.member.application.service.MyPageService;
 import com.kkirok.server.domain.member.application.service.NotificationAgreeService;
 import com.kkirok.server.domain.member.application.service.OnboardingService;
+import com.kkirok.server.global.auth.jwt.application.ActiveCheckCacheService;
 import com.kkirok.server.global.auth.jwt.application.RoleCacheService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,9 @@ class MemberControllerTest {
     @Mock
     private RoleCacheService roleCacheService;
 
+    @Mock
+    private ActiveCheckCacheService activeCheckCacheService;
+
     @InjectMocks
     private MemberController memberController;
 
@@ -51,8 +55,9 @@ class MemberControllerTest {
         memberController.quitMember(memberId);
 
         // Then
-        InOrder inOrder = inOrder(memberService, roleCacheService);
+        InOrder inOrder = inOrder(memberService, roleCacheService, activeCheckCacheService);
         inOrder.verify(memberService).quit(memberId);
         inOrder.verify(roleCacheService).evictRole(memberId);
+        inOrder.verify(activeCheckCacheService).evictActive(memberId);
     }
 }
