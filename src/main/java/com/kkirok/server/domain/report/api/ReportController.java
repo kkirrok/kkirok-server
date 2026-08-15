@@ -28,8 +28,9 @@ public class ReportController implements ReportApi {
 
     /**
      * 주간 리포트 조회.
-     * weekStart(월요일 날짜)를 넘기면 해당 주, 없으면 이번 주 리포트를 반환합니다.
-     * 예) GET /v1/meals/weekly-report?weekStart=2025-04-28
+     * weekStart(월요일 날짜)를 넘기면 해당 주, 없으면 지난주 리포트를 반환합니다.
+     * 종료된 주(지난주 이전)만 조회할 수 있으며, 진행 중인 이번 주/미래 주는 조회할 수 없습니다.
+     * 예) GET /v1/reports/weekly-report?weekStart=2025-04-28
      */
     @Override
     @GetMapping("/weekly-report")
