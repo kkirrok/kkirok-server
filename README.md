@@ -20,14 +20,14 @@
 - Framework: Spring Boot, Spring Security, Spring Data JPA, Spring AOP
 - Auth: OAuth2 (카카오 · 네이버), JWT
 - Database: PostgreSQL, Redis
-- Storage: Cloudflare R2 (S3 호환), AWS S3
+- Storage: Cloudflare R2
 - Email: AWS SES
 - Push: Firebase Cloud Messaging (FCM)
 - External API: OpenFeign (AI 분석 서버 연동)
 - API Docs: Swagger (springdoc-openapi)
 - Logging: Log4j2
 - Build Tool: Gradle
-- Deploy: Docker, Railway, Cloudflare
+- Deploy: Docker, Docker Compose, Cloudflare
 
 ## 프로젝트 구조
 #### 도메인형
@@ -68,4 +68,30 @@ src/
 - PR 템플릿을 참고하여 작성합니다.
 - 제목 앞에 [타입][작성자]를 붙이고, 관련 이슈가 있다면 연결합니다. (예: `[FEAT][name]: 끼니 기록 기능 구현`)
 - 코드 리뷰를 거친 후 dev 브랜치로 머지합니다.
+
+<table>
+  <tr>
+    <!-- 팀원 수만큼 td 추가/삭제 -->
+    <td align="center">
+      <a href="https://github.com/ggamnunq">
+        <img width="170" src="https://avatars.githubusercontent.com/u/93406666?v=4" alt="김준용" />
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/Yujin1219">
+        <img width="170" src="https://avatars.githubusercontent.com/u/127809173?v=4" alt="팀원2" />
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><b>김준용</b></td>
+    <td align="center"><b>김시아</b></td>
+  </tr>
+  <tr>
+    <td align="center">유저·인증·끼니팝·알림</td>
+    <td align="center">식사기록·분석·리포트</td>
+  </tr>
+</table>
+</div>
+
 
